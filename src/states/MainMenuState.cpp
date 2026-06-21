@@ -7,7 +7,7 @@
 
 void MainMenuState::Init(Game* game) {
     gamePtr = game;
-    highlightY = 250.0f;
+    highlightY = 292.0f;
 }
 
 void MainMenuState::HandleInput() {
@@ -27,25 +27,31 @@ void MainMenuState::HandleInput() {
 }
 
 void MainMenuState::Update(float deltaTime) {
-    const float targetY = 245.0f + selectedOption * 55.0f;
+    const float targetY = 292.0f + selectedOption * 66.0f;
     highlightY += (targetY - highlightY) * std::min(1.0f, deltaTime * 14.0f);
 }
 
 void MainMenuState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
     Font font = gamePtr->GetFont();
+    const float scale = gamePtr->GetUiScale();
 
-    DrawTextEx(font, "KeySprint", {260, 120}, 46, 1, theme.Title);
-    DrawTextEx(font, "Typing speed trainer", {262, 172}, 20, 1, theme.TextDefault);
+    const Rectangle card = gamePtr->ScaleRect({ 390.0f, 92.0f, 500.0f, 520.0f });
+    DrawRectangleRounded(card, 0.10f, 12, Fade(theme.Panel, 0.78f));
+    DrawRectangleRoundedLines(card, 0.10f, 12, Fade(theme.PanelBorder, 0.80f));
 
-    DrawRectangleRounded({235.0f, highlightY, 330.0f, 42.0f}, 0.35f, 10, Fade(theme.Title, 0.18f));
-    DrawRectangleRoundedLines({235.0f, highlightY, 330.0f, 42.0f}, 0.35f, 10, Fade(theme.Title, 0.45f));
+    DrawTextEx(font, "KeySprint", gamePtr->ScalePoint({ 468.0f, 150.0f }), 52.0f * scale, 1.0f * scale, theme.Title);
+    DrawTextEx(font, "Typing speed trainer", gamePtr->ScalePoint({ 482.0f, 212.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
+
+    const Rectangle highlight = gamePtr->ScaleRect({ 450.0f, highlightY, 380.0f, 48.0f });
+    DrawRectangleRounded(highlight, 0.35f, 10, Fade(theme.Highlight, 0.18f));
+    DrawRectangleRoundedLines(highlight, 0.35f, 10, Fade(theme.Highlight, 0.48f));
 
     for (size_t i = 0; i < options.size(); ++i) {
-        const float y = 252.0f + static_cast<float>(i) * 55.0f;
+        const float y = 302.0f + static_cast<float>(i) * 66.0f;
         const Color color = selectedOption == static_cast<int>(i) ? theme.TextCorrect : theme.TextDefault;
-        DrawTextEx(font, options[i], {280.0f, y}, 24, 1, color);
+        DrawTextEx(font, options[i], gamePtr->ScalePoint({ 520.0f, y }), 25.0f * scale, 1.0f * scale, color);
     }
 
-    DrawTextEx(font, "Use Up/Down and Enter", {250, 465}, 18, 1, theme.TextDefault);
+    DrawTextEx(font, "Use Up/Down and Enter", gamePtr->ScalePoint({ 490.0f, 535.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
 }

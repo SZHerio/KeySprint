@@ -6,6 +6,9 @@
 
 class Game {
 public:
+    static constexpr float VirtualWidth = 1280.0f;
+    static constexpr float VirtualHeight = 720.0f;
+
     Game(int width, int height, const char* title);
     ~Game();
 
@@ -20,6 +23,11 @@ public:
     }
     
     Font GetFont() const { return mainFont; }
+    int GetWindowWidth() const;
+    int GetWindowHeight() const;
+    float GetUiScale() const;
+    Vector2 ScalePoint(Vector2 point) const;
+    Rectangle ScaleRect(Rectangle rect) const;
 
 private:
     std::shared_ptr<GameState> currentState;
