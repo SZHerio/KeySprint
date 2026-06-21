@@ -41,4 +41,5 @@ private:
     void GenerateText(int wordCount);
     void ResetProgress();
     void RebuildTypedText();
+    void AppendInputCodepoint(int codepoint);
 };

@@ -59,6 +59,7 @@ private:
     float caretX = 50.0f;
     float caretY = 300.0f;
     float pulseTime = 0.0f;
+    float textScrollY = 0.0f;
     
     // Предрасчет позиций символов
     std::vector<Vector2> charPositions;
@@ -68,6 +69,9 @@ private:
     void CalculateLayout(Font font, float fontSize);
     void DrawVirtualKeyboard(Font font, const Theme& theme);
     void DrawHandsGuide(Font font, const Theme& theme);
+    float GetTextFontSize() const;
+    const char* GetModeTitle() const;
+    std::string BuildCompositionText() const;
     int GetNextExpectedChar() const;
     FingerType GetFingerForKey(int key) const;
     Color GetFingerColor(FingerType finger, const Theme& theme) const;

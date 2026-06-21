@@ -13,5 +13,12 @@ private:
     Game* gamePtr = nullptr;
     int selectedOption = 0;
     float highlightY = 250.0f;
-    std::array<const char*, 3> options = { "Practice", "Tutorial", "Settings" };
+    float menuTime = 0.0f;
+    std::array<const char*, 4> options = { "Practice", "Tutorial", "Composition", "Settings" };
+    std::array<const char*, 4> descriptions = {
+        "Short generated drills with live WPM and finger guidance.",
+        "Structured lessons with unlocks, weak-key focus and colored hands.",
+        "Long-form typing flow: larger text, scrolling canvas and endurance.",
+        "Theme, language, sound profiles and progress reset."
+    };
 };

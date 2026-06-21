@@ -11,7 +11,11 @@ TypingLogic::TypingLogic() : isFinished(false) {
         "this", "but", "his", "by", "from", "they", "we", "say", "her", "she",
         "or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
         "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
-        "code", "program", "keyboard", "developer", "type", "fast", "sprint"
+        "code", "program", "keyboard", "developer", "type", "fast", "sprint",
+        "lesson", "finger", "rhythm", "accuracy", "focus", "practice", "typing",
+        "screen", "sound", "theme", "speed", "result", "progress", "hands",
+        "memory", "motion", "steady", "clear", "flow", "calm", "skill", "train",
+        "words", "sentence", "paragraph", "compose", "endurance", "control"
     };
 }
 
@@ -52,6 +56,27 @@ void TypingLogic::RebuildTypedText() {
     typedText = CodepointsToUtf8(typedCodepoints);
 }
 
+void TypingLogic::AppendInputCodepoint(int codepoint) {
+    if (typedCodepoints.size() >= targetCodepoints.size()) {
+        return;
+    }
+
+    const int normalizedKey = ToLowerCodepoint(codepoint);
+    const int expected = ToLowerCodepoint(targetCodepoints[typedCodepoints.size()]);
+
+    totalKeystrokes++;
+    if (normalizedKey == expected) {
+        correctKeystrokes++;
+        AudioManager::PlayClick();
+    } else {
+        mistakeCounts[expected]++;
+        AudioManager::PlayError();
+    }
+
+    typedCodepoints.push_back(codepoint);
+    RebuildTypedText();
+}
+
 void TypingLogic::Update(float deltaTime) {
     if (!isFinished && !typedText.empty()) {
         timeElapsed += deltaTime;
@@ -73,25 +98,14 @@ float TypingLogic::GetAccuracy() const {
 void TypingLogic::HandleInput() {
     if (isFinished) return;
 
+    if (IsKeyPressed(KEY_ENTER)) {
+        AppendInputCodepoint('\n');
+    }
+
     int key = GetCharPressed();
     while (key > 0) {
         if (key >= 32) {
-            if (typedCodepoints.size() < targetCodepoints.size()) {
-                const int normalizedKey = ToLowerCodepoint(key);
-                const int expected = ToLowerCodepoint(targetCodepoints[typedCodepoints.size()]);
-
-                totalKeystrokes++;
-                if (normalizedKey == expected) {
-                    correctKeystrokes++;
-                    AudioManager::PlayClick();
-                } else {
-                    mistakeCounts[expected]++;
-                    AudioManager::PlayError();
-                }
-
-                typedCodepoints.push_back(key);
-                RebuildTypedText();
-            }
+            AppendInputCodepoint(key);
         }
         key = GetCharPressed();
     }

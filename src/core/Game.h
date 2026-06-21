@@ -17,6 +17,7 @@ public:
     void Run();
     void ChangeState(std::shared_ptr<GameState> newState);
     void Quit();
+    void ToggleFullscreenMode();
 
     const Theme& GetTheme() const { return currentTheme; }
     void ToggleTheme() { 
@@ -40,6 +41,9 @@ private:
     int screenWidth;
     int screenHeight;
     bool isRunning;
+    bool fullscreen = false;
+    int windowedWidth;
+    int windowedHeight;
 
     Theme currentTheme;
     bool isDarkTheme;

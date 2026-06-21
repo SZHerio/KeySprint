@@ -12,6 +12,7 @@
 namespace {
 constexpr float TextFontSize = 30.0f;
 constexpr float UiSpacing = 1.0f;
+constexpr Rectangle TextViewport = { 60.0f, 130.0f, 1160.0f, 190.0f };
 
 Color FadeColor(Color color, float alpha) {
     color.a = static_cast<unsigned char>(std::clamp(alpha, 0.0f, 1.0f) * 255.0f);
@@ -37,6 +38,16 @@ void DrawRoundedLinesScene(Game* game, Rectangle rect, float roundness, int segm
 
 void DrawRectScene(Game* game, Rectangle rect, Color color) {
     DrawRectangleRec(game->ScaleRect(rect), color);
+}
+
+void BeginScissorScene(Game* game, Rectangle rect) {
+    const Rectangle scaled = game->ScaleRect(rect);
+    BeginScissorMode(
+        static_cast<int>(scaled.x),
+        static_cast<int>(scaled.y),
+        static_cast<int>(scaled.width),
+        static_cast<int>(scaled.height)
+    );
 }
 }
 
@@ -74,6 +85,7 @@ void TypingState::BuildKeyboardModel() {
     }
 
     keyboardKeys.push_back({ ' ', "SPACE", 3, 5.2f, FingerType::RightThumb, HandSide::Both });
+    keyboardKeys.push_back({ '\n', "ENTER", 3, 2.0f, FingerType::RightPinky, HandSide::Right });
 }
 
 void TypingState::CalculateLayout(Font font, float fontSize) {
@@ -81,7 +93,7 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
     charPositions.clear();
     
     const float startX = 80.0f;
-    const float startY = mode == TypingMode::Tutorial ? 150.0f : 205.0f;
+    const float startY = 150.0f;
     const float maxX = Game::VirtualWidth - 80.0f;
     const float lineHeight = fontSize + 18.0f;
     float currentX = startX;
@@ -90,8 +102,16 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
     
     size_t i = 0;
     while (i < target.size()) {
+        if (target[i] == '\n') {
+            charPositions.push_back({ currentX, currentY });
+            currentX = startX;
+            currentY += lineHeight * 1.45f;
+            ++i;
+            continue;
+        }
+
         size_t wordEnd = i;
-        while (wordEnd < target.size() && target[wordEnd] != ' ') {
+        while (wordEnd < target.size() && target[wordEnd] != ' ' && target[wordEnd] != '\n') {
             ++wordEnd;
         }
         
@@ -110,7 +130,7 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
             currentX += MeasureTextEx(font, glyph.c_str(), fontSize, UiSpacing).x + UiSpacing;
         }
         
-        if (wordEnd < target.size()) {
+        if (wordEnd < target.size() && target[wordEnd] == ' ') {
             charPositions.push_back({ currentX, currentY });
             currentX += spaceWidth + UiSpacing;
         }
@@ -133,11 +153,23 @@ void TypingState::Init(Game* game) {
         lessonTitle = lesson.title;
         lessonDescription = lesson.description;
         logic.StartCustomTest(lesson.text);
+    } else if (mode == TypingMode::Composition) {
+        logic.StartCustomTest(BuildCompositionText());
+        lessonId = -1;
+        lessonTitle = "Composition";
+        lessonDescription = "Long-form endurance typing";
     } else {
         if (language == Language::Russian) {
-            logic.StartCustomTest(u8"мама дом школа код урок рука палец клавиша текст скорость точность фокус ритм");
+            logic.StartCustomTest(
+                u8"мама дом школа код урок рука палец клавиша текст скорость точность фокус ритм. "
+                u8"Печатай спокойно и возвращай пальцы на домашний ряд.\n"
+                u8"Каждая короткая фраза помогает удерживать внимание на точности."
+            );
         } else {
-            logic.StartNewTest(24);
+            logic.StartCustomTest(
+                "calm focus builds reliable typing speed. keep your fingers near the home row and watch the rhythm.\n"
+                "short clear sentences help you train accuracy before you push for a faster result."
+            );
         }
         lessonId = -1;
         lessonTitle = "Practice";
@@ -145,13 +177,14 @@ void TypingState::Init(Game* game) {
     }
     
     Font font = gamePtr->GetFont();
-    float fontSize = TextFontSize;
+    float fontSize = GetTextFontSize();
     CalculateLayout(font, fontSize);
     
     if (!charPositions.empty()) {
         caretX = charPositions[0].x;
         caretY = charPositions[0].y;
     }
+    textScrollY = 0.0f;
 }
 
 void TypingState::HandleInput() {
@@ -176,6 +209,9 @@ void TypingState::Update(float deltaTime) {
         caretY += (targetPos.y - caretY) * 20.0f * deltaTime;
     }
 
+    const float targetScroll = std::max(0.0f, caretY - (TextViewport.y + TextViewport.height - 58.0f));
+    textScrollY += (targetScroll - textScrollY) * std::min(1.0f, deltaTime * 10.0f);
+
     if (logic.IsFinished()) {
         gamePtr->ChangeState(std::make_shared<ResultsState>(
             logic.GetWPM(),
@@ -187,6 +223,48 @@ void TypingState::Update(float deltaTime) {
             logic.GetMistakeCountsUtf8()
         ));
     }
+}
+
+float TypingState::GetTextFontSize() const {
+    return mode == TypingMode::Composition ? 23.0f : TextFontSize;
+}
+
+const char* TypingState::GetModeTitle() const {
+    switch (mode) {
+        case TypingMode::Tutorial:
+            return "Tutorial Mode";
+        case TypingMode::Composition:
+            return "Composition Mode";
+        case TypingMode::Practice:
+        default:
+            return "Practice Mode";
+    }
+}
+
+std::string TypingState::BuildCompositionText() const {
+    if (language == Language::Russian) {
+        return u8"Слепая печать начинается не со скорости, а с спокойного ритма. "
+            u8"Пальцы должны возвращаться на домашний ряд после каждого движения. "
+            u8"Когда внимание перестает метаться между клавишами, текст начинает течь ровнее. "
+            u8"Ошибки не нужно бояться: каждая ошибка показывает, какой палец просит отдельной тренировки.\n"
+            u8"Сохраняй ровное дыхание, не ускоряйся раньше времени и следи за точностью. "
+            u8"Хорошая скорость появляется тогда, когда движение становится уверенным и повторяемым. "
+            u8"Если абзац закончился, нажми Enter и продолжай новый фрагмент без спешки.\n"
+            u8"Длинный текст учит держать внимание дольше нескольких слов. "
+            u8"В такой тренировке важны не рекорды, а устойчивость: одинаковая сила нажатий, мягкая посадка пальцев и спокойный взгляд на строку. "
+            u8"Когда точность остается высокой на протяжении нескольких абзацев, скорость начинает расти сама.";
+    }
+
+    return "Fast typing is not only about speed. It starts with calm rhythm, relaxed hands, "
+        "and a clear return to the home row after every movement. When your attention stops "
+        "jumping from key to key, the sentence begins to flow naturally. Mistakes are not a "
+        "problem: each one shows which finger needs a focused drill.\nKeep your breathing even, "
+        "avoid rushing too early, and let accuracy build the speed. A reliable rhythm will "
+        "always beat a tense burst of random fast typing. When the paragraph ends, press Enter "
+        "and continue with the next thought without breaking your posture.\nLong-form typing "
+        "teaches endurance. It asks you to keep the same pressure, the same focus, and the same "
+        "soft return to the home row for several connected ideas. If accuracy stays high through "
+        "multiple paragraphs, speed becomes a natural result instead of a forced sprint.";
 }
 
 int TypingState::GetNextExpectedChar() const {
@@ -357,6 +435,7 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
 void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
     const FingerType activeFinger = GetFingerForKey(GetNextExpectedChar());
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
+    const float handYOffset = -20.0f;
 
     auto drawFinger = [&](Rectangle rect, FingerType finger, const char* label) {
         const bool active = activeFinger == finger;
@@ -374,25 +453,25 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
     };
 
     auto drawHand = [&](float x, const char* title, bool left) {
-        DrawTextScene(gamePtr, font, title, { x + 56.0f, 384.0f }, 16.0f, UiSpacing, theme.TextDefault);
-        DrawRoundedScene(gamePtr, { x + 25.0f, 455.0f, 190.0f, 66.0f }, 0.32f, 12, FadeColor(theme.PanelBorder, 0.28f));
+        DrawTextScene(gamePtr, font, title, { x + 56.0f, 384.0f + handYOffset }, 16.0f, UiSpacing, theme.TextDefault);
+        DrawRoundedScene(gamePtr, { x + 25.0f, 455.0f + handYOffset, 190.0f, 66.0f }, 0.32f, 12, FadeColor(theme.PanelBorder, 0.28f));
 
         if (left) {
-            drawFinger({ x + 15.0f, 421.0f, 28.0f, 62.0f }, FingerType::LeftPinky, "P");
-            drawFinger({ x + 56.0f, 410.0f, 30.0f, 74.0f }, FingerType::LeftRing, "R");
-            drawFinger({ x + 99.0f, 402.0f, 30.0f, 82.0f }, FingerType::LeftMiddle, "M");
-            drawFinger({ x + 142.0f, 414.0f, 32.0f, 70.0f }, FingerType::LeftIndex, "I");
-            drawFinger({ x + 166.0f, 486.0f, 62.0f, 30.0f }, FingerType::LeftThumb, "T");
+            drawFinger({ x + 15.0f, 421.0f + handYOffset, 28.0f, 62.0f }, FingerType::LeftPinky, "P");
+            drawFinger({ x + 56.0f, 410.0f + handYOffset, 30.0f, 74.0f }, FingerType::LeftRing, "R");
+            drawFinger({ x + 99.0f, 402.0f + handYOffset, 30.0f, 82.0f }, FingerType::LeftMiddle, "M");
+            drawFinger({ x + 142.0f, 414.0f + handYOffset, 32.0f, 70.0f }, FingerType::LeftIndex, "I");
+            drawFinger({ x + 166.0f, 486.0f + handYOffset, 62.0f, 30.0f }, FingerType::LeftThumb, "T");
         } else {
-            drawFinger({ x + 178.0f, 421.0f, 28.0f, 62.0f }, FingerType::RightPinky, "P");
-            drawFinger({ x + 135.0f, 410.0f, 30.0f, 74.0f }, FingerType::RightRing, "R");
-            drawFinger({ x + 92.0f, 402.0f, 30.0f, 82.0f }, FingerType::RightMiddle, "M");
-            drawFinger({ x + 47.0f, 414.0f, 32.0f, 70.0f }, FingerType::RightIndex, "I");
-            drawFinger({ x + 0.0f, 486.0f, 62.0f, 30.0f }, FingerType::RightThumb, "T");
+            drawFinger({ x + 178.0f, 421.0f + handYOffset, 28.0f, 62.0f }, FingerType::RightPinky, "P");
+            drawFinger({ x + 135.0f, 410.0f + handYOffset, 30.0f, 74.0f }, FingerType::RightRing, "R");
+            drawFinger({ x + 92.0f, 402.0f + handYOffset, 30.0f, 82.0f }, FingerType::RightMiddle, "M");
+            drawFinger({ x + 47.0f, 414.0f + handYOffset, 32.0f, 70.0f }, FingerType::RightIndex, "I");
+            drawFinger({ x + 0.0f, 486.0f + handYOffset, 62.0f, 30.0f }, FingerType::RightThumb, "T");
         }
     };
 
-    DrawTextScene(gamePtr, font, "Finger guide", { 80.0f, 360.0f }, 22.0f, UiSpacing, theme.Title);
+    DrawTextScene(gamePtr, font, "Finger guide", { 80.0f, 365.0f }, 22.0f, UiSpacing, theme.Title);
     drawHand(350.0f, "LEFT HAND", true);
     drawHand(705.0f, "RIGHT HAND", false);
 }
@@ -400,15 +479,29 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
 void TypingState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
     Font font = gamePtr->GetFont();
-    float fontSize = TextFontSize;
+    float fontSize = GetTextFontSize();
 
     const auto& target = logic.GetTargetCodepoints();
     const auto& typed = logic.GetTypedCodepoints();
 
     DrawRoundedScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(theme.Panel, 0.70f));
     DrawRoundedLinesScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(theme.PanelBorder, 0.75f));
+    DrawRoundedScene(gamePtr, TextViewport, 0.12f, 12, FadeColor(theme.Panel, 0.54f));
+    DrawRoundedLinesScene(gamePtr, TextViewport, 0.12f, 12, FadeColor(theme.PanelBorder, 0.55f));
 
+    BeginScissorScene(gamePtr, TextViewport);
     for (size_t i = 0; i < target.size(); ++i) {
+        if (target[i] == '\n') {
+            const bool isCurrentNewline = i == typed.size();
+            const bool isTyped = i < typed.size();
+            const Color enterColor = isTyped
+                ? (typed[i] == '\n' ? theme.TextCorrect : theme.TextError)
+                : (isCurrentNewline ? theme.Highlight : FadeColor(theme.TextDefault, 0.45f));
+
+            DrawTextScene(gamePtr, font, "ENTER", { charPositions[i].x, charPositions[i].y - textScrollY }, 15.0f, UiSpacing, enterColor);
+            continue;
+        }
+
         Color color = theme.TextDefault;
         
         if (i < typed.size()) {
@@ -418,20 +511,21 @@ void TypingState::Draw() {
                 color = theme.TextError;
                 
                 // Рисуем подчеркивание для ошибок для лучшей читаемости
-                DrawRectScene(gamePtr, { charPositions[i].x, charPositions[i].y + fontSize + 3.0f, MeasureTextEx(font, "A", fontSize, UiSpacing).x, 3.0f }, theme.TextError);
+                DrawRectScene(gamePtr, { charPositions[i].x, charPositions[i].y - textScrollY + fontSize + 3.0f, MeasureTextEx(font, "A", fontSize, UiSpacing).x, 3.0f }, theme.TextError);
             }
         }
 
         const std::string glyph = CodepointToUtf8(target[i]);
-        DrawTextScene(gamePtr, font, glyph.c_str(), charPositions[i], fontSize, UiSpacing, color);
+        DrawTextScene(gamePtr, font, glyph.c_str(), { charPositions[i].x, charPositions[i].y - textScrollY }, fontSize, UiSpacing, color);
     }
     
     // Рисуем плавную каретку
     float caretWidth = MeasureTextEx(font, "A", fontSize, UiSpacing).x;
-    DrawRoundedScene(gamePtr, { caretX, caretY + fontSize + 4.0f, caretWidth, 4.0f }, 1.0f, 4, theme.Caret);
+    DrawRoundedScene(gamePtr, { caretX, caretY - textScrollY + fontSize + 4.0f, caretWidth, 4.0f }, 1.0f, 4, theme.Caret);
+    EndScissorMode();
 
     // Заголовки (системным шрифтом или тем же, но для UI можно оставить обычный)
-    const char* title = mode == TypingMode::Tutorial ? "Tutorial Mode" : "Practice Mode";
+    const char* title = GetModeTitle();
     DrawTextScene(gamePtr, font, title, {80.0f, 48.0f}, 34.0f, UiSpacing, theme.Title);
     DrawTextScene(gamePtr, font, TextFormat("%s | %s | ESC Menu", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str()), {80.0f, 90.0f}, 17.0f, UiSpacing, theme.TextDefault);
 
@@ -439,10 +533,8 @@ void TypingState::Draw() {
     DrawTextScene(gamePtr, font, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, UiSpacing, theme.TextCorrect);
     DrawTextScene(gamePtr, font, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, UiSpacing, theme.TextCorrect);
 
-    if (mode == TypingMode::Tutorial) {
-        DrawRoundedScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.Panel, 0.66f));
-        DrawRoundedLinesScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.PanelBorder, 0.70f));
-        DrawHandsGuide(font, theme);
-        DrawVirtualKeyboard(font, theme);
-    }
+    DrawRoundedScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.Panel, 0.66f));
+    DrawRoundedLinesScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.PanelBorder, 0.70f));
+    DrawHandsGuide(font, theme);
+    DrawVirtualKeyboard(font, theme);
 }

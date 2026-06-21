@@ -5,9 +5,10 @@
 #include "AudioManager.h"
 
 Game::Game(int width, int height, const char* title) 
-    : screenWidth(width), screenHeight(height), isRunning(true), isDarkTheme(true), language(Language::English) {
+    : screenWidth(width), screenHeight(height), isRunning(true), windowedWidth(width), windowedHeight(height), isDarkTheme(true), language(Language::English) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     InitWindow(screenWidth, screenHeight, title);
+    SetExitKey(KEY_NULL);
     SetWindowMinSize(960, 540);
     InitAudioDevice();
     AudioManager::Init();
@@ -39,6 +40,10 @@ void Game::ChangeState(std::shared_ptr<GameState> newState) {
 
 void Game::Run() {
     while (!WindowShouldClose() && isRunning) {
+        if (IsKeyPressed(KEY_F11)) {
+            ToggleFullscreenMode();
+        }
+
         if (currentState) {
             currentState->HandleInput();
             currentState->Update(GetFrameTime());
@@ -62,6 +67,21 @@ void Game::Quit() {
 
 void Game::ToggleLanguage() {
     language = language == Language::English ? Language::Russian : Language::English;
+}
+
+void Game::ToggleFullscreenMode() {
+    if (!fullscreen) {
+        windowedWidth = GetScreenWidth();
+        windowedHeight = GetScreenHeight();
+        const int monitor = GetCurrentMonitor();
+        SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+        ToggleFullscreen();
+        fullscreen = true;
+    } else {
+        ToggleFullscreen();
+        SetWindowSize(windowedWidth, windowedHeight);
+        fullscreen = false;
+    }
 }
 
 int Game::GetWindowWidth() const {

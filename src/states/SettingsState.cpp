@@ -57,5 +57,6 @@ void SettingsState::Draw() {
     DrawTextEx(font, TextFormat("C  Click profile: %d", AudioManager::GetClickProfile() + 1), gamePtr->ScalePoint({ 455.0f, 420.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
     DrawTextEx(font, TextFormat("+/- Volume: %.0f%%", AudioManager::GetVolume() * 100.0f), gamePtr->ScalePoint({ 455.0f, 460.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
     DrawTextEx(font, "R  Reset progress", gamePtr->ScalePoint({ 455.0f, 500.0f }), 20.0f * scale, 1.0f * scale, theme.TextError);
-    DrawTextEx(font, "ESC  Return to Menu", gamePtr->ScalePoint({ 455.0f, 552.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawTextEx(font, "F11  Toggle fullscreen", gamePtr->ScalePoint({ 455.0f, 540.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawTextEx(font, "ESC  Return to Menu", gamePtr->ScalePoint({ 455.0f, 572.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
 }
