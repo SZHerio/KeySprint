@@ -56,15 +56,6 @@ std::string RandomizeDrillText(const std::string& text) {
     return out.str();
 }
 
-bool IsKeyForLanguage(const std::string& key, Language language) {
-    if (key == "Space" || key == "Enter" || key == "?") {
-        return false;
-    }
-
-    const bool asciiKey = key.size() == 1 && static_cast<unsigned char>(key[0]) < 128;
-    return language == Language::English ? asciiKey : !asciiKey;
-}
-
 const std::vector<Lesson> EnglishLessons = {
     { 0, "Home Row", "Master ASDF and JKL; first.", "asdf jkl; asdf jkl; fj fj dk dk sl sl aa ss dd ff jj kk ll ;;" },
     { 1, "Left Alternation", "Alternate left-hand fingers without rushing.", "as sa ad da af fa sd ds df fd asdf fdsa asdf fdsa" },
@@ -209,6 +200,32 @@ std::string LessonLibrary::BuildDailyChallengeText(Language language) {
 
 std::string LessonLibrary::GetLanguageLabel(Language language) {
     return language == Language::Russian ? "RU" : "EN";
+}
+
+bool LessonLibrary::IsKeyForLanguage(const std::string& key, Language language) {
+    if (key == "Space" || key == "Enter") {
+        return true;
+    }
+
+    if (key.empty()) {
+        return false;
+    }
+
+    const bool asciiKey = key.size() == 1 && static_cast<unsigned char>(key[0]) < 128;
+    return language == Language::English ? asciiKey : !asciiKey;
+}
+
+std::string LessonLibrary::FormatKeyLabel(const std::string& key, Language language) {
+    if (key.empty()) {
+        return language == Language::Russian ? u8"пока нет" : "none yet";
+    }
+    if (key == "Space") {
+        return language == Language::Russian ? u8"Пробел" : "Space";
+    }
+    if (key == "Enter") {
+        return language == Language::Russian ? u8"Ввод" : "Enter";
+    }
+    return key;
 }
 
 std::string LessonLibrary::GenerateFocusText(Language language, const std::map<std::string, int>& weakKeys) {

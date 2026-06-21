@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include "LessonLibrary.h"
 
 namespace {
 const char* ProgressPath = "settings/progress.json";
@@ -158,21 +159,31 @@ std::string ProgressManager::GetRankLabel() const {
     return "Novice";
 }
 
-std::string ProgressManager::GetWeakKeyOfDay() const {
+std::string ProgressManager::GetWeakKeyOfDay(Language language) const {
     if (data.weakKeys.empty()) {
-        return "?";
+        return {};
     }
 
-    std::vector<std::pair<std::string, int>> ranked(data.weakKeys.begin(), data.weakKeys.end());
+    std::vector<std::pair<std::string, int>> ranked;
+    for (const auto& [key, count] : data.weakKeys) {
+        if (LessonLibrary::IsKeyForLanguage(key, language)) {
+            ranked.emplace_back(key, count);
+        }
+    }
+
+    if (ranked.empty()) {
+        ranked.assign(data.weakKeys.begin(), data.weakKeys.end());
+    }
+
     std::sort(ranked.begin(), ranked.end(), [](const auto& lhs, const auto& rhs) {
         return lhs.second > rhs.second;
     });
     return ranked.front().first;
 }
 
-std::string ProgressManager::GetWeakFingerOfDay() const {
-    const std::string key = GetWeakKeyOfDay();
-    if (key.empty() || key == "?") return "No data";
+std::string ProgressManager::GetWeakFingerOfDay(Language language) const {
+    const std::string key = GetWeakKeyOfDay(language);
+    if (key.empty()) return "No data";
 
     if (key == "Space") return "Thumb";
     if (key == "Enter") return "Right pinky";

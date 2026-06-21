@@ -1,5 +1,6 @@
 #include "ResultsState.h"
 #include "../core/Game.h"
+#include "../core/LessonLibrary.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -118,11 +119,17 @@ void ResultsState::Draw() {
 
     std::vector<std::pair<std::string, int>> weak(mistakes.begin(), mistakes.end());
     std::sort(weak.begin(), weak.end(), [](const auto& lhs, const auto& rhs) { return lhs.second > rhs.second; });
-    const std::string weakKey = weak.empty() ? gamePtr->GetProgress().GetWeakKeyOfDay() : weak.front().first;
-    const std::string weakFinger = gamePtr->GetProgress().GetWeakFingerOfDay();
+    const std::string weakKey = weak.empty()
+        ? gamePtr->GetProgress().GetWeakKeyOfDay(language)
+        : weak.front().first;
+    const std::string weakKeyLabel = LessonLibrary::FormatKeyLabel(weakKey, language);
+    const std::string weakFinger = gamePtr->GetProgress().GetWeakFingerOfDay(language);
     DrawRectangleRounded(gamePtr->ScaleRect({ 350.0f, 370.0f, 580.0f, 86.0f }), 0.18f, 10, Fade(theme.PanelBorder, 0.18f));
     DrawTextEx(font, IsRu(language) ? u8"Заметка тренера" : "Coach note", gamePtr->ScalePoint({ 380.0f, 386.0f }), 18.0f * scale, 1.0f * scale, theme.Title);
-    DrawTextEx(font, TextFormat(IsRu(language) ? u8"Слабая клавиша: %s | Фокус: %s" : "Weak key: %s | Finger focus: %s", weakKey.c_str(), LocalFinger(weakFinger, IsRu(language))), gamePtr->ScalePoint({ 380.0f, 416.0f }), 16.0f * scale, 1.0f * scale, theme.TextDefault);
+    const std::string weakKeyLine = IsRu(language)
+        ? u8"Слабая клавиша: «" + weakKeyLabel + u8"» | Фокус: " + LocalFinger(weakFinger, true)
+        : "Weak key: " + weakKeyLabel + " | Finger focus: " + LocalFinger(weakFinger, false);
+    DrawTextEx(font, weakKeyLine.c_str(), gamePtr->ScalePoint({ 380.0f, 416.0f }), 16.0f * scale, 1.0f * scale, theme.TextDefault);
     const char* tip = accuracy < threshold ? (IsRu(language) ? u8"Миссия: повтори медленнее и держи точность выше порога." : "Mission: replay this lesson slower and keep accuracy above threshold.") : (IsRu(language) ? u8"Миссия: повтори и побей серию без потери точности." : "Mission: repeat once and beat your streak without losing accuracy.");
     DrawTextEx(font, tip, gamePtr->ScalePoint({ 380.0f, 438.0f }), 14.0f * scale, 1.0f * scale, theme.TextDefault);
 

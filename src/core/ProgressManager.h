@@ -35,8 +35,8 @@ public:
     float GetUnlockAccuracyThreshold() const;
     std::string GetDifficultyLabel() const;
     std::string GetRankLabel() const;
-    std::string GetWeakKeyOfDay() const;
-    std::string GetWeakFingerOfDay() const;
+    std::string GetWeakKeyOfDay(Language language) const;
+    std::string GetWeakFingerOfDay(Language language) const;
 
 private:
     ProgressData data;

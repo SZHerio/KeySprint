@@ -88,18 +88,29 @@ void TypingState::BuildKeyboardModel() {
     keyboardKeys.push_back({ '\n', "ENTER", 3, 2.0f, FingerType::RightPinky, HandSide::Right });
 }
 
+float MeasureCodepointRunWidth(Font font, const std::vector<int>& codepoints, size_t from, size_t to, float fontSize, float spacing) {
+    float width = 0.0f;
+    for (size_t index = from; index < to; ++index) {
+        width += MeasureTextEx(font, CodepointToUtf8(codepoints[index]).c_str(), fontSize, spacing).x;
+        if (index + 1 < to) {
+            width += spacing;
+        }
+    }
+    return width;
+}
+
 void TypingState::CalculateLayout(Font font, float fontSize) {
     const auto& target = logic.GetTargetCodepoints();
     charPositions.clear();
-    
-    const float startX = 80.0f;
+
+    const float startX = TextViewport.x + 20.0f;
+    const float maxX = TextViewport.x + TextViewport.width - 20.0f;
     const float startY = 150.0f;
-    const float maxX = Game::VirtualWidth - 80.0f;
     const float lineHeight = fontSize + 15.0f;
     float currentX = startX;
     float currentY = startY;
-    float spaceWidth = MeasureTextEx(font, " ", fontSize, UiSpacing).x;
-    
+    const float spaceWidth = MeasureTextEx(font, " ", fontSize, UiSpacing).x;
+
     size_t i = 0;
     while (i < target.size()) {
         if (target[i] == '\n') {
@@ -114,30 +125,30 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
         while (wordEnd < target.size() && target[wordEnd] != ' ' && target[wordEnd] != '\n') {
             ++wordEnd;
         }
-        
-        std::vector<int> wordCodepoints(target.begin() + i, target.begin() + wordEnd);
-        std::string word = CodepointsToUtf8(wordCodepoints);
-        float wordWidth = MeasureTextEx(font, word.c_str(), fontSize, UiSpacing).x;
-        
+
+        const float wordWidth = MeasureCodepointRunWidth(font, target, i, wordEnd, fontSize, UiSpacing);
         if (currentX > startX && currentX + wordWidth > maxX) {
             currentX = startX;
             currentY += lineHeight;
         }
-        
+
         for (size_t j = i; j < wordEnd; ++j) {
             charPositions.push_back({ currentX, currentY });
-            const std::string glyph = CodepointToUtf8(target[j]);
-            currentX += MeasureTextEx(font, glyph.c_str(), fontSize, UiSpacing).x + UiSpacing;
+            currentX += MeasureTextEx(font, CodepointToUtf8(target[j]).c_str(), fontSize, UiSpacing).x;
+            if (j + 1 < wordEnd) {
+                currentX += UiSpacing;
+            }
         }
-        
+
         if (wordEnd < target.size() && target[wordEnd] == ' ') {
             charPositions.push_back({ currentX, currentY });
             currentX += spaceWidth + UiSpacing;
+            i = wordEnd + 1;
+        } else {
+            i = wordEnd;
         }
-        
-        i = wordEnd + 1;
     }
-    
+
     charPositions.push_back({ currentX, currentY });
 }
 

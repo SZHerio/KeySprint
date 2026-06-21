@@ -12,7 +12,7 @@ public:
 private:
     Game* gamePtr = nullptr;
     int selectedOption = 0;
-    float highlightY = 232.0f;
+    float highlightY = 252.0f;
     float menuTime = 0.0f;
     std::array<const char*, 7> options = { "Practice", "Lessons", "Daily Challenge", "Composition", "Progress", "Settings", "Exit" };
     std::array<const char*, 7> descriptions = {

@@ -21,6 +21,8 @@ public:
     static std::string BuildCompositionText(Language language);
     static std::string BuildDailyChallengeText(Language language);
     static std::string GetLanguageLabel(Language language);
+    static bool IsKeyForLanguage(const std::string& key, Language language);
+    static std::string FormatKeyLabel(const std::string& key, Language language);
 
 private:
     static std::string GenerateFocusText(Language language, const std::map<std::string, int>& weakKeys);

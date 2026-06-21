@@ -85,6 +85,9 @@ void ProgressState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
     const Font font = gamePtr->GetFont();
     const ProgressManager& progress = gamePtr->GetProgress();
+    const Language language = gamePtr->GetLanguage();
+    const bool ru = IsRu(gamePtr);
+    const std::string weakKeyLabel = LessonLibrary::FormatKeyLabel(progress.GetWeakKeyOfDay(language), language);
 
     DrawRectangleRounded(gamePtr->ScaleRect({ 70.0f, 54.0f, 1140.0f, 610.0f }), 0.04f, 16, Fade(theme.Panel, 0.80f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 70.0f, 54.0f, 1140.0f, 610.0f }), 0.04f, 16, Fade(theme.PanelBorder, 0.78f));
@@ -102,7 +105,7 @@ void ProgressState::Draw() {
     DrawRectangleRounded(gamePtr->ScaleRect({ 110.0f, 325.0f, 500.0f, 250.0f }), 0.10f, 12, Fade(theme.PanelBorder, 0.16f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 110.0f, 325.0f, 500.0f, 250.0f }), 0.10f, 12, Fade(theme.PanelBorder, 0.56f));
     DrawSceneText(gamePtr, font, IsRu(gamePtr) ? u8"Слабые клавиши" : "Weak Keys", { 138.0f, 352.0f }, 24.0f, theme.Title);
-    const std::string weakFinger = progress.GetWeakFingerOfDay();
+    const std::string weakFinger = progress.GetWeakFingerOfDay(language);
     DrawSceneText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"Палец дня: %s" : "Finger of the day: %s", LocalFinger(weakFinger, IsRu(gamePtr))), { 138.0f, 382.0f }, 14.0f, theme.TextDefault);
 
     std::vector<std::pair<std::string, int>> weak(progress.GetWeakKeys().begin(), progress.GetWeakKeys().end());
@@ -117,9 +120,9 @@ void ProgressState::Draw() {
         for (int i = 0; i < count; ++i) {
             const float y = 415.0f + i * 24.0f;
             const float barWidth = std::min(260.0f, weak[i].second * 28.0f);
-            DrawSceneText(gamePtr, font, weak[i].first.c_str(), { 140.0f, y }, 18.0f, theme.TextCorrect);
+            DrawSceneText(gamePtr, font, LessonLibrary::FormatKeyLabel(weak[i].first, language).c_str(), { 140.0f, y }, 18.0f, theme.TextCorrect);
             DrawRectangleRounded(gamePtr->ScaleRect({ 205.0f, y + 5.0f, barWidth, 12.0f }), 0.4f, 8, Fade(theme.TextError, 0.60f));
-            DrawSceneText(gamePtr, font, TextFormat("%d misses", weak[i].second), { 485.0f, y }, 15.0f, theme.TextDefault);
+            DrawSceneText(gamePtr, font, TextFormat(ru ? u8"%d ошибок" : "%d misses", weak[i].second), { 485.0f, y }, 15.0f, theme.TextDefault);
         }
     }
 
@@ -132,7 +135,10 @@ void ProgressState::Draw() {
     const int russianUnlocked = std::min(progress.GetUnlockedLesson(Language::Russian) + 1, russianCount);
     DrawSceneText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"День: пройти испытание выше %.0f%%" : "Daily: finish Daily Challenge above %.0f%%", progress.GetUnlockAccuracyThreshold()), { 680.0f, 405.0f }, 16.0f, theme.TextDefault);
     DrawSceneText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"Сессия: побить серию %d" : "Session: beat streak %d", std::max(15, progress.GetBestStreak() + 5)), { 680.0f, 435.0f }, 16.0f, theme.TextDefault);
-    DrawSceneText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"Тренер: 2 минуты на клавишу %s" : "Coach: drill weak key %s for 2 minutes", progress.GetWeakKeyOfDay().c_str()), { 680.0f, 465.0f }, 16.0f, theme.TextDefault);
+    const std::string coachMission = ru
+        ? u8"Тренер: 2 минуты на клавишу «" + weakKeyLabel + u8"»"
+        : "Coach: drill weak key \"" + weakKeyLabel + "\" for 2 minutes";
+    DrawSceneText(gamePtr, font, coachMission.c_str(), { 680.0f, 465.0f }, 16.0f, theme.TextDefault);
     DrawSceneText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"Курс: EN %d/%d | RU %d/%d" : "Course: EN %d/%d | RU %d/%d", englishUnlocked, englishCount, russianUnlocked, russianCount), { 680.0f, 505.0f }, 17.0f, theme.TextCorrect);
     DrawSceneText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"Порог открытия: %.0f%% точности" : "Unlock threshold: %.0f%% accuracy", progress.GetUnlockAccuracyThreshold()), { 680.0f, 535.0f }, 15.0f, theme.TextDefault);
 }
