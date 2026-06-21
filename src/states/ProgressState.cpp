@@ -53,14 +53,15 @@ void ProgressState::Draw() {
     DrawSceneText(gamePtr, font, "Progress Stats", { 105.0f, 92.0f }, 38.0f, theme.Title);
     DrawSceneText(gamePtr, font, "ESC Menu | R Reset Progress", { 850.0f, 105.0f }, 16.0f, theme.TextDefault);
 
-    DrawMetricCard(gamePtr, font, theme, { 110.0f, 165.0f, 235.0f, 118.0f }, "Best WPM", TextFormat("%.0f", progress.GetBestWpm()), theme.Fingers.Index);
-    DrawMetricCard(gamePtr, font, theme, { 365.0f, 165.0f, 235.0f, 118.0f }, "Best Accuracy", TextFormat("%.0f%%", progress.GetBestAccuracy()), theme.Fingers.Middle);
-    DrawMetricCard(gamePtr, font, theme, { 620.0f, 165.0f, 235.0f, 118.0f }, "Lessons Done", TextFormat("%d", progress.GetCompletedLessons()), theme.Fingers.Ring);
-    DrawMetricCard(gamePtr, font, theme, { 875.0f, 165.0f, 235.0f, 118.0f }, "Current Lang", LessonLibrary::GetLanguageLabel(gamePtr->GetLanguage()).c_str(), theme.Fingers.Thumb);
+    DrawMetricCard(gamePtr, font, theme, { 110.0f, 165.0f, 235.0f, 118.0f }, "Rank", progress.GetRankLabel().c_str(), theme.Fingers.Index);
+    DrawMetricCard(gamePtr, font, theme, { 365.0f, 165.0f, 235.0f, 118.0f }, "Best WPM", TextFormat("%.0f", progress.GetBestWpm()), theme.Fingers.Middle);
+    DrawMetricCard(gamePtr, font, theme, { 620.0f, 165.0f, 235.0f, 118.0f }, "Best Streak", TextFormat("%d", progress.GetBestStreak()), theme.Fingers.Ring);
+    DrawMetricCard(gamePtr, font, theme, { 875.0f, 165.0f, 235.0f, 118.0f }, "Difficulty", progress.GetDifficultyLabel().c_str(), theme.Fingers.Thumb);
 
     DrawRectangleRounded(gamePtr->ScaleRect({ 110.0f, 325.0f, 500.0f, 250.0f }), 0.10f, 12, Fade(theme.PanelBorder, 0.16f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 110.0f, 325.0f, 500.0f, 250.0f }), 0.10f, 12, Fade(theme.PanelBorder, 0.56f));
     DrawSceneText(gamePtr, font, "Weak Keys", { 138.0f, 352.0f }, 24.0f, theme.Title);
+    DrawSceneText(gamePtr, font, TextFormat("Finger of the day: %s", progress.GetWeakFingerOfDay().c_str()), { 138.0f, 382.0f }, 14.0f, theme.TextDefault);
 
     std::vector<std::pair<std::string, int>> weak(progress.GetWeakKeys().begin(), progress.GetWeakKeys().end());
     std::sort(weak.begin(), weak.end(), [](const auto& lhs, const auto& rhs) {
@@ -72,9 +73,9 @@ void ProgressState::Draw() {
     } else {
         const int count = std::min(6, static_cast<int>(weak.size()));
         for (int i = 0; i < count; ++i) {
-            const float y = 405.0f + i * 28.0f;
+            const float y = 415.0f + i * 24.0f;
             const float barWidth = std::min(260.0f, weak[i].second * 28.0f);
-            DrawSceneText(gamePtr, font, weak[i].first.c_str(), { 140.0f, y }, 19.0f, theme.TextCorrect);
+            DrawSceneText(gamePtr, font, weak[i].first.c_str(), { 140.0f, y }, 18.0f, theme.TextCorrect);
             DrawRectangleRounded(gamePtr->ScaleRect({ 205.0f, y + 5.0f, barWidth, 12.0f }), 0.4f, 8, Fade(theme.TextError, 0.60f));
             DrawSceneText(gamePtr, font, TextFormat("%d misses", weak[i].second), { 485.0f, y }, 15.0f, theme.TextDefault);
         }
@@ -82,12 +83,14 @@ void ProgressState::Draw() {
 
     DrawRectangleRounded(gamePtr->ScaleRect({ 650.0f, 325.0f, 460.0f, 250.0f }), 0.10f, 12, Fade(theme.PanelBorder, 0.16f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 650.0f, 325.0f, 460.0f, 250.0f }), 0.10f, 12, Fade(theme.PanelBorder, 0.56f));
-    DrawSceneText(gamePtr, font, "Lesson Unlocks", { 680.0f, 352.0f }, 24.0f, theme.Title);
+    DrawSceneText(gamePtr, font, "Missions", { 680.0f, 352.0f }, 24.0f, theme.Title);
     const int englishCount = static_cast<int>(LessonLibrary::GetLessons(Language::English).size());
     const int russianCount = static_cast<int>(LessonLibrary::GetLessons(Language::Russian).size());
     const int englishUnlocked = std::min(progress.GetUnlockedLesson(Language::English) + 1, englishCount);
     const int russianUnlocked = std::min(progress.GetUnlockedLesson(Language::Russian) + 1, russianCount);
-    DrawSceneText(gamePtr, font, TextFormat("EN unlocked: %d / %d", englishUnlocked, englishCount), { 680.0f, 410.0f }, 20.0f, theme.TextDefault);
-    DrawSceneText(gamePtr, font, TextFormat("RU unlocked: %d / %d", russianUnlocked, russianCount), { 680.0f, 452.0f }, 20.0f, theme.TextDefault);
-    DrawSceneText(gamePtr, font, "Tip: accuracy above 85% unlocks the next lesson.", { 680.0f, 515.0f }, 16.0f, theme.TextDefault);
+    DrawSceneText(gamePtr, font, TextFormat("Daily: finish Daily Challenge above %.0f%%", progress.GetUnlockAccuracyThreshold()), { 680.0f, 405.0f }, 16.0f, theme.TextDefault);
+    DrawSceneText(gamePtr, font, TextFormat("Session: beat streak %d", std::max(15, progress.GetBestStreak() + 5)), { 680.0f, 435.0f }, 16.0f, theme.TextDefault);
+    DrawSceneText(gamePtr, font, TextFormat("Coach: drill weak key %s for 2 minutes", progress.GetWeakKeyOfDay().c_str()), { 680.0f, 465.0f }, 16.0f, theme.TextDefault);
+    DrawSceneText(gamePtr, font, TextFormat("Course: EN %d/%d | RU %d/%d", englishUnlocked, englishCount, russianUnlocked, russianCount), { 680.0f, 505.0f }, 17.0f, theme.TextCorrect);
+    DrawSceneText(gamePtr, font, TextFormat("Unlock threshold: %.0f%% accuracy", progress.GetUnlockAccuracyThreshold()), { 680.0f, 535.0f }, 15.0f, theme.TextDefault);
 }

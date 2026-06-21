@@ -24,6 +24,8 @@ public:
     float GetWPM() const;
     float GetAccuracy() const;
     float GetTimeElapsed() const { return timeElapsed; }
+    int GetCurrentStreak() const { return currentStreak; }
+    int GetBestStreak() const { return bestStreak; }
 
 private:
     std::vector<std::string> wordList;
@@ -37,6 +39,8 @@ private:
     float timeElapsed;
     int totalKeystrokes;
     int correctKeystrokes;
+    int currentStreak;
+    int bestStreak;
 
     void GenerateText(int wordCount);
     void ResetProgress();

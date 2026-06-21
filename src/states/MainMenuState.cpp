@@ -41,7 +41,7 @@ void DrawWrappedText(Game* game, Font font, const char* text, Vector2 position, 
 
 void MainMenuState::Init(Game* game) {
     gamePtr = game;
-    highlightY = 250.0f;
+    highlightY = 238.0f;
 }
 
 void MainMenuState::HandleInput() {
@@ -50,7 +50,7 @@ void MainMenuState::HandleInput() {
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         const Vector2 mouse = GetMousePosition();
         for (size_t i = 0; i < options.size(); ++i) {
-            const Rectangle optionRect = gamePtr->ScaleRect({ 415.0f, 250.0f + static_cast<float>(i) * 50.0f, 450.0f, 42.0f });
+            const Rectangle optionRect = gamePtr->ScaleRect({ 415.0f, 238.0f + static_cast<float>(i) * 44.0f, 450.0f, 38.0f });
             if (CheckCollisionPointRec(mouse, optionRect)) {
                 selectedOption = static_cast<int>(i);
                 activateOption = true;
@@ -69,8 +69,10 @@ void MainMenuState::HandleInput() {
         } else if (selectedOption == 1) {
             gamePtr->ChangeState(std::make_shared<LessonSelectState>());
         } else if (selectedOption == 2) {
-            gamePtr->ChangeState(std::make_shared<TypingState>(TypingMode::Composition));
+            gamePtr->ChangeState(std::make_shared<TypingState>(TypingMode::Daily));
         } else if (selectedOption == 3) {
+            gamePtr->ChangeState(std::make_shared<TypingState>(TypingMode::Composition));
+        } else if (selectedOption == 4) {
             gamePtr->ChangeState(std::make_shared<ProgressState>());
         } else {
             gamePtr->ChangeState(std::make_shared<SettingsState>());
@@ -80,7 +82,7 @@ void MainMenuState::HandleInput() {
 
 void MainMenuState::Update(float deltaTime) {
     menuTime += deltaTime;
-    const float targetY = 250.0f + selectedOption * 50.0f;
+    const float targetY = 238.0f + selectedOption * 44.0f;
     highlightY += (targetY - highlightY) * std::min(1.0f, deltaTime * 14.0f);
 }
 
@@ -97,23 +99,24 @@ void MainMenuState::Draw() {
 
     DrawTextEx(font, "KeySprint", gamePtr->ScalePoint({ 438.0f, 122.0f }), 54.0f * scale, 1.0f * scale, theme.Title);
     DrawTextEx(font, "Typing speed trainer", gamePtr->ScalePoint({ 470.0f, 185.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
-    DrawTextEx(font, TextFormat("%s | Best %.0f WPM | Lessons %d",
+    DrawTextEx(font, TextFormat("%s | %s Rank | %s | Best %.0f WPM",
         LessonLibrary::GetLanguageLabel(gamePtr->GetLanguage()).c_str(),
-        gamePtr->GetProgress().GetBestWpm(),
-        gamePtr->GetProgress().GetCompletedLessons()),
-        gamePtr->ScalePoint({ 410.0f, 218.0f }), 16.0f * scale, 1.0f * scale, theme.TextDefault);
+        gamePtr->GetProgress().GetRankLabel().c_str(),
+        gamePtr->GetProgress().GetDifficultyLabel().c_str(),
+        gamePtr->GetProgress().GetBestWpm()),
+        gamePtr->ScalePoint({ 384.0f, 215.0f }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
 
     const Rectangle highlight = gamePtr->ScaleRect({ 415.0f, highlightY, 450.0f, 42.0f });
     DrawRectangleRounded(highlight, 0.35f, 10, Fade(theme.Highlight, 0.18f));
     DrawRectangleRoundedLines(highlight, 0.35f, 10, Fade(theme.Highlight, 0.48f));
 
-    const Rectangle detail = gamePtr->ScaleRect({ 400.0f, 526.0f, 480.0f, 72.0f });
+    const Rectangle detail = gamePtr->ScaleRect({ 400.0f, 525.0f, 480.0f, 72.0f });
     DrawRectangleRounded(detail, 0.18f, 10, Fade(theme.PanelBorder, 0.18f));
     DrawRectangleRoundedLines(detail, 0.18f, 10, Fade(theme.Highlight, 0.35f));
     DrawWrappedText(gamePtr, font, descriptions[selectedOption], { 425.0f, 541.0f }, 430.0f, 15.0f, 1.0f, theme.TextDefault);
 
     for (size_t i = 0; i < options.size(); ++i) {
-        const float y = 259.0f + static_cast<float>(i) * 50.0f;
+        const float y = 247.0f + static_cast<float>(i) * 44.0f;
         const Color color = selectedOption == static_cast<int>(i) ? theme.TextCorrect : theme.TextDefault;
         const float dotPulse = selectedOption == static_cast<int>(i) ? glow : 0.15f;
         DrawCircleV(gamePtr->ScalePoint({ 440.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? theme.Highlight : Fade(theme.TextDefault, 0.35f));

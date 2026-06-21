@@ -1,4 +1,5 @@
 #include "TypingLogic.h"
+#include <algorithm>
 #include <raylib.h>
 #include <random>
 #include "AudioManager.h"
@@ -50,6 +51,8 @@ void TypingLogic::ResetProgress() {
     timeElapsed = 0.0f;
     totalKeystrokes = 0;
     correctKeystrokes = 0;
+    currentStreak = 0;
+    bestStreak = 0;
 }
 
 void TypingLogic::RebuildTypedText() {
@@ -67,8 +70,11 @@ void TypingLogic::AppendInputCodepoint(int codepoint) {
     totalKeystrokes++;
     if (normalizedKey == expected) {
         correctKeystrokes++;
+        currentStreak++;
+        bestStreak = std::max(bestStreak, currentStreak);
         AudioManager::PlayClick();
     } else {
+        currentStreak = 0;
         mistakeCounts[expected]++;
         AudioManager::PlayError();
     }
@@ -127,7 +133,13 @@ void TypingLogic::HandleInput() {
 std::map<std::string, int> TypingLogic::GetMistakeCountsUtf8() const {
     std::map<std::string, int> result;
     for (const auto& [codepoint, count] : mistakeCounts) {
-        result[CodepointToUtf8(codepoint)] = count;
+        if (codepoint == '\n') {
+            result["Enter"] = count;
+        } else if (codepoint == ' ') {
+            result["Space"] = count;
+        } else {
+            result[CodepointToUtf8(codepoint)] = count;
+        }
     }
     return result;
 }

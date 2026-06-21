@@ -19,6 +19,7 @@ public:
     static Lesson BuildAdaptiveLesson(Language language, int lessonId, const std::map<std::string, int>& weakKeys);
     static std::string BuildPracticeText(Language language);
     static std::string BuildCompositionText(Language language);
+    static std::string BuildDailyChallengeText(Language language);
     static std::string GetLanguageLabel(Language language);
 
 private:

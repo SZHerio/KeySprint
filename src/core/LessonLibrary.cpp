@@ -192,6 +192,12 @@ std::string LessonLibrary::BuildCompositionText(Language language) {
     return JoinSample(paragraphs, 4, "\n");
 }
 
+std::string LessonLibrary::BuildDailyChallengeText(Language language) {
+    const auto& practice = language == Language::Russian ? RussianPracticeSentences : EnglishPracticeSentences;
+    const auto& paragraphs = language == Language::Russian ? RussianCompositionParagraphs : EnglishCompositionParagraphs;
+    return JoinSample(practice, 4, ". ") + ".\n" + JoinSample(paragraphs, 1, "\n");
+}
+
 std::string LessonLibrary::GetLanguageLabel(Language language) {
     return language == Language::Russian ? "RU" : "EN";
 }

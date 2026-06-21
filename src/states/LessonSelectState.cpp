@@ -109,8 +109,16 @@ void LessonSelectState::Draw() {
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 55.0f, 42.0f, 1170.0f, 635.0f }), 0.04f, 16, Fade(theme.PanelBorder, 0.80f));
 
     DrawSceneText(gamePtr, font, "Lesson Select", { 90.0f, 72.0f }, 38.0f, theme.Title);
-    DrawSceneText(gamePtr, font, TextFormat("%s layout | unlocked through lesson %d", LessonLibrary::GetLanguageLabel(language).c_str(), unlocked + 1), { 90.0f, 118.0f }, 18.0f, theme.TextDefault);
+    DrawSceneText(gamePtr, font, TextFormat("%s course map | unlocked through lesson %d", LessonLibrary::GetLanguageLabel(language).c_str(), unlocked + 1), { 90.0f, 118.0f }, 18.0f, theme.TextDefault);
     DrawSceneText(gamePtr, font, "ESC Menu | Arrows/WASD Move | Enter Start", { 760.0f, 92.0f }, 16.0f, theme.TextDefault);
+
+    for (int i = 0; i + 1 < static_cast<int>(lessons.size()); ++i) {
+        const Rectangle from = GetCardRect(i);
+        const Rectangle to = GetCardRect(i + 1);
+        const Vector2 start = gamePtr->ScalePoint({ from.x + from.width * 0.5f, from.y + from.height * 0.5f });
+        const Vector2 end = gamePtr->ScalePoint({ to.x + to.width * 0.5f, to.y + to.height * 0.5f });
+        DrawLineEx(start, end, 3.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, i < unlocked ? 0.45f : 0.18f));
+    }
 
     DrawRectangleRounded(gamePtr->ScaleRect({ cursorX - 5.0f, cursorY - 5.0f, 530.0f, 96.0f }), 0.12f, 12, Fade(theme.Highlight, 0.16f + pulse * 0.06f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ cursorX - 5.0f, cursorY - 5.0f, 530.0f, 96.0f }), 0.12f, 12, Fade(theme.Highlight, 0.55f));

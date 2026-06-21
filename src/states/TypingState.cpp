@@ -160,6 +160,11 @@ void TypingState::Init(Game* game) {
         lessonId = -1;
         lessonTitle = "Composition";
         lessonDescription = "Long-form endurance typing";
+    } else if (mode == TypingMode::Daily) {
+        logic.StartCustomTest(LessonLibrary::BuildDailyChallengeText(language));
+        lessonId = -1;
+        lessonTitle = "Daily Challenge";
+        lessonDescription = "One focused challenge for today";
     } else {
         logic.StartCustomTest(LessonLibrary::BuildPracticeText(language));
         lessonId = -1;
@@ -211,6 +216,7 @@ void TypingState::Update(float deltaTime) {
             language,
             lessonId,
             lessonTitle,
+            logic.GetBestStreak(),
             logic.GetMistakeCountsUtf8()
         ));
     }
@@ -226,6 +232,8 @@ const char* TypingState::GetModeTitle() const {
             return "Tutorial Mode";
         case TypingMode::Composition:
             return "Composition Mode";
+        case TypingMode::Daily:
+            return "Daily Challenge";
         case TypingMode::Practice:
         default:
             return "Practice Mode";
@@ -501,6 +509,7 @@ void TypingState::Draw() {
     // Live Metrics
     DrawTextScene(gamePtr, font, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, UiSpacing, theme.TextCorrect);
     DrawTextScene(gamePtr, font, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, UiSpacing, theme.TextCorrect);
+    DrawTextScene(gamePtr, font, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, UiSpacing, logic.GetCurrentStreak() > 20 ? theme.Highlight : theme.TextDefault);
 
     DrawRoundedScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.Panel, 0.66f));
     DrawRoundedLinesScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.PanelBorder, 0.70f));

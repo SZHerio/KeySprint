@@ -14,6 +14,7 @@ public:
         Language language = Language::English,
         int lessonId = -1,
         const std::string& lessonTitle = "",
+        int bestStreak = 0,
         const std::map<std::string, int>& mistakes = {}
     );
 
@@ -30,6 +31,7 @@ private:
     Language language;
     int lessonId;
     std::string lessonTitle;
+    int bestStreak;
     std::map<std::string, int> mistakes;
     bool recorded = false;
 };

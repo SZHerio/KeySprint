@@ -3,5 +3,6 @@
 enum class TypingMode {
     Practice,
     Tutorial,
-    Composition
+    Composition,
+    Daily
 };
