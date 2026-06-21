@@ -85,11 +85,9 @@ void ProgressState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
     const Font font = gamePtr->GetFont();
     const ProgressManager& progress = gamePtr->GetProgress();
-    const float pulse = (std::sin(animTime * 3.0f) + 1.0f) * 0.5f;
 
     DrawRectangleRounded(gamePtr->ScaleRect({ 70.0f, 54.0f, 1140.0f, 610.0f }), 0.04f, 16, Fade(theme.Panel, 0.80f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 70.0f, 54.0f, 1140.0f, 610.0f }), 0.04f, 16, Fade(theme.PanelBorder, 0.78f));
-    DrawRectangleRounded(gamePtr->ScaleRect({ 94.0f, 82.0f, 1092.0f, 555.0f }), 0.04f, 16, Fade(theme.Highlight, 0.03f + pulse * 0.03f));
 
     DrawSceneText(gamePtr, font, IsRu(gamePtr) ? u8"Статистика" : "Progress Stats", { 105.0f, 92.0f }, 38.0f, theme.Title);
     DrawSceneText(gamePtr, font, IsRu(gamePtr) ? u8"ESC Меню | R Сброс прогресса" : "ESC Menu | R Reset Progress", { 800.0f, 105.0f }, 16.0f, theme.TextDefault);

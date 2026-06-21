@@ -25,6 +25,10 @@ add_executable(${PROJECT_NAME}
     src/states/ResultsState.cpp
 )
 
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+endif()
+
 # Copy assets folder to output directory
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

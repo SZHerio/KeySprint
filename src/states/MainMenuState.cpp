@@ -137,7 +137,6 @@ void MainMenuState::Draw() {
     const Rectangle card = gamePtr->ScaleRect({ 310.0f, 70.0f, 660.0f, 585.0f });
     DrawRectangleRounded(card, 0.09f, 16, Fade(theme.Panel, 0.82f));
     DrawRectangleRoundedLines(card, 0.09f, 16, Fade(theme.PanelBorder, 0.80f));
-    DrawRectangleRounded(gamePtr->ScaleRect({ 335.0f, 95.0f, 610.0f, 535.0f }), 0.08f, 16, Fade(theme.Highlight, 0.04f + glow * 0.035f));
 
     DrawTextEx(font, "KeySprint", gamePtr->ScalePoint({ 438.0f, 122.0f }), 54.0f * scale, 1.0f * scale, theme.Title);
     DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Тренажер скорости печати" : "Typing speed trainer", gamePtr->ScalePoint({ 414.0f, 178.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);

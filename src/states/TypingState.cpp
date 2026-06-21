@@ -10,9 +10,9 @@
 #include "ResultsState.h"
 
 namespace {
-constexpr float TextFontSize = 30.0f;
+constexpr float TextFontSize = 27.0f;
 constexpr float UiSpacing = 1.0f;
-constexpr Rectangle TextViewport = { 60.0f, 130.0f, 1160.0f, 190.0f };
+constexpr Rectangle TextViewport = { 60.0f, 128.0f, 1160.0f, 202.0f };
 
 Color FadeColor(Color color, float alpha) {
     color.a = static_cast<unsigned char>(std::clamp(alpha, 0.0f, 1.0f) * 255.0f);
@@ -84,7 +84,7 @@ void TypingState::BuildKeyboardModel() {
         addRow(2, "zxcvbnm");
     }
 
-        keyboardKeys.push_back({ ' ', language == Language::Russian ? u8"ПРОБЕЛ" : "SPACE", 3, 5.2f, FingerType::RightThumb, HandSide::Both });
+    keyboardKeys.push_back({ ' ', language == Language::Russian ? u8"ПРОБЕЛ" : "SPACE", 3, 5.2f, FingerType::RightThumb, HandSide::Both });
     keyboardKeys.push_back({ '\n', "ENTER", 3, 2.0f, FingerType::RightPinky, HandSide::Right });
 }
 
@@ -95,7 +95,7 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
     const float startX = 80.0f;
     const float startY = 150.0f;
     const float maxX = Game::VirtualWidth - 80.0f;
-    const float lineHeight = fontSize + 18.0f;
+    const float lineHeight = fontSize + 15.0f;
     float currentX = startX;
     float currentY = startY;
     float spaceWidth = MeasureTextEx(font, " ", fontSize, UiSpacing).x;
@@ -205,7 +205,7 @@ void TypingState::Update(float deltaTime) {
         caretY += (targetPos.y - caretY) * 20.0f * deltaTime;
     }
 
-    const float targetScroll = std::max(0.0f, caretY - (TextViewport.y + TextViewport.height - 58.0f));
+    const float targetScroll = std::max(0.0f, caretY - (TextViewport.y + TextViewport.height - 62.0f));
     textScrollY += (targetScroll - textScrollY) * std::min(1.0f, deltaTime * 10.0f);
 
     if (logic.IsFinished()) {
@@ -223,7 +223,7 @@ void TypingState::Update(float deltaTime) {
 }
 
 float TypingState::GetTextFontSize() const {
-    return mode == TypingMode::Composition ? 23.0f : TextFontSize;
+    return mode == TypingMode::Composition ? 22.0f : TextFontSize;
 }
 
 const char* TypingState::GetModeTitle() const {
@@ -354,12 +354,12 @@ Color TypingState::GetFingerColor(FingerType finger, const Theme& theme) const {
 
 void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
     const int nextChar = GetNextExpectedChar();
-    const float keySize = 36.0f;
-    const float gap = 6.0f;
-    const float startY = 528.0f;
+    const float keySize = 34.0f;
+    const float gap = 5.0f;
+    const float startY = 536.0f;
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
 
-    DrawTextScene(gamePtr, font, language == Language::Russian ? u8"Цвет клавиши = нужный палец" : "Keyboard color = finger to use", { 80.0f, 504.0f }, 15.0f, UiSpacing, theme.TextDefault);
+    DrawTextScene(gamePtr, font, language == Language::Russian ? u8"Цвет клавиши = нужный палец" : "Keyboard color = finger to use", { 80.0f, 512.0f }, 13.0f, UiSpacing, theme.TextDefault);
 
     for (int row = 0; row <= 3; ++row) {
         std::vector<const KeyLayout*> rowKeys;
@@ -392,7 +392,7 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
             DrawRoundedScene(gamePtr, keyRect, 0.22f, 8, FadeColor(fingerColor, isNext ? 0.80f : 0.34f));
             DrawRoundedLinesScene(gamePtr, keyRect, 0.22f, 8, FadeColor(isNext ? theme.TextCorrect : theme.PanelBorder, isNext ? 0.95f : 0.60f));
 
-            const float labelSize = key->key == ' ' ? 12.0f : (language == Language::Russian ? 15.0f : 16.0f);
+            const float labelSize = key->key == ' ' ? 11.0f : (language == Language::Russian ? 14.0f : 15.0f);
             const Vector2 textSize = MeasureTextEx(font, key->label.c_str(), labelSize, UiSpacing);
             DrawTextScene(
                 gamePtr,
@@ -412,7 +412,7 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
 void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
     const FingerType activeFinger = GetFingerForKey(GetNextExpectedChar());
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
-    const float handYOffset = -20.0f;
+    const float handYOffset = -28.0f;
 
     auto drawFinger = [&](Rectangle rect, FingerType finger, const char* label) {
         const bool active = activeFinger == finger;
@@ -425,32 +425,32 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
         DrawRoundedScene(gamePtr, rect, 0.45f, 12, FadeColor(color, active ? 0.88f : 0.46f));
         DrawRoundedLinesScene(gamePtr, rect, 0.45f, 12, FadeColor(active ? theme.TextCorrect : theme.PanelBorder, active ? 0.95f : 0.45f));
 
-        const Vector2 labelSize = MeasureTextEx(font, label, 12.0f, UiSpacing);
+        const Vector2 labelSize = MeasureTextEx(font, label, 10.0f, UiSpacing);
         const bool thumb = rect.height <= 35.0f;
-        const float labelY = thumb ? rect.y + (rect.height - 12.0f) * 0.5f : rect.y + rect.height + 5.0f;
-        DrawTextScene(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, labelY }, 12.0f, UiSpacing, thumb ? theme.TextCorrect : theme.TextDefault);
+        const float labelY = thumb ? rect.y + (rect.height - 10.0f) * 0.5f : 503.0f + handYOffset;
+        DrawTextScene(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, labelY }, 10.0f, UiSpacing, thumb ? theme.TextCorrect : FadeColor(theme.TextDefault, 0.72f));
     };
 
     auto drawHand = [&](float x, const char* title, bool left) {
-        DrawTextScene(gamePtr, font, title, { x + 56.0f, 384.0f + handYOffset }, 14.0f, UiSpacing, theme.TextDefault);
-        DrawRoundedScene(gamePtr, { x + 25.0f, 455.0f + handYOffset, 190.0f, 66.0f }, 0.32f, 12, FadeColor(theme.PanelBorder, 0.28f));
+        DrawTextScene(gamePtr, font, title, { x + 56.0f, 374.0f + handYOffset }, 14.0f, UiSpacing, theme.TextDefault);
+        DrawRoundedScene(gamePtr, { x + 25.0f, 457.0f + handYOffset, 190.0f, 62.0f }, 0.32f, 12, FadeColor(theme.PanelBorder, 0.24f));
 
         if (left) {
             drawFinger({ x + 15.0f, 421.0f + handYOffset, 28.0f, 62.0f }, FingerType::LeftPinky, "P");
             drawFinger({ x + 56.0f, 410.0f + handYOffset, 30.0f, 74.0f }, FingerType::LeftRing, "R");
             drawFinger({ x + 99.0f, 402.0f + handYOffset, 30.0f, 82.0f }, FingerType::LeftMiddle, "M");
             drawFinger({ x + 142.0f, 414.0f + handYOffset, 32.0f, 70.0f }, FingerType::LeftIndex, "I");
-            drawFinger({ x + 166.0f, 486.0f + handYOffset, 62.0f, 30.0f }, FingerType::LeftThumb, "T");
+            drawFinger({ x + 166.0f, 492.0f + handYOffset, 62.0f, 28.0f }, FingerType::LeftThumb, "T");
         } else {
             drawFinger({ x + 178.0f, 421.0f + handYOffset, 28.0f, 62.0f }, FingerType::RightPinky, "P");
             drawFinger({ x + 135.0f, 410.0f + handYOffset, 30.0f, 74.0f }, FingerType::RightRing, "R");
             drawFinger({ x + 92.0f, 402.0f + handYOffset, 30.0f, 82.0f }, FingerType::RightMiddle, "M");
             drawFinger({ x + 47.0f, 414.0f + handYOffset, 32.0f, 70.0f }, FingerType::RightIndex, "I");
-            drawFinger({ x + 0.0f, 486.0f + handYOffset, 62.0f, 30.0f }, FingerType::RightThumb, "T");
+            drawFinger({ x + 0.0f, 492.0f + handYOffset, 62.0f, 28.0f }, FingerType::RightThumb, "T");
         }
     };
 
-    DrawTextScene(gamePtr, font, language == Language::Russian ? u8"Подсказка пальцев" : "Finger guide", { 80.0f, 365.0f }, 20.0f, UiSpacing, theme.Title);
+    DrawTextScene(gamePtr, font, language == Language::Russian ? u8"Подсказка пальцев" : "Finger guide", { 80.0f, 356.0f }, 19.0f, UiSpacing, theme.Title);
     drawHand(350.0f, language == Language::Russian ? u8"ЛЕВАЯ РУКА" : "LEFT HAND", true);
     drawHand(705.0f, language == Language::Russian ? u8"ПРАВАЯ РУКА" : "RIGHT HAND", false);
 }
@@ -513,8 +513,8 @@ void TypingState::Draw() {
     DrawTextScene(gamePtr, font, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, UiSpacing, theme.TextCorrect);
     DrawTextScene(gamePtr, font, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, UiSpacing, logic.GetCurrentStreak() > 20 ? theme.Highlight : theme.TextDefault);
 
-    DrawRoundedScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.Panel, 0.66f));
-    DrawRoundedLinesScene(gamePtr, { 60.0f, 342.0f, 1160.0f, 362.0f }, 0.12f, 12, FadeColor(theme.PanelBorder, 0.70f));
+    DrawRoundedScene(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, FadeColor(theme.Panel, 0.66f));
+    DrawRoundedLinesScene(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, FadeColor(theme.PanelBorder, 0.70f));
     DrawHandsGuide(font, theme);
     DrawVirtualKeyboard(font, theme);
 }

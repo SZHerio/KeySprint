@@ -122,9 +122,16 @@ void LessonSelectState::Draw() {
     for (int i = 0; i + 1 < static_cast<int>(lessons.size()); ++i) {
         const Rectangle from = GetCardRect(i);
         const Rectangle to = GetCardRect(i + 1);
-        const Vector2 start = gamePtr->ScalePoint({ from.x + from.width * 0.5f, from.y + from.height * 0.5f });
-        const Vector2 end = gamePtr->ScalePoint({ to.x + to.width * 0.5f, to.y + to.height * 0.5f });
-        DrawLineEx(start, end, 3.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, i < unlocked ? 0.45f : 0.18f));
+        const bool sameRow = static_cast<int>(from.y) == static_cast<int>(to.y);
+        const Vector2 start = sameRow
+            ? gamePtr->ScalePoint({ from.x + from.width + 10.0f, from.y + from.height * 0.5f })
+            : gamePtr->ScalePoint({ from.x + from.width - 28.0f, from.y + from.height + 8.0f });
+        const Vector2 end = sameRow
+            ? gamePtr->ScalePoint({ to.x - 10.0f, to.y + to.height * 0.5f })
+            : gamePtr->ScalePoint({ to.x + 28.0f, to.y - 8.0f });
+        DrawLineEx(start, end, 2.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, i < unlocked ? 0.42f : 0.16f));
+        DrawCircleV(start, 3.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, 0.45f));
+        DrawCircleV(end, 3.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, 0.45f));
     }
 
     DrawRectangleRounded(gamePtr->ScaleRect({ cursorX - 5.0f, cursorY - 5.0f, 530.0f, 96.0f }), 0.12f, 12, Fade(theme.Highlight, 0.16f + pulse * 0.06f));

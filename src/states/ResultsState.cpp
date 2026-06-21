@@ -71,12 +71,12 @@ void ResultsState::Init(Game* game) {
 void ResultsState::HandleInput() {
     const Vector2 mouse = GetMousePosition();
     const bool retryClicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 500.0f, 420.0f, 36.0f }));
+        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 500.0f, 420.0f, 40.0f }));
     const bool menuClicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 545.0f, 420.0f, 36.0f }));
+        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 548.0f, 420.0f, 40.0f }));
     const bool buttonHover =
-        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 500.0f, 420.0f, 36.0f })) ||
-        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 545.0f, 420.0f, 36.0f }));
+        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 500.0f, 420.0f, 40.0f })) ||
+        CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 548.0f, 420.0f, 40.0f }));
     SetMouseCursor(buttonHover ? MOUSE_CURSOR_POINTING_HAND : MOUSE_CURSOR_DEFAULT);
 
     if (IsKeyPressed(KEY_ENTER) || retryClicked) {
@@ -93,6 +93,7 @@ void ResultsState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
     Font font = gamePtr->GetFont();
     const float scale = gamePtr->GetUiScale();
+    const Vector2 mouse = GetMousePosition();
 
     const Rectangle card = gamePtr->ScaleRect({ 305.0f, 88.0f, 670.0f, 540.0f });
     DrawRectangleRounded(card, 0.10f, 12, Fade(theme.Panel, 0.78f));
@@ -125,8 +126,18 @@ void ResultsState::Draw() {
     const char* tip = accuracy < threshold ? (IsRu(language) ? u8"Миссия: повтори медленнее и держи точность выше порога." : "Mission: replay this lesson slower and keep accuracy above threshold.") : (IsRu(language) ? u8"Миссия: повтори и побей серию без потери точности." : "Mission: repeat once and beat your streak without losing accuracy.");
     DrawTextEx(font, tip, gamePtr->ScalePoint({ 380.0f, 438.0f }), 14.0f * scale, 1.0f * scale, theme.TextDefault);
 
-    DrawRectangleRounded(gamePtr->ScaleRect({ 430.0f, 500.0f, 420.0f, 36.0f }), 0.25f, 8, Fade(theme.Highlight, 0.16f));
+    const Rectangle retryRect = { 430.0f, 500.0f, 420.0f, 40.0f };
+    const Rectangle menuRect = { 430.0f, 548.0f, 420.0f, 40.0f };
+    const bool retryHover = CheckCollisionPointRec(mouse, gamePtr->ScaleRect(retryRect));
+    const bool menuHover = CheckCollisionPointRec(mouse, gamePtr->ScaleRect(menuRect));
+
+    DrawRectangleRounded(gamePtr->ScaleRect(retryRect), 0.25f, 8, Fade(theme.Highlight, retryHover ? 0.24f : 0.14f));
+    DrawRectangleRoundedLines(gamePtr->ScaleRect(retryRect), 0.25f, 8, Fade(theme.Highlight, retryHover ? 0.62f : 0.28f));
+    DrawCircleV(gamePtr->ScalePoint({ retryRect.x + 18.0f, retryRect.y + 20.0f }), (retryHover ? 6.0f : 4.0f) * scale, retryHover ? theme.Highlight : Fade(theme.TextDefault, 0.45f));
     DrawTextEx(font, IsRu(language) ? u8"ENTER / Клик: повторить" : "ENTER / Click to Try Again", gamePtr->ScalePoint({ 455.0f, 510.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
-    DrawRectangleRounded(gamePtr->ScaleRect({ 430.0f, 545.0f, 420.0f, 36.0f }), 0.25f, 8, Fade(theme.PanelBorder, 0.22f));
-    DrawTextEx(font, IsRu(language) ? u8"ESC / Клик: в меню" : "ESC / Click to return to Menu", gamePtr->ScalePoint({ 448.0f, 554.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
+
+    DrawRectangleRounded(gamePtr->ScaleRect(menuRect), 0.25f, 8, Fade(menuHover ? theme.Highlight : theme.PanelBorder, menuHover ? 0.20f : 0.18f));
+    DrawRectangleRoundedLines(gamePtr->ScaleRect(menuRect), 0.25f, 8, Fade(menuHover ? theme.Highlight : theme.PanelBorder, menuHover ? 0.56f : 0.25f));
+    DrawCircleV(gamePtr->ScalePoint({ menuRect.x + 18.0f, menuRect.y + 20.0f }), (menuHover ? 6.0f : 4.0f) * scale, menuHover ? theme.Highlight : Fade(theme.TextDefault, 0.45f));
+    DrawTextEx(font, IsRu(language) ? u8"ESC / Клик: в меню" : "ESC / Click to return to Menu", gamePtr->ScalePoint({ 455.0f, 558.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
 }
