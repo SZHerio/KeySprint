@@ -91,7 +91,7 @@ void MainMenuState::HandleInput() {
 
     const Vector2 mouse = GetMousePosition();
     for (size_t i = 0; i < options.size(); ++i) {
-        const Rectangle optionRect = gamePtr->ScaleRect({ 415.0f, 238.0f + static_cast<float>(i) * 44.0f, 450.0f, 38.0f });
+        const Rectangle optionRect = gamePtr->ScaleRect({ 390.0f, 238.0f + static_cast<float>(i) * 44.0f, 500.0f, 38.0f });
         if (CheckCollisionPointRec(mouse, optionRect)) {
             selectedOption = static_cast<int>(i);
             hoveringOption = true;
@@ -125,7 +125,7 @@ void MainMenuState::HandleInput() {
 void MainMenuState::Update(float deltaTime) {
     menuTime += deltaTime;
     const float targetY = 238.0f + selectedOption * 44.0f;
-    highlightY += (targetY - highlightY) * std::min(1.0f, deltaTime * 14.0f);
+    highlightY = targetY;
 }
 
 void MainMenuState::Draw() {
@@ -150,22 +150,22 @@ void MainMenuState::Draw() {
         gamePtr->GetProgress().GetBestWpm()),
         gamePtr->ScalePoint({ 384.0f, 215.0f }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
 
-    const Rectangle highlight = gamePtr->ScaleRect({ 415.0f, highlightY, 450.0f, 42.0f });
+    const Rectangle highlight = gamePtr->ScaleRect({ 390.0f, highlightY, 500.0f, 42.0f });
     DrawRectangleRounded(highlight, 0.35f, 10, Fade(theme.Highlight, 0.18f));
     DrawRectangleRoundedLines(highlight, 0.35f, 10, Fade(theme.Highlight, 0.48f));
 
-    const Rectangle detail = gamePtr->ScaleRect({ 400.0f, 525.0f, 480.0f, 72.0f });
+    const Rectangle detail = gamePtr->ScaleRect({ 390.0f, 525.0f, 500.0f, 72.0f });
     DrawRectangleRounded(detail, 0.18f, 10, Fade(theme.PanelBorder, 0.18f));
     DrawRectangleRoundedLines(detail, 0.18f, 10, Fade(theme.Highlight, 0.35f));
-    DrawWrappedText(gamePtr, font, LocalizedDescription(selectedOption, gamePtr->GetLanguage()), { 425.0f, 541.0f }, 430.0f, 15.0f, 1.0f, theme.TextDefault);
+    DrawWrappedText(gamePtr, font, LocalizedDescription(selectedOption, gamePtr->GetLanguage()), { 420.0f, 541.0f }, 440.0f, 15.0f, 1.0f, theme.TextDefault);
 
     for (size_t i = 0; i < options.size(); ++i) {
         const float y = 247.0f + static_cast<float>(i) * 44.0f;
         const Color color = selectedOption == static_cast<int>(i) ? theme.TextCorrect : theme.TextDefault;
         const float dotPulse = selectedOption == static_cast<int>(i) ? glow : 0.15f;
-        DrawCircleV(gamePtr->ScalePoint({ 440.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? theme.Highlight : Fade(theme.TextDefault, 0.35f));
-        DrawTextEx(font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), gamePtr->ScalePoint({ 470.0f, y }), 23.0f * scale, 1.0f * scale, color);
+        DrawCircleV(gamePtr->ScalePoint({ 420.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? theme.Highlight : Fade(theme.TextDefault, 0.35f));
+        DrawTextEx(font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), gamePtr->ScalePoint({ 455.0f, y }), 23.0f * scale, 1.0f * scale, color);
     }
 
-    DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Стрелки/WASD, Enter или мышь" : "Use Up/Down, Enter or Mouse", gamePtr->ScalePoint({ 430.0f, 610.0f }), 17.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Стрелки/WASD, Enter или мышь" : "Use Up/Down, Enter or Mouse", gamePtr->ScalePoint({ 420.0f, 610.0f }), 17.0f * scale, 1.0f * scale, theme.TextDefault);
 }

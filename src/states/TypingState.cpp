@@ -412,7 +412,7 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
 void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
     const FingerType activeFinger = GetFingerForKey(GetNextExpectedChar());
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
-    const float handYOffset = -28.0f;
+    const float handYOffset = -8.0f;
 
     auto drawFinger = [&](Rectangle rect, FingerType finger, const char* label) {
         const bool active = activeFinger == finger;
@@ -440,13 +440,13 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
             drawFinger({ x + 56.0f, 410.0f + handYOffset, 30.0f, 74.0f }, FingerType::LeftRing, "R");
             drawFinger({ x + 99.0f, 402.0f + handYOffset, 30.0f, 82.0f }, FingerType::LeftMiddle, "M");
             drawFinger({ x + 142.0f, 414.0f + handYOffset, 32.0f, 70.0f }, FingerType::LeftIndex, "I");
-            drawFinger({ x + 166.0f, 492.0f + handYOffset, 62.0f, 28.0f }, FingerType::LeftThumb, "T");
+            drawFinger({ x + 166.0f, 508.0f + handYOffset, 62.0f, 28.0f }, FingerType::LeftThumb, "T");
         } else {
             drawFinger({ x + 178.0f, 421.0f + handYOffset, 28.0f, 62.0f }, FingerType::RightPinky, "P");
             drawFinger({ x + 135.0f, 410.0f + handYOffset, 30.0f, 74.0f }, FingerType::RightRing, "R");
             drawFinger({ x + 92.0f, 402.0f + handYOffset, 30.0f, 82.0f }, FingerType::RightMiddle, "M");
             drawFinger({ x + 47.0f, 414.0f + handYOffset, 32.0f, 70.0f }, FingerType::RightIndex, "I");
-            drawFinger({ x + 0.0f, 492.0f + handYOffset, 62.0f, 28.0f }, FingerType::RightThumb, "T");
+            drawFinger({ x + 0.0f, 508.0f + handYOffset, 62.0f, 28.0f }, FingerType::RightThumb, "T");
         }
     };
 
@@ -471,13 +471,6 @@ void TypingState::Draw() {
     BeginScissorScene(gamePtr, TextViewport);
     for (size_t i = 0; i < target.size(); ++i) {
         if (target[i] == '\n') {
-            const bool isCurrentNewline = i == typed.size();
-            const bool isTyped = i < typed.size();
-            const Color enterColor = isTyped
-                ? (typed[i] == '\n' ? theme.TextCorrect : theme.TextError)
-                : (isCurrentNewline ? theme.Highlight : FadeColor(theme.TextDefault, 0.45f));
-
-            DrawTextScene(gamePtr, font, "ENTER", { charPositions[i].x, charPositions[i].y - textScrollY }, 15.0f, UiSpacing, enterColor);
             continue;
         }
 
