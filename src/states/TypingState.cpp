@@ -75,13 +75,13 @@ void TypingState::BuildKeyboardModel() {
     };
 
     if (language == Language::Russian) {
-        addRow(0, u8"йцукенгшщзх");
+        addRow(0, u8"йцукенгшщзхъ");
         addRow(1, u8"фывапролджэ");
-        addRow(2, u8"ячсмитьбю");
+        addRow(2, u8"ячсмитьбю,.-");
     } else {
-        addRow(0, "qwertyuiop");
+        addRow(0, "qwertyuiop-");
         addRow(1, "asdfghjkl;");
-        addRow(2, "zxcvbnm");
+        addRow(2, "zxcvbnm,.");
     }
 
     keyboardKeys.push_back({ ' ', language == Language::Russian ? u8"ПРОБЕЛ" : "SPACE", 3, 5.2f, FingerType::RightThumb, HandSide::Both });
@@ -277,6 +277,8 @@ FingerType TypingState::GetFingerForKey(int key) const {
         case 'c':
         case 0x0441: // с
             return FingerType::LeftMiddle;
+        case ',':
+            return FingerType::RightMiddle;
         case 'r':
         case 0x043a: // к
         case 't':
@@ -314,12 +316,14 @@ FingerType TypingState::GetFingerForKey(int key) const {
         case 0x0449: // щ
         case 'l':
         case 0x0434: // д
+        case '.':
             return FingerType::RightRing;
         case 'p':
         case 0x0437: // з
         case 0x0445: // х
         case 0x044a: // ъ
         case ';':
+        case '-':
         case 0x0436: // ж
         case 0x044d: // э
         case 0x0431: // б
