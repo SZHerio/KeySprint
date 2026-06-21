@@ -56,6 +56,15 @@ std::string RandomizeDrillText(const std::string& text) {
     return out.str();
 }
 
+bool IsKeyForLanguage(const std::string& key, Language language) {
+    if (key == "Space" || key == "Enter" || key == "?") {
+        return false;
+    }
+
+    const bool asciiKey = key.size() == 1 && static_cast<unsigned char>(key[0]) < 128;
+    return language == Language::English ? asciiKey : !asciiKey;
+}
+
 const std::vector<Lesson> EnglishLessons = {
     { 0, "Home Row", "Master ASDF and JKL; first.", "asdf jkl; asdf jkl; fj fj dk dk sl sl aa ss dd ff jj kk ll ;;" },
     { 1, "Left Alternation", "Alternate left-hand fingers without rushing.", "as sa ad da af fa sd ds df fd asdf fdsa asdf fdsa" },
@@ -173,7 +182,7 @@ Lesson LessonLibrary::BuildAdaptiveLesson(Language language, int lessonId, const
     Lesson lesson = GetLesson(language, lessonId);
     lesson.text = RandomizeDrillText(lesson.text);
 
-    const std::string focusText = GenerateFocusText(weakKeys);
+    const std::string focusText = GenerateFocusText(language, weakKeys);
     if (!focusText.empty()) {
         lesson.title += " + Focus";
         lesson.description = "Adaptive drill added for your weakest keys.";
@@ -202,12 +211,22 @@ std::string LessonLibrary::GetLanguageLabel(Language language) {
     return language == Language::Russian ? "RU" : "EN";
 }
 
-std::string LessonLibrary::GenerateFocusText(const std::map<std::string, int>& weakKeys) {
+std::string LessonLibrary::GenerateFocusText(Language language, const std::map<std::string, int>& weakKeys) {
     if (weakKeys.empty()) {
         return "";
     }
 
-    std::vector<std::pair<std::string, int>> ranked(weakKeys.begin(), weakKeys.end());
+    std::vector<std::pair<std::string, int>> ranked;
+    for (const auto& [key, count] : weakKeys) {
+        if (IsKeyForLanguage(key, language)) {
+            ranked.push_back({ key, count });
+        }
+    }
+
+    if (ranked.empty()) {
+        return "";
+    }
+
     std::sort(ranked.begin(), ranked.end(), [](const auto& lhs, const auto& rhs) {
         return lhs.second > rhs.second;
     });

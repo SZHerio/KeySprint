@@ -13,6 +13,10 @@ void DrawSceneText(Game* game, Font font, const char* text, Vector2 position, fl
     const float scale = game->GetUiScale();
     DrawTextEx(font, text, game->ScalePoint(position), fontSize * scale, 1.0f * scale, color);
 }
+
+bool IsRu(Language language) {
+    return language == Language::Russian;
+}
 }
 
 void LessonSelectState::Init(Game* game) {
@@ -78,16 +82,19 @@ void LessonSelectState::HandleInput() {
         StartSelectedLesson();
     }
 
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        const Vector2 mouse = GetMousePosition();
-        for (int i = 0; i < count; ++i) {
-            if (CheckCollisionPointRec(mouse, gamePtr->ScaleRect(GetCardRect(i)))) {
-                selectedLesson = i;
+    const Vector2 mouse = GetMousePosition();
+    bool hover = false;
+    for (int i = 0; i < count; ++i) {
+        if (CheckCollisionPointRec(mouse, gamePtr->ScaleRect(GetCardRect(i)))) {
+            selectedLesson = i;
+            hover = true;
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 StartSelectedLesson();
-                break;
             }
+            break;
         }
     }
+    SetMouseCursor(hover ? MOUSE_CURSOR_POINTING_HAND : MOUSE_CURSOR_DEFAULT);
 }
 
 void LessonSelectState::Update(float deltaTime) {
@@ -108,9 +115,9 @@ void LessonSelectState::Draw() {
     DrawRectangleRounded(gamePtr->ScaleRect({ 55.0f, 42.0f, 1170.0f, 635.0f }), 0.04f, 16, Fade(theme.Panel, 0.78f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 55.0f, 42.0f, 1170.0f, 635.0f }), 0.04f, 16, Fade(theme.PanelBorder, 0.80f));
 
-    DrawSceneText(gamePtr, font, "Lesson Select", { 90.0f, 72.0f }, 38.0f, theme.Title);
-    DrawSceneText(gamePtr, font, TextFormat("%s course map | unlocked through lesson %d", LessonLibrary::GetLanguageLabel(language).c_str(), unlocked + 1), { 90.0f, 118.0f }, 18.0f, theme.TextDefault);
-    DrawSceneText(gamePtr, font, "ESC Menu | Arrows/WASD Move | Enter Start", { 760.0f, 92.0f }, 16.0f, theme.TextDefault);
+    DrawSceneText(gamePtr, font, IsRu(language) ? u8"Выбор урока" : "Lesson Select", { 90.0f, 72.0f }, 38.0f, theme.Title);
+    DrawSceneText(gamePtr, font, TextFormat(IsRu(language) ? u8"%s карта курса | открыто до урока %d" : "%s course map | unlocked through lesson %d", LessonLibrary::GetLanguageLabel(language).c_str(), unlocked + 1), { 90.0f, 118.0f }, 18.0f, theme.TextDefault);
+    DrawSceneText(gamePtr, font, IsRu(language) ? u8"ESC Меню | Стрелки/WASD | Enter Старт" : "ESC Menu | Arrows/WASD Move | Enter Start", { 720.0f, 92.0f }, 16.0f, theme.TextDefault);
 
     for (int i = 0; i + 1 < static_cast<int>(lessons.size()); ++i) {
         const Rectangle from = GetCardRect(i);
@@ -141,7 +148,7 @@ void LessonSelectState::Draw() {
         DrawSceneText(gamePtr, font, lesson.title.c_str(), { rect.x + 88.0f, rect.y + 16.0f }, 22.0f, unlockedLesson ? theme.TextCorrect : Fade(theme.TextDefault, 0.55f));
         DrawSceneText(gamePtr, font, lesson.description.c_str(), { rect.x + 88.0f, rect.y + 50.0f }, 14.0f, unlockedLesson ? theme.TextDefault : Fade(theme.TextDefault, 0.42f));
 
-        const char* status = unlockedLesson ? (i < unlocked ? "DONE" : "OPEN") : "LOCKED";
+        const char* status = unlockedLesson ? (i < unlocked ? (IsRu(language) ? u8"ГОТОВО" : "DONE") : (IsRu(language) ? u8"ОТКРЫТ" : "OPEN")) : (IsRu(language) ? u8"ЗАКРЫТ" : "LOCKED");
         const Color statusColor = unlockedLesson ? theme.TextCorrect : theme.TextError;
         DrawSceneText(gamePtr, font, status, { rect.x + rect.width - 92.0f, rect.y + 20.0f }, 15.0f, statusColor);
     }

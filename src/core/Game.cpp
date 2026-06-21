@@ -1,6 +1,7 @@
 #include "Game.h"
 #include <raylib.h>
 #include <algorithm>
+#include <string>
 #include <vector>
 #include "AudioManager.h"
 
@@ -16,12 +17,34 @@ Game::Game(int width, int height, const char* title)
     currentTheme = ThemeManager::GetMidnightTheme();
     progress.Load();
     
-    // Загружаем латиницу и кириллицу, чтобы EN/RU уроки рисовались одним шрифтом.
+    // Загружаем жирный системный шрифт с кириллицей. Assets могут отсутствовать в чистой сборке.
     std::vector<int> glyphs;
     for (int codepoint = 32; codepoint <= 126; ++codepoint) glyphs.push_back(codepoint);
-    for (int codepoint = 0x0401; codepoint <= 0x0451; ++codepoint) glyphs.push_back(codepoint);
-    mainFont = LoadFontEx("assets/fonts/JetBrainsMono-Regular.ttf", 64, glyphs.data(), static_cast<int>(glyphs.size()));
-    SetTextureFilter(mainFont.texture, TEXTURE_FILTER_BILINEAR);
+    for (int codepoint = 0x0400; codepoint <= 0x052F; ++codepoint) glyphs.push_back(codepoint);
+    glyphs.push_back(0x00AB);
+    glyphs.push_back(0x00BB);
+    glyphs.push_back(0x2014);
+
+    const std::vector<std::string> fontCandidates = {
+        "assets/fonts/JetBrainsMono-Bold.ttf",
+        "assets/fonts/JetBrainsMono-Regular.ttf",
+        "C:/Windows/Fonts/consolab.ttf",
+        "C:/Windows/Fonts/arialbd.ttf"
+    };
+
+    for (const std::string& path : fontCandidates) {
+        if (!FileExists(path.c_str())) {
+            continue;
+        }
+        mainFont = LoadFontEx(path.c_str(), 64, glyphs.data(), static_cast<int>(glyphs.size()));
+        if (mainFont.texture.id != 0) {
+            break;
+        }
+    }
+
+    if (mainFont.texture.id != 0) {
+        SetTextureFilter(mainFont.texture, TEXTURE_FILTER_BILINEAR);
+    }
 }
 
 Game::~Game() {
@@ -73,13 +96,19 @@ void Game::ToggleFullscreenMode() {
     if (!fullscreen) {
         windowedWidth = GetScreenWidth();
         windowedHeight = GetScreenHeight();
+        const Vector2 position = GetWindowPosition();
+        windowedX = static_cast<int>(position.x);
+        windowedY = static_cast<int>(position.y);
         const int monitor = GetCurrentMonitor();
+        const Vector2 monitorPosition = GetMonitorPosition(monitor);
+        SetWindowState(FLAG_WINDOW_UNDECORATED);
+        SetWindowPosition(static_cast<int>(monitorPosition.x), static_cast<int>(monitorPosition.y));
         SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
-        ToggleFullscreen();
         fullscreen = true;
     } else {
-        ToggleFullscreen();
+        ClearWindowState(FLAG_WINDOW_UNDECORATED);
         SetWindowSize(windowedWidth, windowedHeight);
+        SetWindowPosition(windowedX, windowedY);
         fullscreen = false;
     }
 }

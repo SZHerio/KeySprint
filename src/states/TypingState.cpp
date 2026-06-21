@@ -84,7 +84,7 @@ void TypingState::BuildKeyboardModel() {
         addRow(2, "zxcvbnm");
     }
 
-    keyboardKeys.push_back({ ' ', "SPACE", 3, 5.2f, FingerType::RightThumb, HandSide::Both });
+        keyboardKeys.push_back({ ' ', language == Language::Russian ? u8"ПРОБЕЛ" : "SPACE", 3, 5.2f, FingerType::RightThumb, HandSide::Both });
     keyboardKeys.push_back({ '\n', "ENTER", 3, 2.0f, FingerType::RightPinky, HandSide::Right });
 }
 
@@ -158,18 +158,18 @@ void TypingState::Init(Game* game) {
     } else if (mode == TypingMode::Composition) {
         logic.StartCustomTest(LessonLibrary::BuildCompositionText(language));
         lessonId = -1;
-        lessonTitle = "Composition";
-        lessonDescription = "Long-form endurance typing";
+        lessonTitle = language == Language::Russian ? u8"Сочинение" : "Composition";
+        lessonDescription = language == Language::Russian ? u8"Длинный текст на выносливость" : "Long-form endurance typing";
     } else if (mode == TypingMode::Daily) {
         logic.StartCustomTest(LessonLibrary::BuildDailyChallengeText(language));
         lessonId = -1;
-        lessonTitle = "Daily Challenge";
-        lessonDescription = "One focused challenge for today";
+        lessonTitle = language == Language::Russian ? u8"Испытание дня" : "Daily Challenge";
+        lessonDescription = language == Language::Russian ? u8"Одна цель на сегодня" : "One focused challenge for today";
     } else {
         logic.StartCustomTest(LessonLibrary::BuildPracticeText(language));
         lessonId = -1;
-        lessonTitle = "Practice";
-        lessonDescription = "Free typing test";
+        lessonTitle = language == Language::Russian ? u8"Практика" : "Practice";
+        lessonDescription = language == Language::Russian ? u8"Свободная тренировка" : "Free typing test";
     }
     
     Font font = gamePtr->GetFont();
@@ -229,14 +229,14 @@ float TypingState::GetTextFontSize() const {
 const char* TypingState::GetModeTitle() const {
     switch (mode) {
         case TypingMode::Tutorial:
-            return "Tutorial Mode";
+            return language == Language::Russian ? u8"Режим обучения" : "Tutorial Mode";
         case TypingMode::Composition:
-            return "Composition Mode";
+            return language == Language::Russian ? u8"Режим сочинения" : "Composition Mode";
         case TypingMode::Daily:
-            return "Daily Challenge";
+            return language == Language::Russian ? u8"Испытание дня" : "Daily Challenge";
         case TypingMode::Practice:
         default:
-            return "Practice Mode";
+            return language == Language::Russian ? u8"Режим практики" : "Practice Mode";
     }
 }
 
@@ -354,12 +354,12 @@ Color TypingState::GetFingerColor(FingerType finger, const Theme& theme) const {
 
 void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
     const int nextChar = GetNextExpectedChar();
-    const float keySize = 42.0f;
-    const float gap = 7.0f;
-    const float startY = 512.0f;
+    const float keySize = 36.0f;
+    const float gap = 6.0f;
+    const float startY = 528.0f;
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
 
-    DrawTextScene(gamePtr, font, "Keyboard color = finger to use", { 80.0f, 502.0f }, 17.0f, UiSpacing, theme.TextDefault);
+    DrawTextScene(gamePtr, font, language == Language::Russian ? u8"Цвет клавиши = нужный палец" : "Keyboard color = finger to use", { 80.0f, 504.0f }, 15.0f, UiSpacing, theme.TextDefault);
 
     for (int row = 0; row <= 3; ++row) {
         std::vector<const KeyLayout*> rowKeys;
@@ -392,7 +392,7 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
             DrawRoundedScene(gamePtr, keyRect, 0.22f, 8, FadeColor(fingerColor, isNext ? 0.80f : 0.34f));
             DrawRoundedLinesScene(gamePtr, keyRect, 0.22f, 8, FadeColor(isNext ? theme.TextCorrect : theme.PanelBorder, isNext ? 0.95f : 0.60f));
 
-            const float labelSize = key->key == ' ' ? 15.0f : (language == Language::Russian ? 16.0f : 18.0f);
+            const float labelSize = key->key == ' ' ? 12.0f : (language == Language::Russian ? 15.0f : 16.0f);
             const Vector2 textSize = MeasureTextEx(font, key->label.c_str(), labelSize, UiSpacing);
             DrawTextScene(
                 gamePtr,
@@ -425,12 +425,14 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
         DrawRoundedScene(gamePtr, rect, 0.45f, 12, FadeColor(color, active ? 0.88f : 0.46f));
         DrawRoundedLinesScene(gamePtr, rect, 0.45f, 12, FadeColor(active ? theme.TextCorrect : theme.PanelBorder, active ? 0.95f : 0.45f));
 
-        const Vector2 labelSize = MeasureTextEx(font, label, 13.0f, UiSpacing);
-        DrawTextScene(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, rect.y + rect.height + 5.0f }, 13.0f, UiSpacing, theme.TextDefault);
+        const Vector2 labelSize = MeasureTextEx(font, label, 12.0f, UiSpacing);
+        const bool thumb = rect.height <= 35.0f;
+        const float labelY = thumb ? rect.y + (rect.height - 12.0f) * 0.5f : rect.y + rect.height + 5.0f;
+        DrawTextScene(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, labelY }, 12.0f, UiSpacing, thumb ? theme.TextCorrect : theme.TextDefault);
     };
 
     auto drawHand = [&](float x, const char* title, bool left) {
-        DrawTextScene(gamePtr, font, title, { x + 56.0f, 384.0f + handYOffset }, 16.0f, UiSpacing, theme.TextDefault);
+        DrawTextScene(gamePtr, font, title, { x + 56.0f, 384.0f + handYOffset }, 14.0f, UiSpacing, theme.TextDefault);
         DrawRoundedScene(gamePtr, { x + 25.0f, 455.0f + handYOffset, 190.0f, 66.0f }, 0.32f, 12, FadeColor(theme.PanelBorder, 0.28f));
 
         if (left) {
@@ -448,9 +450,9 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
         }
     };
 
-    DrawTextScene(gamePtr, font, "Finger guide", { 80.0f, 365.0f }, 22.0f, UiSpacing, theme.Title);
-    drawHand(350.0f, "LEFT HAND", true);
-    drawHand(705.0f, "RIGHT HAND", false);
+    DrawTextScene(gamePtr, font, language == Language::Russian ? u8"Подсказка пальцев" : "Finger guide", { 80.0f, 365.0f }, 20.0f, UiSpacing, theme.Title);
+    drawHand(350.0f, language == Language::Russian ? u8"ЛЕВАЯ РУКА" : "LEFT HAND", true);
+    drawHand(705.0f, language == Language::Russian ? u8"ПРАВАЯ РУКА" : "RIGHT HAND", false);
 }
 
 void TypingState::Draw() {
@@ -504,7 +506,7 @@ void TypingState::Draw() {
     // Заголовки (системным шрифтом или тем же, но для UI можно оставить обычный)
     const char* title = GetModeTitle();
     DrawTextScene(gamePtr, font, title, {80.0f, 48.0f}, 34.0f, UiSpacing, theme.Title);
-    DrawTextScene(gamePtr, font, TextFormat("%s | %s | ESC Menu", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str()), {80.0f, 90.0f}, 17.0f, UiSpacing, theme.TextDefault);
+    DrawTextScene(gamePtr, font, TextFormat("%s | %s | %s", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str(), language == Language::Russian ? u8"ESC Меню" : "ESC Menu"), {80.0f, 90.0f}, 17.0f, UiSpacing, theme.TextDefault);
 
     // Live Metrics
     DrawTextScene(gamePtr, font, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, UiSpacing, theme.TextCorrect);

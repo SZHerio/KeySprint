@@ -23,5 +23,5 @@ public:
     static std::string GetLanguageLabel(Language language);
 
 private:
-    static std::string GenerateFocusText(const std::map<std::string, int>& weakKeys);
+    static std::string GenerateFocusText(Language language, const std::map<std::string, int>& weakKeys);
 };

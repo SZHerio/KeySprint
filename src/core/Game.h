@@ -44,6 +44,8 @@ private:
     bool fullscreen = false;
     int windowedWidth;
     int windowedHeight;
+    int windowedX = 80;
+    int windowedY = 80;
 
     Theme currentTheme;
     bool isDarkTheme;

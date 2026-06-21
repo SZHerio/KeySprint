@@ -27,8 +27,8 @@ public:
     static Theme GetLightTheme() {
         return {
             RAYWHITE,     // Background
-            LIGHTGRAY,    // TextDefault
-            DARKGRAY,     // TextCorrect
+            { 70, 72, 88, 255 },     // TextDefault
+            { 28, 32, 46, 255 },     // TextCorrect
             RED,          // TextError
             DARKGRAY,     // Caret
             DARKBLUE,     // Title
@@ -48,11 +48,11 @@ public:
     static Theme GetMidnightTheme() {
         return {
             { 15, 15, 25, 255 },    // Background
-            { 100, 100, 120, 255 }, // TextDefault
-            { 220, 220, 240, 255 }, // TextCorrect
+            { 180, 182, 210, 255 }, // TextDefault
+            { 240, 240, 255, 255 }, // TextCorrect
             { 255, 80, 80, 255 },   // TextError
             { 200, 200, 255, 255 }, // Caret
-            { 150, 150, 200, 255 }, // Title
+            { 205, 202, 255, 255 }, // Title
             { 25, 26, 42, 255 },    // Panel
             { 56, 58, 82, 255 },    // PanelBorder
             { 159, 166, 255, 255 }, // Highlight
