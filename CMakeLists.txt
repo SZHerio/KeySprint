@@ -18,6 +18,8 @@ add_executable(${PROJECT_NAME}
     src/core/ProgressManager.cpp
     src/core/AudioManager.cpp
     src/states/MainMenuState.cpp
+    src/states/LessonSelectState.cpp
+    src/states/ProgressState.cpp
     src/states/TypingState.cpp
     src/states/SettingsState.cpp
     src/states/ResultsState.cpp

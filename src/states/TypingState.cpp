@@ -51,7 +51,7 @@ void BeginScissorScene(Game* game, Rectangle rect) {
 }
 }
 
-TypingState::TypingState(TypingMode mode) : mode(mode) {
+TypingState::TypingState(TypingMode mode, int lessonOverride) : mode(mode), lessonOverride(lessonOverride) {
 }
 
 void TypingState::BuildKeyboardModel() {
@@ -148,29 +148,20 @@ void TypingState::Init(Game* game) {
 
     if (mode == TypingMode::Tutorial) {
         const auto& lessons = LessonLibrary::GetLessons(language);
-        lessonId = gamePtr->GetProgress().GetCurrentLesson(language, static_cast<int>(lessons.size()));
+        lessonId = lessonOverride >= 0
+            ? std::clamp(lessonOverride, 0, static_cast<int>(lessons.size()) - 1)
+            : gamePtr->GetProgress().GetCurrentLesson(language, static_cast<int>(lessons.size()));
         const Lesson lesson = LessonLibrary::BuildAdaptiveLesson(language, lessonId, gamePtr->GetProgress().GetWeakKeys());
         lessonTitle = lesson.title;
         lessonDescription = lesson.description;
         logic.StartCustomTest(lesson.text);
     } else if (mode == TypingMode::Composition) {
-        logic.StartCustomTest(BuildCompositionText());
+        logic.StartCustomTest(LessonLibrary::BuildCompositionText(language));
         lessonId = -1;
         lessonTitle = "Composition";
         lessonDescription = "Long-form endurance typing";
     } else {
-        if (language == Language::Russian) {
-            logic.StartCustomTest(
-                u8"мама дом школа код урок рука палец клавиша текст скорость точность фокус ритм. "
-                u8"Печатай спокойно и возвращай пальцы на домашний ряд.\n"
-                u8"Каждая короткая фраза помогает удерживать внимание на точности."
-            );
-        } else {
-            logic.StartCustomTest(
-                "calm focus builds reliable typing speed. keep your fingers near the home row and watch the rhythm.\n"
-                "short clear sentences help you train accuracy before you push for a faster result."
-            );
-        }
+        logic.StartCustomTest(LessonLibrary::BuildPracticeText(language));
         lessonId = -1;
         lessonTitle = "Practice";
         lessonDescription = "Free typing test";
@@ -242,29 +233,7 @@ const char* TypingState::GetModeTitle() const {
 }
 
 std::string TypingState::BuildCompositionText() const {
-    if (language == Language::Russian) {
-        return u8"Слепая печать начинается не со скорости, а с спокойного ритма. "
-            u8"Пальцы должны возвращаться на домашний ряд после каждого движения. "
-            u8"Когда внимание перестает метаться между клавишами, текст начинает течь ровнее. "
-            u8"Ошибки не нужно бояться: каждая ошибка показывает, какой палец просит отдельной тренировки.\n"
-            u8"Сохраняй ровное дыхание, не ускоряйся раньше времени и следи за точностью. "
-            u8"Хорошая скорость появляется тогда, когда движение становится уверенным и повторяемым. "
-            u8"Если абзац закончился, нажми Enter и продолжай новый фрагмент без спешки.\n"
-            u8"Длинный текст учит держать внимание дольше нескольких слов. "
-            u8"В такой тренировке важны не рекорды, а устойчивость: одинаковая сила нажатий, мягкая посадка пальцев и спокойный взгляд на строку. "
-            u8"Когда точность остается высокой на протяжении нескольких абзацев, скорость начинает расти сама.";
-    }
-
-    return "Fast typing is not only about speed. It starts with calm rhythm, relaxed hands, "
-        "and a clear return to the home row after every movement. When your attention stops "
-        "jumping from key to key, the sentence begins to flow naturally. Mistakes are not a "
-        "problem: each one shows which finger needs a focused drill.\nKeep your breathing even, "
-        "avoid rushing too early, and let accuracy build the speed. A reliable rhythm will "
-        "always beat a tense burst of random fast typing. When the paragraph ends, press Enter "
-        "and continue with the next thought without breaking your posture.\nLong-form typing "
-        "teaches endurance. It asks you to keep the same pressure, the same focus, and the same "
-        "soft return to the home row for several connected ideas. If accuracy stays high through "
-        "multiple paragraphs, speed becomes a natural result instead of a forced sprint.";
+    return LessonLibrary::BuildCompositionText(language);
 }
 
 int TypingState::GetNextExpectedChar() const {

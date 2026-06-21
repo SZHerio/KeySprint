@@ -14,11 +14,12 @@ private:
     int selectedOption = 0;
     float highlightY = 250.0f;
     float menuTime = 0.0f;
-    std::array<const char*, 4> options = { "Practice", "Tutorial", "Composition", "Settings" };
-    std::array<const char*, 4> descriptions = {
+    std::array<const char*, 5> options = { "Practice", "Lessons", "Composition", "Progress", "Settings" };
+    std::array<const char*, 5> descriptions = {
         "Short generated drills with live WPM and finger guidance.",
-        "Structured lessons with unlocks, weak-key focus and colored hands.",
+        "Pick a lesson card, replay older drills or unlock the next level.",
         "Long-form typing flow: larger text, scrolling canvas and endurance.",
+        "Review best scores, weak keys, lesson unlocks and reset progress.",
         "Theme, language, sound profiles and progress reset."
     };
 };

@@ -39,7 +39,7 @@ struct KeyLayout {
 
 class TypingState : public GameState {
 public:
-    explicit TypingState(TypingMode mode = TypingMode::Practice);
+    explicit TypingState(TypingMode mode = TypingMode::Practice, int lessonOverride = -1);
 
     void Init(Game* game) override;
     void HandleInput() override;
@@ -52,6 +52,7 @@ private:
     TypingMode mode;
     Language language = Language::English;
     int lessonId = 0;
+    int lessonOverride = -1;
     std::string lessonTitle;
     std::string lessonDescription;
     

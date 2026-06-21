@@ -36,7 +36,7 @@ void ResultsState::HandleInput() {
         CheckCollisionPointRec(mouse, gamePtr->ScaleRect({ 430.0f, 516.0f, 420.0f, 36.0f }));
 
     if (IsKeyPressed(KEY_ENTER) || retryClicked) {
-        gamePtr->ChangeState(std::make_shared<TypingState>(retryMode));
+        gamePtr->ChangeState(std::make_shared<TypingState>(retryMode, lessonId));
     } else if (IsKeyPressed(KEY_ESCAPE) || menuClicked) {
         gamePtr->ChangeState(std::make_shared<MainMenuState>());
     }
