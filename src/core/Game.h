@@ -1,7 +1,9 @@
 #pragma once
 #include <memory>
 #include <raylib.h>
+#include "AppTypes.h"
 #include "GameState.h"
+#include "ProgressManager.h"
 #include "Theme.h"
 
 class Game {
@@ -23,6 +25,10 @@ public:
     }
     
     Font GetFont() const { return mainFont; }
+    Language GetLanguage() const { return language; }
+    void ToggleLanguage();
+    ProgressManager& GetProgress() { return progress; }
+    const ProgressManager& GetProgress() const { return progress; }
     int GetWindowWidth() const;
     int GetWindowHeight() const;
     float GetUiScale() const;
@@ -38,4 +44,6 @@ private:
     Theme currentTheme;
     bool isDarkTheme;
     Font mainFont;
+    Language language;
+    ProgressManager progress;
 };

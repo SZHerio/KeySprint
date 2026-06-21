@@ -13,6 +13,9 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/core/Game.cpp
     src/core/TypingLogic.cpp
+    src/core/TextUtils.cpp
+    src/core/LessonLibrary.cpp
+    src/core/ProgressManager.cpp
     src/core/AudioManager.cpp
     src/states/MainMenuState.cpp
     src/states/TypingState.cpp

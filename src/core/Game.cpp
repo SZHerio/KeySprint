@@ -1,10 +1,11 @@
 #include "Game.h"
 #include <raylib.h>
 #include <algorithm>
+#include <vector>
 #include "AudioManager.h"
 
 Game::Game(int width, int height, const char* title) 
-    : screenWidth(width), screenHeight(height), isRunning(true), isDarkTheme(true) {
+    : screenWidth(width), screenHeight(height), isRunning(true), isDarkTheme(true), language(Language::English) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     InitWindow(screenWidth, screenHeight, title);
     SetWindowMinSize(960, 540);
@@ -12,9 +13,13 @@ Game::Game(int width, int height, const char* title)
     AudioManager::Init();
     SetTargetFPS(60);
     currentTheme = ThemeManager::GetMidnightTheme();
+    progress.Load();
     
-    // Загружаем шрифт (размер 64 для четкости, потом будем скейлить)
-    mainFont = LoadFontEx("assets/fonts/JetBrainsMono-Regular.ttf", 64, 0, 250);
+    // Загружаем латиницу и кириллицу, чтобы EN/RU уроки рисовались одним шрифтом.
+    std::vector<int> glyphs;
+    for (int codepoint = 32; codepoint <= 126; ++codepoint) glyphs.push_back(codepoint);
+    for (int codepoint = 0x0401; codepoint <= 0x0451; ++codepoint) glyphs.push_back(codepoint);
+    mainFont = LoadFontEx("assets/fonts/JetBrainsMono-Regular.ttf", 64, glyphs.data(), static_cast<int>(glyphs.size()));
     SetTextureFilter(mainFont.texture, TEXTURE_FILTER_BILINEAR);
 }
 
@@ -53,6 +58,10 @@ void Game::Run() {
 
 void Game::Quit() {
     isRunning = false;
+}
+
+void Game::ToggleLanguage() {
+    language = language == Language::English ? Language::Russian : Language::English;
 }
 
 int Game::GetWindowWidth() const {

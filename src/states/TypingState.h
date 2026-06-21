@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <raylib.h>
+#include "../core/AppTypes.h"
 #include "../core/GameState.h"
 #include "../core/Theme.h"
 #include "../core/TypingLogic.h"
@@ -28,7 +29,7 @@ enum class HandSide {
 };
 
 struct KeyLayout {
-    char key;
+    int key;
     std::string label;
     int row;
     float width;
@@ -49,6 +50,10 @@ private:
     Game* gamePtr = nullptr;
     TypingLogic logic;
     TypingMode mode;
+    Language language = Language::English;
+    int lessonId = 0;
+    std::string lessonTitle;
+    std::string lessonDescription;
     
     // Для плавности каретки
     float caretX = 50.0f;
@@ -63,7 +68,7 @@ private:
     void CalculateLayout(Font font, float fontSize);
     void DrawVirtualKeyboard(Font font, const Theme& theme);
     void DrawHandsGuide(Font font, const Theme& theme);
-    char GetNextExpectedChar() const;
-    FingerType GetFingerForKey(char key) const;
+    int GetNextExpectedChar() const;
+    FingerType GetFingerForKey(int key) const;
     Color GetFingerColor(FingerType finger, const Theme& theme) const;
 };

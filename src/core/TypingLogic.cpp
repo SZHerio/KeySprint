@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <random>
 #include "AudioManager.h"
+#include "TextUtils.h"
 
 TypingLogic::TypingLogic() : isFinished(false) {
     wordList = {
@@ -23,6 +24,7 @@ void TypingLogic::GenerateText(int wordCount) {
             targetText += " ";
         }
     }
+    targetCodepoints = Utf8ToCodepoints(targetText);
 }
 
 void TypingLogic::StartNewTest(int wordCount) {
@@ -32,15 +34,22 @@ void TypingLogic::StartNewTest(int wordCount) {
 
 void TypingLogic::StartCustomTest(const std::string& text) {
     targetText = text;
+    targetCodepoints = Utf8ToCodepoints(targetText);
     ResetProgress();
 }
 
 void TypingLogic::ResetProgress() {
     typedText.clear();
+    typedCodepoints.clear();
+    mistakeCounts.clear();
     isFinished = false;
     timeElapsed = 0.0f;
     totalKeystrokes = 0;
     correctKeystrokes = 0;
+}
+
+void TypingLogic::RebuildTypedText() {
+    typedText = CodepointsToUtf8(typedCodepoints);
 }
 
 void TypingLogic::Update(float deltaTime) {
@@ -64,19 +73,24 @@ float TypingLogic::GetAccuracy() const {
 void TypingLogic::HandleInput() {
     if (isFinished) return;
 
-    // Чтение вводимых символов
     int key = GetCharPressed();
     while (key > 0) {
-        if ((key >= 32) && (key <= 125)) {
-            if (typedText.length() < targetText.length()) {
+        if (key >= 32) {
+            if (typedCodepoints.size() < targetCodepoints.size()) {
+                const int normalizedKey = ToLowerCodepoint(key);
+                const int expected = ToLowerCodepoint(targetCodepoints[typedCodepoints.size()]);
+
                 totalKeystrokes++;
-                if (key == targetText[typedText.length()]) {
+                if (normalizedKey == expected) {
                     correctKeystrokes++;
                     AudioManager::PlayClick();
                 } else {
+                    mistakeCounts[expected]++;
                     AudioManager::PlayError();
                 }
-                typedText += (char)key;
+
+                typedCodepoints.push_back(key);
+                RebuildTypedText();
             }
         }
         key = GetCharPressed();
@@ -84,13 +98,22 @@ void TypingLogic::HandleInput() {
 
     // Обработка Backspace
     if (IsKeyPressed(KEY_BACKSPACE)) {
-        if (!typedText.empty()) {
-            typedText.pop_back();
+        if (!typedCodepoints.empty()) {
+            typedCodepoints.pop_back();
+            RebuildTypedText();
             // Мы не уменьшаем totalKeystrokes при удалении для точности метрик
         }
     }
 
-    if (typedText == targetText || typedText.length() == targetText.length()) {
+    if (typedCodepoints.size() == targetCodepoints.size()) {
         isFinished = true;
     }
+}
+
+std::map<std::string, int> TypingLogic::GetMistakeCountsUtf8() const {
+    std::map<std::string, int> result;
+    for (const auto& [codepoint, count] : mistakeCounts) {
+        result[CodepointToUtf8(codepoint)] = count;
+    }
+    return result;
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 #include <string>
 #include <vector>
 
@@ -13,6 +14,9 @@ public:
 
     const std::string& GetTargetText() const { return targetText; }
     const std::string& GetTypedText() const { return typedText; }
+    const std::vector<int>& GetTargetCodepoints() const { return targetCodepoints; }
+    const std::vector<int>& GetTypedCodepoints() const { return typedCodepoints; }
+    std::map<std::string, int> GetMistakeCountsUtf8() const;
 
     bool IsFinished() const { return isFinished; }
     
@@ -25,6 +29,9 @@ private:
     std::vector<std::string> wordList;
     std::string targetText;
     std::string typedText;
+    std::vector<int> targetCodepoints;
+    std::vector<int> typedCodepoints;
+    std::map<int, int> mistakeCounts;
     bool isFinished;
     
     float timeElapsed;
@@ -33,4 +40,5 @@ private:
 
     void GenerateText(int wordCount);
     void ResetProgress();
+    void RebuildTypedText();
 };

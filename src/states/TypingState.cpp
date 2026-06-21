@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include "../core/LessonLibrary.h"
+#include "../core/TextUtils.h"
 #include "MainMenuState.h"
 #include "ResultsState.h"
 
@@ -45,14 +47,14 @@ void TypingState::BuildKeyboardModel() {
     keyboardKeys.clear();
 
     auto addRow = [this](int row, const std::string& keys) {
-        for (char key : keys) {
+        for (int key : Utf8ToCodepoints(keys)) {
             const FingerType finger = GetFingerForKey(key);
             const bool leftHand = finger == FingerType::LeftPinky || finger == FingerType::LeftRing ||
                 finger == FingerType::LeftMiddle || finger == FingerType::LeftIndex || finger == FingerType::LeftThumb;
 
             keyboardKeys.push_back({
                 key,
-                std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(key)))),
+                CodepointToUtf8(key),
                 row,
                 1.0f,
                 finger,
@@ -61,14 +63,21 @@ void TypingState::BuildKeyboardModel() {
         }
     };
 
-    addRow(0, "qwertyuiop");
-    addRow(1, "asdfghjkl;");
-    addRow(2, "zxcvbnm");
+    if (language == Language::Russian) {
+        addRow(0, u8"йцукенгшщзх");
+        addRow(1, u8"фывапролджэ");
+        addRow(2, u8"ячсмитьбю");
+    } else {
+        addRow(0, "qwertyuiop");
+        addRow(1, "asdfghjkl;");
+        addRow(2, "zxcvbnm");
+    }
+
     keyboardKeys.push_back({ ' ', "SPACE", 3, 5.2f, FingerType::RightThumb, HandSide::Both });
 }
 
 void TypingState::CalculateLayout(Font font, float fontSize) {
-    const std::string& target = logic.GetTargetText();
+    const auto& target = logic.GetTargetCodepoints();
     charPositions.clear();
     
     const float startX = 80.0f;
@@ -80,11 +89,14 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
     float spaceWidth = MeasureTextEx(font, " ", fontSize, UiSpacing).x;
     
     size_t i = 0;
-    while (i < target.length()) {
-        size_t wordEnd = target.find(' ', i);
-        if (wordEnd == std::string::npos) wordEnd = target.length();
+    while (i < target.size()) {
+        size_t wordEnd = i;
+        while (wordEnd < target.size() && target[wordEnd] != ' ') {
+            ++wordEnd;
+        }
         
-        std::string word = target.substr(i, wordEnd - i);
+        std::vector<int> wordCodepoints(target.begin() + i, target.begin() + wordEnd);
+        std::string word = CodepointsToUtf8(wordCodepoints);
         float wordWidth = MeasureTextEx(font, word.c_str(), fontSize, UiSpacing).x;
         
         if (currentX > startX && currentX + wordWidth > maxX) {
@@ -94,11 +106,11 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
         
         for (size_t j = i; j < wordEnd; ++j) {
             charPositions.push_back({ currentX, currentY });
-            char str[2] = { target[j], '\0' };
-            currentX += MeasureTextEx(font, str, fontSize, UiSpacing).x + UiSpacing;
+            const std::string glyph = CodepointToUtf8(target[j]);
+            currentX += MeasureTextEx(font, glyph.c_str(), fontSize, UiSpacing).x + UiSpacing;
         }
         
-        if (wordEnd < target.length()) {
+        if (wordEnd < target.size()) {
             charPositions.push_back({ currentX, currentY });
             currentX += spaceWidth + UiSpacing;
         }
@@ -111,12 +123,25 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
 
 void TypingState::Init(Game* game) {
     gamePtr = game;
+    language = gamePtr->GetLanguage();
     BuildKeyboardModel();
 
     if (mode == TypingMode::Tutorial) {
-        logic.StartCustomTest("asdf jkl; asdf jkl; fj fj dk dk sl sl aa ss dd ff jj kk ll ;;");
+        const auto& lessons = LessonLibrary::GetLessons(language);
+        lessonId = gamePtr->GetProgress().GetCurrentLesson(language, static_cast<int>(lessons.size()));
+        const Lesson lesson = LessonLibrary::BuildAdaptiveLesson(language, lessonId, gamePtr->GetProgress().GetWeakKeys());
+        lessonTitle = lesson.title;
+        lessonDescription = lesson.description;
+        logic.StartCustomTest(lesson.text);
     } else {
-        logic.StartNewTest(24);
+        if (language == Language::Russian) {
+            logic.StartCustomTest(u8"мама дом школа код урок рука палец клавиша текст скорость точность фокус ритм");
+        } else {
+            logic.StartNewTest(24);
+        }
+        lessonId = -1;
+        lessonTitle = "Practice";
+        lessonDescription = "Free typing test";
     }
     
     Font font = gamePtr->GetFont();
@@ -143,7 +168,7 @@ void TypingState::Update(float deltaTime) {
     pulseTime += deltaTime;
 
     // Плавность каретки
-    size_t typedLen = logic.GetTypedText().length();
+    size_t typedLen = logic.GetTypedCodepoints().size();
     if (typedLen < charPositions.size()) {
         Vector2 targetPos = charPositions[typedLen];
         // Lerp
@@ -152,58 +177,98 @@ void TypingState::Update(float deltaTime) {
     }
 
     if (logic.IsFinished()) {
-        gamePtr->ChangeState(std::make_shared<ResultsState>(logic.GetWPM(), logic.GetAccuracy(), mode));
+        gamePtr->ChangeState(std::make_shared<ResultsState>(
+            logic.GetWPM(),
+            logic.GetAccuracy(),
+            mode,
+            language,
+            lessonId,
+            lessonTitle,
+            logic.GetMistakeCountsUtf8()
+        ));
     }
 }
 
-char TypingState::GetNextExpectedChar() const {
-    const std::string& target = logic.GetTargetText();
-    const std::string& typed = logic.GetTypedText();
-    if (typed.length() >= target.length()) {
-        return '\0';
+int TypingState::GetNextExpectedChar() const {
+    const auto& target = logic.GetTargetCodepoints();
+    const auto& typed = logic.GetTypedCodepoints();
+    if (typed.size() >= target.size()) {
+        return 0;
     }
 
-    return static_cast<char>(std::tolower(static_cast<unsigned char>(target[typed.length()])));
+    return ToLowerCodepoint(target[typed.size()]);
 }
 
-FingerType TypingState::GetFingerForKey(char key) const {
-    switch (static_cast<char>(std::tolower(static_cast<unsigned char>(key)))) {
+FingerType TypingState::GetFingerForKey(int key) const {
+    switch (ToLowerCodepoint(key)) {
         case 'q':
+        case 0x0439: // й
         case 'a':
+        case 0x0444: // ф
         case 'z':
+        case 0x044f: // я
             return FingerType::LeftPinky;
         case 'w':
+        case 0x0446: // ц
         case 's':
+        case 0x044b: // ы
         case 'x':
+        case 0x0447: // ч
             return FingerType::LeftRing;
         case 'e':
+        case 0x0443: // у
         case 'd':
+        case 0x0432: // в
         case 'c':
+        case 0x0441: // с
             return FingerType::LeftMiddle;
         case 'r':
+        case 0x043a: // к
         case 't':
+        case 0x0435: // е
         case 'f':
+        case 0x0430: // а
         case 'g':
+        case 0x043f: // п
         case 'v':
+        case 0x043c: // м
         case 'b':
+        case 0x0438: // и
             return FingerType::LeftIndex;
         case ' ':
             return FingerType::RightThumb;
         case 'y':
+        case 0x043d: // н
         case 'u':
+        case 0x0433: // г
         case 'h':
+        case 0x0440: // р
         case 'j':
+        case 0x043e: // о
         case 'n':
+        case 0x0442: // т
         case 'm':
+        case 0x044c: // ь
             return FingerType::RightIndex;
         case 'i':
+        case 0x0448: // ш
         case 'k':
+        case 0x043b: // л
             return FingerType::RightMiddle;
         case 'o':
+        case 0x0449: // щ
         case 'l':
+        case 0x0434: // д
             return FingerType::RightRing;
         case 'p':
+        case 0x0437: // з
+        case 0x0445: // х
+        case 0x044a: // ъ
         case ';':
+        case 0x0436: // ж
+        case 0x044d: // э
+        case 0x0431: // б
+        case 0x044e: // ю
             return FingerType::RightPinky;
         default:
             return FingerType::None;
@@ -233,7 +298,7 @@ Color TypingState::GetFingerColor(FingerType finger, const Theme& theme) const {
 }
 
 void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
-    const char nextChar = GetNextExpectedChar();
+    const int nextChar = GetNextExpectedChar();
     const float keySize = 42.0f;
     const float gap = 7.0f;
     const float startY = 512.0f;
@@ -272,7 +337,7 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
             DrawRoundedScene(gamePtr, keyRect, 0.22f, 8, FadeColor(fingerColor, isNext ? 0.80f : 0.34f));
             DrawRoundedLinesScene(gamePtr, keyRect, 0.22f, 8, FadeColor(isNext ? theme.TextCorrect : theme.PanelBorder, isNext ? 0.95f : 0.60f));
 
-            const float labelSize = key->key == ' ' ? 15.0f : 18.0f;
+            const float labelSize = key->key == ' ' ? 15.0f : (language == Language::Russian ? 16.0f : 18.0f);
             const Vector2 textSize = MeasureTextEx(font, key->label.c_str(), labelSize, UiSpacing);
             DrawTextScene(
                 gamePtr,
@@ -337,17 +402,17 @@ void TypingState::Draw() {
     Font font = gamePtr->GetFont();
     float fontSize = TextFontSize;
 
-    const std::string& target = logic.GetTargetText();
-    const std::string& typed = logic.GetTypedText();
+    const auto& target = logic.GetTargetCodepoints();
+    const auto& typed = logic.GetTypedCodepoints();
 
     DrawRoundedScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(theme.Panel, 0.70f));
     DrawRoundedLinesScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(theme.PanelBorder, 0.75f));
 
-    for (size_t i = 0; i < target.length(); ++i) {
+    for (size_t i = 0; i < target.size(); ++i) {
         Color color = theme.TextDefault;
         
-        if (i < typed.length()) {
-            if (typed[i] == target[i]) {
+        if (i < typed.size()) {
+            if (ToLowerCodepoint(typed[i]) == ToLowerCodepoint(target[i])) {
                 color = theme.TextCorrect;
             } else {
                 color = theme.TextError;
@@ -357,8 +422,8 @@ void TypingState::Draw() {
             }
         }
 
-        char str[2] = { target[i], '\0' };
-        DrawTextScene(gamePtr, font, str, charPositions[i], fontSize, UiSpacing, color);
+        const std::string glyph = CodepointToUtf8(target[i]);
+        DrawTextScene(gamePtr, font, glyph.c_str(), charPositions[i], fontSize, UiSpacing, color);
     }
     
     // Рисуем плавную каретку
@@ -368,7 +433,7 @@ void TypingState::Draw() {
     // Заголовки (системным шрифтом или тем же, но для UI можно оставить обычный)
     const char* title = mode == TypingMode::Tutorial ? "Tutorial Mode" : "Practice Mode";
     DrawTextScene(gamePtr, font, title, {80.0f, 48.0f}, 34.0f, UiSpacing, theme.Title);
-    DrawTextScene(gamePtr, font, "Press ESC to return to Menu", {80.0f, 90.0f}, 17.0f, UiSpacing, theme.TextDefault);
+    DrawTextScene(gamePtr, font, TextFormat("%s | %s | ESC Menu", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str()), {80.0f, 90.0f}, 17.0f, UiSpacing, theme.TextDefault);
 
     // Live Metrics
     DrawTextScene(gamePtr, font, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, UiSpacing, theme.TextCorrect);

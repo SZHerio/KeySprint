@@ -1,10 +1,21 @@
 #pragma once
+#include <map>
+#include <string>
+#include "../core/AppTypes.h"
 #include "../core/GameState.h"
 #include "../core/TypingMode.h"
 
 class ResultsState : public GameState {
 public:
-    ResultsState(float finalWPM, float finalAccuracy, TypingMode mode = TypingMode::Practice);
+    ResultsState(
+        float finalWPM,
+        float finalAccuracy,
+        TypingMode mode = TypingMode::Practice,
+        Language language = Language::English,
+        int lessonId = -1,
+        const std::string& lessonTitle = "",
+        const std::map<std::string, int>& mistakes = {}
+    );
 
     void Init(Game* game) override;
     void HandleInput() override;
@@ -16,4 +27,9 @@ private:
     float wpm;
     float accuracy;
     TypingMode retryMode;
+    Language language;
+    int lessonId;
+    std::string lessonTitle;
+    std::map<std::string, int> mistakes;
+    bool recorded = false;
 };
