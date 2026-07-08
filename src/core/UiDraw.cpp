@@ -6,6 +6,8 @@
 #include <vector>
 
 namespace {
+constexpr float BoldOffset = 0.65f;
+
 std::vector<std::string> SplitLines(const char* text) {
     std::vector<std::string> lines;
     std::string current;
@@ -36,6 +38,18 @@ Vector2 MeasureTextBlock(Font font, const std::vector<std::string>& lines, float
     }
     return size;
 }
+
+void DrawTextInternal(Game* game, Font font, const char* text, Vector2 position, float fontSize, float spacing, Color color, bool bold) {
+    const float scale = game->GetUiScale();
+    const Vector2 scaled = game->ScalePoint(position);
+    const float scaledSize = fontSize * scale;
+    const float scaledSpacing = spacing * scale;
+    DrawTextEx(font, text, scaled, scaledSize, scaledSpacing, color);
+
+    if (bold) {
+        DrawTextEx(font, text, { scaled.x + BoldOffset * scale, scaled.y }, scaledSize, scaledSpacing, color);
+    }
+}
 }
 
 namespace Ui {
@@ -49,8 +63,7 @@ Rectangle Inflate(Rectangle rect, float amount) {
 }
 
 void DrawText(Game* game, Font font, const char* text, Vector2 position, float fontSize, float spacing, Color color) {
-    const float scale = game->GetUiScale();
-    DrawTextEx(font, text, game->ScalePoint(position), fontSize * scale, spacing * scale, color);
+    DrawTextInternal(game, font, text, position, fontSize, spacing, color, false);
 }
 
 void DrawFittedText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, float spacing, Color color, float minFontSize) {
@@ -60,6 +73,47 @@ void DrawFittedText(Game* game, Font font, const char* text, Vector2 position, f
     }
 
     DrawText(game, font, text, position, adjustedSize, spacing, color);
+}
+
+void DrawBoldText(Game* game, Font font, const char* text, Vector2 position, float fontSize, float spacing, Color color) {
+    DrawTextInternal(game, font, text, position, fontSize, spacing, color, true);
+}
+
+void DrawBoldFittedText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, float spacing, Color color, float minFontSize) {
+    float adjustedSize = fontSize;
+    while (adjustedSize > minFontSize && MeasureTextEx(font, text, adjustedSize, spacing).x + BoldOffset > maxWidth) {
+        adjustedSize -= 1.0f;
+    }
+
+    DrawBoldText(game, font, text, position, adjustedSize, spacing, color);
+}
+
+void DrawBoldCenteredText(Game* game, Font font, const char* text, Rectangle rect, float fontSize, float spacing, Color color) {
+    const std::vector<std::string> lines = SplitLines(text);
+    const float lineGap = std::max(1.0f, fontSize * 0.14f);
+    const Vector2 blockSize = MeasureTextBlock(font, lines, fontSize, spacing, lineGap);
+    float y = rect.y + (rect.height - blockSize.y) * 0.5f;
+
+    for (const std::string& line : lines) {
+        const Vector2 lineSize = MeasureTextEx(font, line.c_str(), fontSize, spacing);
+        DrawBoldText(game, font, line.c_str(), { rect.x + (rect.width - lineSize.x - BoldOffset) * 0.5f, y }, fontSize, spacing, color);
+        y += lineSize.y + lineGap;
+    }
+}
+
+void DrawBoldCenteredFittedText(Game* game, Font font, const char* text, Rectangle rect, float fontSize, float spacing, Color color, float minFontSize) {
+    float adjustedSize = fontSize;
+    while (adjustedSize > minFontSize) {
+        const std::vector<std::string> lines = SplitLines(text);
+        const float lineGap = std::max(1.0f, adjustedSize * 0.14f);
+        const Vector2 blockSize = MeasureTextBlock(font, lines, adjustedSize, spacing, lineGap);
+        if (blockSize.x + BoldOffset <= rect.width - 6.0f && blockSize.y <= rect.height - 4.0f) {
+            break;
+        }
+        adjustedSize -= 1.0f;
+    }
+
+    DrawBoldCenteredText(game, font, text, rect, adjustedSize, spacing, color);
 }
 
 void DrawCenteredText(Game* game, Font font, const char* text, Rectangle rect, float fontSize, float spacing, Color color) {

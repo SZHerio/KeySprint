@@ -18,6 +18,8 @@ private:
     void SetDraftUiFontIndex(int index, int direction);
     void SetDraftTypingTextFontIndex(int index, int direction);
     void SetDraftKeyboardFontIndex(int index, int direction);
+    void SetDraftFocusModeEnabled(bool enabled);
+    void SetDraftUiDensity(UiDensity density);
     void SetDraftAudioEnabled(bool enabled);
     void SetDraftClickProfile(int profile);
     void SetDraftVolume(float volume);
@@ -30,6 +32,8 @@ private:
     int draftUiFontIndex = 0;
     int draftTypingTextFontIndex = 0;
     int draftKeyboardFontIndex = 0;
+    bool draftFocusModeEnabled = true;
+    UiDensity draftUiDensity = UiDensity::Normal;
     bool draftAudioEnabled = true;
     int draftClickProfile = 0;
     float draftVolume = 0.65f;
@@ -37,6 +41,8 @@ private:
     float interfaceLanguagePosition = 1.0f;
     float typingLanguagePosition = 0.0f;
     float difficultyPosition = 1.0f;
+    float focusModePosition = 1.0f;
+    float uiDensityPosition = 1.0f;
     float clickProfilePosition = 0.0f;
     float soundPosition = 1.0f;
     float volumeVisual = 0.65f;

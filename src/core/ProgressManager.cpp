@@ -34,19 +34,27 @@ std::string DifficultyToString(Difficulty difficulty) {
     }
 }
 
+UiDensity UiDensityFromString(const std::string& value) {
+    if (value == "compact") return UiDensity::Compact;
+    if (value == "spacious") return UiDensity::Spacious;
+    return UiDensity::Normal;
+}
+
+std::string UiDensityToString(UiDensity density) {
+    switch (density) {
+        case UiDensity::Compact: return "compact";
+        case UiDensity::Spacious: return "spacious";
+        case UiDensity::Normal:
+        default: return "normal";
+    }
+}
+
 Language LanguageFromString(const std::string& value) {
     return value == "ru" ? Language::Russian : Language::English;
 }
 
 std::string LanguageToString(Language language) {
     return language == Language::Russian ? "ru" : "en";
-}
-
-int NextWrappedIndex(int index, int count) {
-    if (count <= 0) {
-        return 0;
-    }
-    return (std::clamp(index, 0, count - 1) + 1) % count;
 }
 
 int ClampSettingIndex(int index, int count) {
@@ -81,6 +89,8 @@ void ProgressManager::Load() {
         data.uiFontIndex = json.value("uiFontIndex", 0);
         data.typingTextFontIndex = json.value("typingTextFontIndex", 0);
         data.keyboardFontIndex = json.value("keyboardFontIndex", 0);
+        data.focusModeEnabled = json.value("focusModeEnabled", true);
+        data.uiDensity = UiDensityFromString(json.value("uiDensity", std::string("normal")));
         data.weakKeys.clear();
 
         if (json.contains("weakKeys") && json["weakKeys"].is_object()) {
@@ -125,6 +135,8 @@ void ProgressManager::Save() const {
     json["uiFontIndex"] = data.uiFontIndex;
     json["typingTextFontIndex"] = data.typingTextFontIndex;
     json["keyboardFontIndex"] = data.keyboardFontIndex;
+    json["focusModeEnabled"] = data.focusModeEnabled;
+    json["uiDensity"] = UiDensityToString(data.uiDensity);
     json["weakKeys"] = data.weakKeys;
     json["recentSessions"] = nlohmann::json::array();
     for (const SessionRecord& session : data.recentSessions) {
@@ -148,6 +160,8 @@ void ProgressManager::Reset() {
     const int preservedUiFontIndex = data.uiFontIndex;
     const int preservedTypingTextFontIndex = data.typingTextFontIndex;
     const int preservedKeyboardFontIndex = data.keyboardFontIndex;
+    const bool preservedFocusModeEnabled = data.focusModeEnabled;
+    const UiDensity preservedUiDensity = data.uiDensity;
 
     data = ProgressData{};
     data.difficulty = preservedDifficulty;
@@ -157,6 +171,8 @@ void ProgressManager::Reset() {
     data.uiFontIndex = preservedUiFontIndex;
     data.typingTextFontIndex = preservedTypingTextFontIndex;
     data.keyboardFontIndex = preservedKeyboardFontIndex;
+    data.focusModeEnabled = preservedFocusModeEnabled;
+    data.uiDensity = preservedUiDensity;
     Save();
 }
 
@@ -196,21 +212,6 @@ int ProgressManager::GetCurrentLesson(Language language, int lessonCount) const 
     }
 
     return std::clamp(GetUnlockedLesson(language), 0, lessonCount - 1);
-}
-
-void ProgressManager::CycleDifficulty() {
-    switch (data.difficulty) {
-        case Difficulty::Relaxed:
-            data.difficulty = Difficulty::Normal;
-            break;
-        case Difficulty::Normal:
-            data.difficulty = Difficulty::Strict;
-            break;
-        case Difficulty::Strict:
-            data.difficulty = Difficulty::Relaxed;
-            break;
-    }
-    Save();
 }
 
 void ProgressManager::SetDifficulty(Difficulty difficulty) {
@@ -273,13 +274,19 @@ void ProgressManager::SetKeyboardFontIndex(int index, int fontCount) {
     Save();
 }
 
-void ProgressManager::CycleTypingTextFont(int fontCount) {
-    data.typingTextFontIndex = NextWrappedIndex(data.typingTextFontIndex, fontCount);
+void ProgressManager::SetFocusModeEnabled(bool enabled) {
+    if (data.focusModeEnabled == enabled) {
+        return;
+    }
+    data.focusModeEnabled = enabled;
     Save();
 }
 
-void ProgressManager::CycleKeyboardFont(int fontCount) {
-    data.keyboardFontIndex = NextWrappedIndex(data.keyboardFontIndex, fontCount);
+void ProgressManager::SetUiDensity(UiDensity density) {
+    if (data.uiDensity == density) {
+        return;
+    }
+    data.uiDensity = density;
     Save();
 }
 

@@ -26,6 +26,8 @@ struct ProgressData {
     int uiFontIndex = 0;
     int typingTextFontIndex = 0;
     int keyboardFontIndex = 0;
+    bool focusModeEnabled = true;
+    UiDensity uiDensity = UiDensity::Normal;
     std::map<std::string, int> weakKeys;
     std::vector<SessionRecord> recentSessions;
 };
@@ -48,7 +50,6 @@ public:
     const std::vector<SessionRecord>& GetRecentSessions() const { return data.recentSessions; }
     Difficulty GetDifficulty() const { return data.difficulty; }
     void SetDifficulty(Difficulty difficulty);
-    void CycleDifficulty();
     Language GetUiLanguage() const { return data.uiLanguage; }
     Language GetTypingLanguage() const { return data.typingLanguage; }
     void SetUiLanguage(Language language);
@@ -61,8 +62,10 @@ public:
     int GetKeyboardFontIndex() const { return data.keyboardFontIndex; }
     void SetTypingTextFontIndex(int index, int fontCount);
     void SetKeyboardFontIndex(int index, int fontCount);
-    void CycleTypingTextFont(int fontCount);
-    void CycleKeyboardFont(int fontCount);
+    bool IsFocusModeEnabled() const { return data.focusModeEnabled; }
+    void SetFocusModeEnabled(bool enabled);
+    UiDensity GetUiDensity() const { return data.uiDensity; }
+    void SetUiDensity(UiDensity density);
     float GetUnlockAccuracyThreshold() const;
     std::string GetDifficultyLabel() const;
     std::string GetRankLabel() const;

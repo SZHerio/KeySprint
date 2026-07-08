@@ -85,17 +85,16 @@ struct MainMenuLayout {
     float contentWidth = 500.0f;
     float brandTitleY = 82.0f;
     float taglineY = 156.0f;
-    float statusY = 193.0f;
-    float statusFontSize = 15.0f;
+    float menuTop = 230.0f;
+    float profileX = 55.0f;
+    float profileY = 112.0f;
+    float profileWidth = 210.0f;
+    float profileHeight = 146.0f;
     float menuItemSpacing = 39.0f;
     float menuItemHeight = 38.0f;
     float optionTextOffset = 8.0f;
     float detailHeight = 62.0f;
     int optionCount = 7;
-
-    float StatusBottom() const {
-        return statusY + statusFontSize;
-    }
 
     float MenuBlockHeight() const {
         return (static_cast<float>(optionCount) - 1.0f) * menuItemSpacing + menuItemHeight;
@@ -107,7 +106,7 @@ struct MainMenuLayout {
     }
 
     float MenuTop() const {
-        return StatusBottom() + MenuGap();
+        return menuTop;
     }
 
     float MenuBottom() const {
@@ -135,8 +134,33 @@ struct MainMenuLayout {
     }
 };
 
-const MainMenuLayout& GetLayout() {
-    static const MainMenuLayout layout;
+MainMenuLayout GetLayout(UiDensity density) {
+    MainMenuLayout layout;
+    switch (density) {
+        case UiDensity::Compact:
+            layout.menuTop = 226.0f;
+            layout.profileX = 60.0f;
+            layout.profileWidth = 200.0f;
+            layout.profileHeight = 132.0f;
+            layout.menuItemSpacing = 35.0f;
+            layout.menuItemHeight = 34.0f;
+            layout.optionTextOffset = 7.0f;
+            layout.detailHeight = 56.0f;
+            break;
+        case UiDensity::Spacious:
+            layout.menuTop = 234.0f;
+            layout.profileX = 50.0f;
+            layout.profileWidth = 220.0f;
+            layout.profileHeight = 160.0f;
+            layout.menuItemSpacing = 43.0f;
+            layout.menuItemHeight = 40.0f;
+            layout.optionTextOffset = 9.0f;
+            layout.detailHeight = 68.0f;
+            break;
+        case UiDensity::Normal:
+        default:
+            break;
+    }
     return layout;
 }
 
@@ -151,8 +175,7 @@ void DrawWrappedText(Game* game, Font font, const char* text, Vector2 position, 
         const float width = MeasureTextEx(font, candidate.c_str(), fontSize, spacing).x;
 
         if (width > maxWidth && !line.empty()) {
-            const float scale = game->GetUiScale();
-            DrawTextEx(font, line.c_str(), game->ScalePoint({ position.x, y }), fontSize * scale, spacing * scale, color);
+            Ui::DrawBoldText(game, font, line.c_str(), { position.x, y }, fontSize, spacing, color);
             line = word;
             y += (fontSize + 6.0f) * 0.80f;
         } else {
@@ -161,8 +184,7 @@ void DrawWrappedText(Game* game, Font font, const char* text, Vector2 position, 
     }
 
     if (!line.empty()) {
-        const float scale = game->GetUiScale();
-        DrawTextEx(font, line.c_str(), game->ScalePoint({ position.x, y }), fontSize * scale, spacing * scale, color);
+        Ui::DrawBoldText(game, font, line.c_str(), { position.x, y }, fontSize, spacing, color);
     }
 }
 
@@ -175,17 +197,17 @@ void DrawBrandTitle(Game* game, Font font, const Theme& theme, float centerX, fl
     const float totalWidth = keySize.x + wordGap + sprintSize.x;
     const float startX = centerX - totalWidth * 0.5f;
 
-    DrawTextEx(font, "Key", game->ScalePoint({ startX + 2.0f, y + 2.0f }), fontSize * game->GetUiScale(), spacing, Fade(theme.Background, 0.34f));
-    DrawTextEx(font, "Sprint", game->ScalePoint({ startX + keySize.x + wordGap + 2.0f, y + 2.0f }), fontSize * game->GetUiScale(), spacing, Fade(theme.Highlight, 0.18f));
-    DrawTextEx(font, "Key", game->ScalePoint({ startX, y }), fontSize * game->GetUiScale(), spacing, theme.Title);
-    DrawTextEx(font, "Sprint", game->ScalePoint({ startX + keySize.x + wordGap, y }), fontSize * game->GetUiScale(), spacing, theme.Highlight);
+    Ui::DrawBoldText(game, font, "Key", { startX + 2.0f, y + 2.0f }, fontSize, spacing, Fade(theme.Background, 0.34f));
+    Ui::DrawBoldText(game, font, "Sprint", { startX + keySize.x + wordGap + 2.0f, y + 2.0f }, fontSize, spacing, Fade(theme.Highlight, 0.18f));
+    Ui::DrawBoldText(game, font, "Key", { startX, y }, fontSize, spacing, theme.Title);
+    Ui::DrawBoldText(game, font, "Sprint", { startX + keySize.x + wordGap, y }, fontSize, spacing, theme.Highlight);
 }
 
 }
 
 void MainMenuState::Init(Game* game) {
     gamePtr = game;
-    highlightY = GetLayout().HighlightY(0);
+    highlightY = GetLayout(gamePtr->GetProgress().GetUiDensity()).HighlightY(0);
 }
 
 void MainMenuState::HandleInput() {
@@ -193,7 +215,7 @@ void MainMenuState::HandleInput() {
     bool hoveringOption = false;
 
     const Vector2 mouse = GetMousePosition();
-    const MainMenuLayout& layout = GetLayout();
+    const MainMenuLayout layout = GetLayout(gamePtr->GetProgress().GetUiDensity());
     for (size_t i = 0; i < options.size(); ++i) {
         const Rectangle optionRect = gamePtr->ScaleRect({ layout.contentX, layout.HighlightY(static_cast<int>(i)), layout.contentWidth, layout.menuItemHeight - 2.0f });
         if (CheckCollisionPointRec(mouse, optionRect)) {
@@ -230,7 +252,7 @@ void MainMenuState::HandleInput() {
 
 void MainMenuState::Update(float deltaTime) {
     menuTime += deltaTime;
-    const float targetY = GetLayout().HighlightY(selectedOption);
+    const float targetY = GetLayout(gamePtr->GetProgress().GetUiDensity()).HighlightY(selectedOption);
     highlightY += (targetY - highlightY) * std::min(1.0f, deltaTime * SelectionMoveSpeed);
 }
 
@@ -239,7 +261,7 @@ void MainMenuState::Draw() {
     Font font = gamePtr->GetUiFont();
     Font titleFont = gamePtr->GetTypingFontByIndex(2);
     const float scale = gamePtr->GetUiScale();
-    const MainMenuLayout& layout = GetLayout();
+    const MainMenuLayout layout = GetLayout(gamePtr->GetProgress().GetUiDensity());
 
     const float glow = (std::sin(menuTime * 2.1f) + 1.0f) * 0.5f;
     const Color selectedAccent = OptionAccent(selectedOption, theme);
@@ -248,17 +270,58 @@ void MainMenuState::Draw() {
     DrawRectangleRoundedLines(card, 0.09f, 16, Fade(theme.PanelBorder, 0.80f));
 
     DrawBrandTitle(gamePtr, titleFont, theme, 640.0f, layout.brandTitleY);
-    DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Тренажер скорости печати" : "Typing speed trainer", gamePtr->ScalePoint({ 414.0f, layout.taglineY }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, gamePtr->GetLanguage() == Language::Russian ? u8"Тренажер скорости печати" : "Typing speed trainer", { 414.0f, layout.taglineY }, 20.0f, 1.0f, theme.TextDefault);
     const Language uiLang = gamePtr->GetLanguage();
     const Language typingLang = gamePtr->GetTypingLanguage();
     const std::string rank = gamePtr->GetProgress().GetRankLabel();
     const std::string difficulty = gamePtr->GetProgress().GetDifficultyLabel();
-    DrawTextEx(font, TextFormat(uiLang == Language::Russian ? u8"%s | Ранг %s | %s | Рекорд %.0f WPM" : "%s | %s Rank | %s | Best %.0f WPM",
-        LessonLibrary::GetLanguageLabel(typingLang).c_str(),
-        LocalRank(rank, uiLang),
-        LocalDifficulty(difficulty, uiLang),
-        gamePtr->GetProgress().GetBestWpm()),
-        gamePtr->ScalePoint({ 384.0f, layout.statusY }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
+    const std::string weakKey = gamePtr->GetProgress().GetWeakKeyOfDay(typingLang);
+    const std::string weakLabel = weakKey.empty() ? "-" : LessonLibrary::FormatKeyLabel(weakKey, typingLang);
+    const Rectangle profile = gamePtr->ScaleRect({ layout.profileX, layout.profileY, layout.profileWidth, layout.profileHeight });
+    DrawRectangleRounded(profile, 0.24f, 10, Fade(theme.PanelBorder, 0.16f));
+    DrawRectangleRoundedLines(profile, 0.24f, 10, Fade(selectedAccent, 0.30f));
+    DrawCircleV(gamePtr->ScalePoint({ layout.profileX + 24.0f, layout.profileY + 26.0f }), 8.0f * scale, Fade(selectedAccent, 0.84f));
+    Ui::DrawBoldFittedText(
+        gamePtr,
+        font,
+        TextFormat(uiLang == Language::Russian ? u8"%s | Ранг %s" : "%s | %s Rank",
+            LessonLibrary::GetLanguageLabel(typingLang).c_str(),
+            LocalRank(rank, uiLang)),
+        { layout.profileX + 46.0f, layout.profileY + 16.0f },
+        layout.profileWidth - 68.0f,
+        14.0f,
+        1.0f,
+        theme.Title);
+    Ui::DrawBoldFittedText(
+        gamePtr,
+        font,
+        TextFormat(uiLang == Language::Russian ? u8"Рекорд %.0f WPM" : "Best %.0f WPM", gamePtr->GetProgress().GetBestWpm()),
+        { layout.profileX + 46.0f, layout.profileY + 38.0f },
+        layout.profileWidth - 68.0f,
+        12.0f,
+        1.0f,
+        theme.TextDefault);
+    Ui::DrawBoldFittedText(
+        gamePtr,
+        font,
+        TextFormat(uiLang == Language::Russian ? u8"Слабая клавиша: %s" : "Weak key: %s",
+            weakLabel.c_str()),
+        { layout.profileX + 24.0f, layout.profileY + 72.0f },
+        layout.profileWidth - 48.0f,
+        12.0f,
+        1.0f,
+        theme.TextDefault);
+    Ui::DrawBoldFittedText(
+        gamePtr,
+        font,
+        TextFormat(uiLang == Language::Russian ? u8"Серия %d | %s" : "Streak %d | %s",
+            gamePtr->GetProgress().GetBestStreak(),
+            LocalDifficulty(difficulty, uiLang)),
+        { layout.profileX + 24.0f, layout.profileY + 96.0f },
+        layout.profileWidth - 48.0f,
+        12.0f,
+        1.0f,
+        theme.TextDefault);
 
     const Rectangle highlight = gamePtr->ScaleRect({ layout.contentX, highlightY, layout.contentWidth, 38.0f });
     DrawRectangleRounded(highlight, 0.35f, 10, Fade(selectedAccent, 0.17f));
@@ -273,7 +336,7 @@ void MainMenuState::Draw() {
         const Rectangle badge = gamePtr->ScaleRect({ layout.contentX + layout.contentWidth - 156.0f, layout.DetailTop() + 13.0f, 126.0f, 28.0f });
         DrawRectangleRounded(badge, 0.42f, 10, Fade(modeStyle.Accent, 0.18f));
         DrawRectangleRoundedLines(badge, 0.42f, 10, Fade(modeStyle.Accent, 0.42f));
-        Ui::DrawFittedText(
+        Ui::DrawBoldFittedText(
             gamePtr,
             font,
             gamePtr->GetLanguage() == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn,
@@ -311,8 +374,8 @@ void MainMenuState::Draw() {
                 Fade(accent, selectedOption == static_cast<int>(i) ? 0.78f : 0.36f));
         }
         DrawCircleV(gamePtr->ScalePoint({ layout.contentX + 30.0f, rowCenterY }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? accent : Fade(modeOption ? accent : theme.TextDefault, modeOption ? 0.45f : 0.35f));
-        DrawTextEx(font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), gamePtr->ScalePoint({ layout.contentX + 65.0f, y }), 21.0f * scale, 0.0f, color);
+        Ui::DrawBoldText(gamePtr, font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), { layout.contentX + 65.0f, y }, 21.0f, 0.0f, color);
     }
 
-    DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Стрелки/WASD, Enter или мышь" : "Use Up/Down, Enter or Mouse", gamePtr->ScalePoint({ 420.0f, layout.FooterY() }), 16.0f * scale, 1.0f * scale, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, gamePtr->GetLanguage() == Language::Russian ? u8"Стрелки/WASD, Enter или мышь" : "Use Up/Down, Enter or Mouse", { 420.0f, layout.FooterY() }, 16.0f, 1.0f, theme.TextDefault);
 }

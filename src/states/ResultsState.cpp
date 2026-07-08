@@ -111,24 +111,24 @@ void ResultsState::Draw() {
 
     const float threshold = gamePtr->GetProgress().GetUnlockAccuracyThreshold();
     const bool lessonPassed = retryMode == TypingMode::Tutorial && accuracy >= threshold;
-    DrawTextEx(font, lessonPassed ? (ru ? u8"Урок пройден" : "Lesson Complete") : (ru ? u8"Разбор сессии" : "Session Review"), gamePtr->ScalePoint({ 365.0f, 130.0f }), 36.0f * scale, 1.0f * scale, theme.Title);
+    Ui::DrawBoldText(gamePtr, font, lessonPassed ? (ru ? u8"Урок пройден" : "Lesson Complete") : (ru ? u8"Разбор сессии" : "Session Review"), { 365.0f, 130.0f }, 36.0f, 1.0f, theme.Title);
     DrawRectangleRounded(gamePtr->ScaleRect({ 735.0f, 132.0f, 178.0f, 34.0f }), 0.36f, 10, Fade(modeStyle.Accent, 0.15f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 735.0f, 132.0f, 178.0f, 34.0f }), 0.36f, 10, Fade(modeStyle.Accent, 0.40f));
     DrawCircleV(gamePtr->ScalePoint({ 754.0f, 149.0f }), 10.0f * scale, Fade(modeStyle.Accent, 0.76f));
-    Ui::DrawFittedText(gamePtr, font, modeStyle.Mark, { 748.0f, 143.0f }, 14.0f, 10.0f, 0.0f, WHITE);
-    Ui::DrawFittedText(gamePtr, font, ru ? modeStyle.LabelRu : modeStyle.LabelEn, { 772.0f, 142.0f }, 128.0f, 14.0f, 0.0f, theme.TextDefault);
+    Ui::DrawBoldFittedText(gamePtr, font, modeStyle.Mark, { 748.0f, 143.0f }, 14.0f, 10.0f, 0.0f, WHITE);
+    Ui::DrawBoldFittedText(gamePtr, font, ru ? modeStyle.LabelRu : modeStyle.LabelEn, { 772.0f, 142.0f }, 128.0f, 14.0f, 0.0f, theme.TextDefault);
     
-    DrawTextEx(font, TextFormat("WPM %.0f", wpm), gamePtr->ScalePoint({ 365.0f, 210.0f }), 26.0f * scale, 1.0f * scale, modeStyle.Accent);
-    DrawTextEx(font, TextFormat("ACC %.0f%%", accuracy), gamePtr->ScalePoint({ 530.0f, 210.0f }), 26.0f * scale, 1.0f * scale, modeStyle.Accent);
-    DrawTextEx(font, TextFormat(ru ? u8"СЕРИЯ %d" : "STREAK %d", bestStreak), gamePtr->ScalePoint({ 705.0f, 210.0f }), 26.0f * scale, 1.0f * scale, Fade(modeStyle.Accent, 0.90f));
+    Ui::DrawBoldText(gamePtr, font, TextFormat("WPM %.0f", wpm), { 365.0f, 210.0f }, 26.0f, 1.0f, modeStyle.Accent);
+    Ui::DrawBoldText(gamePtr, font, TextFormat("ACC %.0f%%", accuracy), { 530.0f, 210.0f }, 26.0f, 1.0f, modeStyle.Accent);
+    Ui::DrawBoldText(gamePtr, font, TextFormat(ru ? u8"СЕРИЯ %d" : "STREAK %d", bestStreak), { 705.0f, 210.0f }, 26.0f, 1.0f, Fade(modeStyle.Accent, 0.90f));
     const std::string rank = gamePtr->GetProgress().GetRankLabel();
     const std::string difficulty = gamePtr->GetProgress().GetDifficultyLabel();
-    DrawTextEx(font, TextFormat(ru ? u8"Ранг: %s | Сложность: %s" : "Rank: %s | Difficulty: %s", LocalRank(rank, ru), LocalDifficulty(difficulty, ru)), gamePtr->ScalePoint({ 365.0f, 258.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, TextFormat(ru ? u8"Ранг: %s | Сложность: %s" : "Rank: %s | Difficulty: %s", LocalRank(rank, ru), LocalDifficulty(difficulty, ru)), { 365.0f, 258.0f }, 18.0f, 1.0f, theme.TextDefault);
 
     if (retryMode == TypingMode::Tutorial) {
         const char* status = lessonPassed ? (ru ? u8"Следующий урок открыт" : "Next lesson unlocked") : (ru ? u8"Точность ниже порога сложности" : "Accuracy below difficulty threshold");
-        DrawTextEx(font, lessonTitle.c_str(), gamePtr->ScalePoint({ 365.0f, 305.0f }), 18.0f * scale, 1.0f * scale, theme.Title);
-        DrawTextEx(font, TextFormat("%s (need %.0f%%)", status, threshold), gamePtr->ScalePoint({ 365.0f, 332.0f }), 16.0f * scale, 1.0f * scale, lessonPassed ? theme.TextCorrect : theme.TextDefault);
+        Ui::DrawBoldText(gamePtr, font, lessonTitle.c_str(), { 365.0f, 305.0f }, 18.0f, 1.0f, theme.Title);
+        Ui::DrawBoldText(gamePtr, font, TextFormat("%s (need %.0f%%)", status, threshold), { 365.0f, 332.0f }, 16.0f, 1.0f, lessonPassed ? theme.TextCorrect : theme.TextDefault);
     }
 
     std::vector<std::pair<std::string, int>> weak(mistakes.begin(), mistakes.end());
@@ -138,15 +138,40 @@ void ResultsState::Draw() {
         : weak.front().first;
     const std::string weakKeyLabel = LessonLibrary::FormatKeyLabel(weakKey, language);
     const std::string weakFinger = gamePtr->GetProgress().GetWeakFingerOfDay(language);
-    DrawRectangleRounded(gamePtr->ScaleRect({ 350.0f, 370.0f, 580.0f, 86.0f }), 0.18f, 10, Fade(modeStyle.Accent, 0.10f));
-    DrawRectangleRoundedLines(gamePtr->ScaleRect({ 350.0f, 370.0f, 580.0f, 86.0f }), 0.18f, 10, Fade(modeStyle.Accent, 0.28f));
-    DrawTextEx(font, ru ? u8"Заметка тренера" : "Coach note", gamePtr->ScalePoint({ 380.0f, 386.0f }), 18.0f * scale, 1.0f * scale, theme.Title);
+    DrawRectangleRounded(gamePtr->ScaleRect({ 350.0f, 364.0f, 580.0f, 110.0f }), 0.18f, 10, Fade(modeStyle.Accent, 0.10f));
+    DrawRectangleRoundedLines(gamePtr->ScaleRect({ 350.0f, 364.0f, 580.0f, 110.0f }), 0.18f, 10, Fade(modeStyle.Accent, 0.28f));
+    Ui::DrawBoldText(gamePtr, font, ru ? u8"Следующий шаг" : "Next step", { 380.0f, 380.0f }, 18.0f, 1.0f, theme.Title);
     const std::string weakKeyLine = ru
         ? u8"Слабая клавиша: " + weakKeyLabel + u8" | Фокус: " + LocalFinger(weakFinger, true)
         : "Weak key: " + weakKeyLabel + " | Finger focus: " + LocalFinger(weakFinger, false);
-    Ui::DrawFittedText(gamePtr, font, weakKeyLine.c_str(), { 380.0f, 416.0f }, 520.0f, 16.0f, 0.0f, theme.TextDefault);
-    const char* tip = accuracy < threshold ? (ru ? u8"Миссия: повтори медленнее и держи точность выше порога." : "Mission: replay this lesson slower and keep accuracy above threshold.") : (ru ? u8"Миссия: повтори и побей серию без потери точности." : "Mission: repeat once and beat your streak without losing accuracy.");
-    Ui::DrawFittedText(gamePtr, font, tip, { 380.0f, 438.0f }, 520.0f, 14.0f, 0.0f, theme.TextDefault);
+    Ui::DrawBoldFittedText(gamePtr, font, weakKeyLine.c_str(), { 380.0f, 410.0f }, 520.0f, 15.0f, 0.0f, theme.TextDefault);
+
+    const std::string nextStep = [&]() {
+        if (accuracy < threshold) {
+            return std::string(ru
+                ? u8"Повтори этот же режим медленнее: цель - чистые нажатия выше порога."
+                : "Replay this mode slower: the goal is clean presses above the threshold.");
+        }
+        if (!weakKey.empty() && retryMode != TypingMode::Composition) {
+            return std::string(ru
+                ? u8"Зайди в уроки или практику: дай слабой клавише короткий фокусный повтор."
+                : "Open lessons or practice: give the weak key a short focused repeat.");
+        }
+        if (retryMode == TypingMode::Practice) {
+            return std::string(ru
+                ? u8"Перейди в уроки: пора закрепить скорость структурным упражнением."
+                : "Move to lessons: lock this speed into a structured drill.");
+        }
+        if (retryMode == TypingMode::Tutorial && lessonPassed) {
+            return std::string(ru
+                ? u8"Открой следующий урок, пока точность свежая."
+                : "Open the next lesson while the accuracy is fresh.");
+        }
+        return std::string(ru
+            ? u8"Сделай один спокойный повтор и попробуй побить серию без спешки."
+            : "Do one calm repeat and try to beat the streak without rushing.");
+    }();
+    Ui::DrawBoldFittedText(gamePtr, font, nextStep.c_str(), { 380.0f, 434.0f }, 520.0f, 14.0f, 0.0f, theme.TextDefault, 11.0f);
 
     const Rectangle retryRect = { 430.0f, 500.0f, 420.0f, 40.0f };
     const Rectangle menuRect = { 430.0f, 548.0f, 420.0f, 40.0f };
@@ -156,10 +181,10 @@ void ResultsState::Draw() {
     DrawRectangleRounded(gamePtr->ScaleRect(retryRect), 0.25f, 8, Fade(modeStyle.Accent, retryHover ? 0.88f : 0.74f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect(retryRect), 0.25f, 8, retryHover ? Fade(HoverOutline(gamePtr), 0.88f) : Fade(modeStyle.Accent, 0.28f));
     DrawCircleV(gamePtr->ScalePoint({ retryRect.x + 18.0f, retryRect.y + 20.0f }), (retryHover ? 6.0f : 4.0f) * scale, Fade(WHITE, retryHover ? 0.95f : 0.72f));
-    DrawTextEx(font, ru ? u8"ENTER / Клик: повторить" : "ENTER / Click to Try Again", gamePtr->ScalePoint({ 455.0f, 510.0f }), 18.0f * scale, 1.0f * scale, WHITE);
+    Ui::DrawBoldText(gamePtr, font, ru ? u8"ENTER / Клик: повторить" : "ENTER / Click to Try Again", { 455.0f, 510.0f }, 18.0f, 1.0f, WHITE);
 
     DrawRectangleRounded(gamePtr->ScaleRect(menuRect), 0.25f, 8, Fade(modeStyle.Accent, menuHover ? 0.80f : 0.62f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect(menuRect), 0.25f, 8, menuHover ? Fade(HoverOutline(gamePtr), 0.88f) : Fade(modeStyle.Accent, 0.28f));
     DrawCircleV(gamePtr->ScalePoint({ menuRect.x + 18.0f, menuRect.y + 20.0f }), (menuHover ? 6.0f : 4.0f) * scale, Fade(WHITE, menuHover ? 0.95f : 0.72f));
-    DrawTextEx(font, ru ? u8"ESC / Клик: в меню" : "ESC / Click to return to Menu", gamePtr->ScalePoint({ 455.0f, 558.0f }), 18.0f * scale, 1.0f * scale, WHITE);
+    Ui::DrawBoldText(gamePtr, font, ru ? u8"ESC / Клик: в меню" : "ESC / Click to return to Menu", { 455.0f, 558.0f }, 18.0f, 1.0f, WHITE);
 }

@@ -10,3 +10,9 @@ enum class Difficulty {
     Normal,
     Strict
 };
+
+enum class UiDensity {
+    Compact,
+    Normal,
+    Spacious
+};

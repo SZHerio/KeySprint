@@ -14,15 +14,39 @@
 namespace {
 constexpr int LessonColumns = 2;
 constexpr float LessonCardWidth = 520.0f;
-constexpr float LessonCardHeight = 70.0f;
 constexpr float LessonGapX = 40.0f;
-constexpr float LessonGapY = 8.0f;
 constexpr float LessonStartX = 90.0f;
-constexpr float LessonViewportPaddingY = 14.0f;
 constexpr float HeaderTextX = 110.0f;
 
 bool IsRu(Language language) {
     return language == Language::Russian;
+}
+
+float LessonCardHeightFor(UiDensity density) {
+    switch (density) {
+        case UiDensity::Compact: return 62.0f;
+        case UiDensity::Spacious: return 78.0f;
+        case UiDensity::Normal:
+        default: return 70.0f;
+    }
+}
+
+float LessonGapYFor(UiDensity density) {
+    switch (density) {
+        case UiDensity::Compact: return 6.0f;
+        case UiDensity::Spacious: return 12.0f;
+        case UiDensity::Normal:
+        default: return 8.0f;
+    }
+}
+
+float LessonViewportPaddingYFor(UiDensity density) {
+    switch (density) {
+        case UiDensity::Compact: return 10.0f;
+        case UiDensity::Spacious: return 18.0f;
+        case UiDensity::Normal:
+        default: return 14.0f;
+    }
 }
 }
 
@@ -53,15 +77,18 @@ Rectangle LessonSelectState::GetLessonViewport() const {
 }
 
 Rectangle LessonSelectState::GetCardBaseRect(int index) const {
-    const float startY = GetLessonViewport().y + LessonViewportPaddingY;
+    const UiDensity density = gamePtr->GetProgress().GetUiDensity();
+    const float cardHeight = LessonCardHeightFor(density);
+    const float gapY = LessonGapYFor(density);
+    const float startY = GetLessonViewport().y + LessonViewportPaddingYFor(density);
 
     const int col = index % LessonColumns;
     const int row = index / LessonColumns;
     return {
         LessonStartX + col * (LessonCardWidth + LessonGapX),
-        startY + row * (LessonCardHeight + LessonGapY),
+        startY + row * (cardHeight + gapY),
         LessonCardWidth,
-        LessonCardHeight
+        cardHeight
     };
 }
 
@@ -78,16 +105,17 @@ float LessonSelectState::GetMaxScrollOffset() const {
         return 0.0f;
     }
 
-    const float contentHeight = LessonViewportPaddingY * 2.0f +
-        static_cast<float>(rows) * LessonCardHeight +
-        static_cast<float>(rows - 1) * LessonGapY;
+    const UiDensity density = gamePtr->GetProgress().GetUiDensity();
+    const float contentHeight = LessonViewportPaddingYFor(density) * 2.0f +
+        static_cast<float>(rows) * LessonCardHeightFor(density) +
+        static_cast<float>(rows - 1) * LessonGapYFor(density);
     return std::max(0.0f, contentHeight - GetLessonViewport().height);
 }
 
 void LessonSelectState::EnsureSelectedVisible() {
     const Rectangle viewport = GetLessonViewport();
     const Rectangle base = GetCardBaseRect(selectedLesson);
-    const float margin = LessonViewportPaddingY;
+    const float margin = LessonViewportPaddingYFor(gamePtr->GetProgress().GetUiDensity());
 
     if (base.y - scrollTarget < viewport.y + margin) {
         scrollTarget = base.y - viewport.y - margin;
@@ -174,15 +202,16 @@ void LessonSelectState::Draw() {
     const int unlocked = gamePtr->GetProgress().GetUnlockedLesson(language);
     const float pulse = (std::sin(animTime * 4.0f) + 1.0f) * 0.5f;
     const Rectangle viewport = GetLessonViewport();
+    const float cardHeight = LessonCardHeightFor(gamePtr->GetProgress().GetUiDensity());
 
     Ui::DrawRounded(gamePtr, { 55.0f, 42.0f, 1170.0f, 635.0f }, 0.04f, 16, Ui::Fade(theme.Panel, 0.78f));
     Ui::DrawRoundedLines(gamePtr, { 55.0f, 42.0f, 1170.0f, 635.0f }, 0.04f, 16, Ui::Fade(modeStyle.Accent, 0.44f));
     Ui::DrawRounded(gamePtr, { 72.0f, 58.0f, 7.0f, 602.0f }, 0.80f, 8, Ui::Fade(modeStyle.Accent, 0.34f));
 
-    Ui::DrawText(gamePtr, font, IsRu(uiLanguage) ? u8"Выбор урока" : "Lesson Select", { HeaderTextX, 72.0f }, 38.0f, 1.0f, theme.Title);
+    Ui::DrawBoldText(gamePtr, font, IsRu(uiLanguage) ? u8"Выбор урока" : "Lesson Select", { HeaderTextX, 72.0f }, 38.0f, 1.0f, theme.Title);
     const int visibleUnlocked = std::min(unlocked + 1, static_cast<int>(lessons.size()));
-    Ui::DrawText(gamePtr, font, TextFormat(IsRu(uiLanguage) ? u8"%s карта курса | открыто %d/%d" : "%s course map | %d/%d open", LessonLibrary::GetLanguageLabel(language).c_str(), visibleUnlocked, static_cast<int>(lessons.size())), { HeaderTextX, 118.0f }, 18.0f, 1.0f, theme.TextDefault);
-    Ui::DrawText(gamePtr, font, IsRu(uiLanguage) ? u8"ESC Меню | Стрелки/WASD | Enter Старт" : "ESC Menu | Arrows/WASD Move | Enter Start", { 720.0f, 92.0f }, 16.0f, 1.0f, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, TextFormat(IsRu(uiLanguage) ? u8"%s карта курса | открыто %d/%d" : "%s course map | %d/%d open", LessonLibrary::GetLanguageLabel(language).c_str(), visibleUnlocked, static_cast<int>(lessons.size())), { HeaderTextX, 118.0f }, 18.0f, 1.0f, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, IsRu(uiLanguage) ? u8"ESC Меню | Стрелки/WASD | Enter Старт" : "ESC Menu | Arrows/WASD Move | Enter Start", { 720.0f, 92.0f }, 16.0f, 1.0f, theme.TextDefault);
 
     Ui::BeginScissor(gamePtr, viewport);
     for (int i = 0; i + 1 < static_cast<int>(lessons.size()); ++i) {
@@ -200,8 +229,8 @@ void LessonSelectState::Draw() {
         DrawCircleV(end, 3.0f * scale, Ui::Fade(i < unlocked ? modeStyle.Accent : theme.PanelBorder, 0.55f));
     }
 
-    Ui::DrawRounded(gamePtr, { cursorX - 5.0f, cursorY - 5.0f, 530.0f, 80.0f }, 0.12f, 12, Ui::Fade(modeStyle.Accent, 0.16f + pulse * 0.06f));
-    Ui::DrawRoundedLines(gamePtr, { cursorX - 5.0f, cursorY - 5.0f, 530.0f, 80.0f }, 0.12f, 12, Ui::Fade(modeStyle.Accent, 0.58f));
+    Ui::DrawRounded(gamePtr, { cursorX - 5.0f, cursorY - 5.0f, 530.0f, cardHeight + 10.0f }, 0.12f, 12, Ui::Fade(modeStyle.Accent, 0.16f + pulse * 0.06f));
+    Ui::DrawRoundedLines(gamePtr, { cursorX - 5.0f, cursorY - 5.0f, 530.0f, cardHeight + 10.0f }, 0.12f, 12, Ui::Fade(modeStyle.Accent, 0.58f));
 
     for (int i = 0; i < static_cast<int>(lessons.size()); ++i) {
         const Lesson& lesson = lessons[i];
@@ -217,13 +246,13 @@ void LessonSelectState::Draw() {
         Ui::DrawRounded(gamePtr, rect, 0.12f, 12, fill);
         Ui::DrawRoundedLines(gamePtr, rect, 0.12f, 12, Ui::Fade(unlockedLesson ? modeStyle.Accent : theme.TextDefault, unlockedLesson ? 0.36f : 0.25f));
 
-        Ui::DrawText(gamePtr, font, TextFormat("%02d", i + 1), { rect.x + 22.0f, rect.y + 13.0f }, 26.0f, 1.0f, unlockedLesson ? modeStyle.Accent : theme.TextDefault);
-        Ui::DrawText(gamePtr, font, lesson.title.c_str(), { rect.x + 88.0f, rect.y + 12.0f }, 20.0f, 1.0f, unlockedLesson ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.55f));
-        Ui::DrawFittedText(gamePtr, font, lesson.description.c_str(), { rect.x + 88.0f, rect.y + 42.0f }, 320.0f, 13.0f, 0.0f, unlockedLesson ? theme.TextDefault : Ui::Fade(theme.TextDefault, 0.42f), 10.0f);
+        Ui::DrawBoldText(gamePtr, font, TextFormat("%02d", i + 1), { rect.x + 22.0f, rect.y + 13.0f }, 26.0f, 1.0f, unlockedLesson ? modeStyle.Accent : theme.TextDefault);
+        Ui::DrawBoldText(gamePtr, font, lesson.title.c_str(), { rect.x + 88.0f, rect.y + 12.0f }, 20.0f, 1.0f, unlockedLesson ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.55f));
+        Ui::DrawBoldFittedText(gamePtr, font, lesson.description.c_str(), { rect.x + 88.0f, rect.y + 42.0f }, 320.0f, 13.0f, 0.0f, unlockedLesson ? theme.TextDefault : Ui::Fade(theme.TextDefault, 0.42f), 10.0f);
 
         const char* status = unlockedLesson ? (i < unlocked ? (IsRu(uiLanguage) ? u8"ГОТОВО" : "DONE") : (IsRu(uiLanguage) ? u8"ОТКРЫТ" : "OPEN")) : (IsRu(uiLanguage) ? u8"ЗАКРЫТ" : "LOCKED");
         const Color statusColor = unlockedLesson ? theme.TextCorrect : theme.TextError;
-        Ui::DrawText(gamePtr, font, status, { rect.x + rect.width - 92.0f, rect.y + 17.0f }, 14.0f, 1.0f, statusColor);
+        Ui::DrawBoldText(gamePtr, font, status, { rect.x + rect.width - 92.0f, rect.y + 17.0f }, 14.0f, 1.0f, statusColor);
     }
     EndScissorMode();
 

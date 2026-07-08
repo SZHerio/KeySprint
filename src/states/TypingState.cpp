@@ -13,7 +13,6 @@
 namespace {
 constexpr float TextFontSize = 27.0f;
 constexpr float UiSpacing = 1.0f;
-constexpr Rectangle TextViewport = { 60.0f, 128.0f, 1160.0f, 202.0f };
 
 float GlyphWidth(Font font, int codepoint, float fontSize, float spacing) {
     const std::string glyph = codepoint == ' ' ? "n" : CodepointToUtf8(codepoint);
@@ -60,9 +59,10 @@ void TypingState::CalculateLayout(Font font, float fontSize) {
     const auto& target = logic.GetTargetCodepoints();
     charPositions.clear();
 
-    const float startX = TextViewport.x + 20.0f;
-    const float maxX = TextViewport.x + TextViewport.width - 20.0f;
-    const float startY = 150.0f;
+    const Rectangle viewport = GetTextViewport();
+    const float startX = viewport.x + 20.0f;
+    const float maxX = viewport.x + viewport.width - 20.0f;
+    const float startY = viewport.y + 22.0f;
     const float lineHeight = (fontSize + 15.0f) * 0.80f;
     float currentX = startX;
     float currentY = startY;
@@ -202,7 +202,8 @@ void TypingState::Update(float deltaTime) {
         caretY += (targetPos.y - caretY) * 20.0f * deltaTime;
     }
 
-    const float targetScroll = std::max(0.0f, caretY - (TextViewport.y + TextViewport.height - 62.0f));
+    const Rectangle viewport = GetTextViewport();
+    const float targetScroll = std::max(0.0f, caretY - (viewport.y + viewport.height - 62.0f));
     textScrollY += (targetScroll - textScrollY) * std::min(1.0f, deltaTime * 10.0f);
 
     if (logic.IsFinished()) {
@@ -221,6 +222,55 @@ void TypingState::Update(float deltaTime) {
 
 float TypingState::GetTextFontSize() const {
     return mode == TypingMode::Composition ? 22.0f : TextFontSize;
+}
+
+bool TypingState::IsFocusModeActive() const {
+    return gamePtr != nullptr && gamePtr->GetProgress().IsFocusModeEnabled();
+}
+
+Rectangle TypingState::GetTextViewport() const {
+    if (IsFocusModeActive()) {
+        switch (gamePtr->GetProgress().GetUiDensity()) {
+            case UiDensity::Compact: return { 60.0f, 74.0f, 1160.0f, 230.0f };
+            case UiDensity::Spacious: return { 60.0f, 72.0f, 1160.0f, 270.0f };
+            case UiDensity::Normal:
+            default: return { 60.0f, 74.0f, 1160.0f, 250.0f };
+        }
+    }
+
+    switch (gamePtr->GetProgress().GetUiDensity()) {
+        case UiDensity::Compact: return { 60.0f, 136.0f, 1160.0f, 188.0f };
+        case UiDensity::Spacious: return { 60.0f, 120.0f, 1160.0f, 220.0f };
+        case UiDensity::Normal:
+        default: return { 60.0f, 128.0f, 1160.0f, 202.0f };
+    }
+}
+
+Rectangle TypingState::GetKeyboardPanelRect() const {
+    return IsFocusModeActive()
+        ? Rectangle{ 60.0f, 362.0f, 1160.0f, 320.0f }
+        : Rectangle{ 60.0f, 348.0f, 1160.0f, 356.0f };
+}
+
+float TypingState::GetKeyboardStartY() const {
+    if (IsFocusModeActive()) {
+        switch (gamePtr->GetProgress().GetUiDensity()) {
+            case UiDensity::Compact: return 486.0f;
+            case UiDensity::Spacious: return 466.0f;
+            case UiDensity::Normal:
+            default: return 474.0f;
+        }
+    }
+    return 506.0f;
+}
+
+float TypingState::GetKeyboardScale() const {
+    switch (gamePtr->GetProgress().GetUiDensity()) {
+        case UiDensity::Compact: return 0.88f;
+        case UiDensity::Spacious: return 0.96f;
+        case UiDensity::Normal:
+        default: return 0.92f;
+    }
 }
 
 const char* TypingState::GetModeTitle() const {
@@ -249,10 +299,10 @@ int TypingState::GetNextExpectedChar() const {
 
 void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
     const int nextChar = GetNextExpectedChar();
-    const float keyboardScale = 0.92f;
+    const float keyboardScale = GetKeyboardScale();
     const float keySize = 34.0f * keyboardScale;
     const float gap = 5.0f * keyboardScale;
-    const float startY = 506.0f;
+    const float startY = GetKeyboardStartY();
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
 
     auto rowKeysFor = [&](int row) {
@@ -322,7 +372,7 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
     const bool spaceActive = GetNextExpectedChar() == ' ';
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
 
-    Ui::DrawText(gamePtr, font, uiLanguage == Language::Russian ? u8"Подсказка" : "Hint", { 80.0f, 356.0f }, 19.0f, UiSpacing, theme.Title);
+    Ui::DrawBoldText(gamePtr, font, uiLanguage == Language::Russian ? u8"Подсказка" : "Hint", { 80.0f, 356.0f }, 19.0f, UiSpacing, theme.Title);
 
     auto drawFinger = [&](Rectangle rect, FingerType finger, const char* label) {
         const bool active = activeFinger == finger ||
@@ -339,7 +389,7 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
         const Vector2 labelSize = MeasureTextEx(font, label, 10.0f, UiSpacing);
         const bool thumb = rect.height <= 30.0f;
         const float labelY = thumb ? rect.y + (rect.height - 10.0f) * 0.5f : rect.y + rect.height - 18.0f;
-        Ui::DrawText(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, labelY }, 10.0f, UiSpacing, WHITE);
+        Ui::DrawBoldText(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, labelY }, 10.0f, UiSpacing, WHITE);
     };
 
     auto drawHand = [&](float x, bool left) {
@@ -373,21 +423,32 @@ void TypingState::Draw() {
     Font uiFont = gamePtr->GetUiFont();
     const float scale = gamePtr->GetUiScale();
     float fontSize = GetTextFontSize();
+    const bool focusMode = IsFocusModeActive();
+    const Rectangle textViewport = GetTextViewport();
 
     const auto& target = logic.GetTargetCodepoints();
     const auto& typed = logic.GetTypedCodepoints();
 
-    Ui::DrawRounded(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, Ui::Fade(theme.Panel, 0.70f));
-    Ui::DrawRoundedLines(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, Ui::Fade(modeStyle.Accent, 0.50f));
-    Ui::DrawRounded(gamePtr, { 78.0f, 48.0f, 7.0f, 56.0f }, 0.80f, 8, Ui::Fade(modeStyle.Accent, 0.58f));
-    Ui::DrawRounded(gamePtr, TextViewport, 0.12f, 12, Ui::Fade(theme.Panel, 0.54f));
-    Ui::DrawRoundedLines(gamePtr, TextViewport, 0.12f, 12, Ui::Fade(modeStyle.Accent, 0.34f));
-    DrawTypingProgress(gamePtr, theme, modeStyle.Accent, TextViewport, progressFill, errorFeedback);
-    if (errorFeedback > 0.0f) {
-        Ui::DrawRoundedLines(gamePtr, Ui::Inflate(TextViewport, 2.0f + errorFeedback * 2.0f), 0.12f, 12, Ui::Fade(theme.TextError, 0.18f + errorFeedback * 0.34f));
+    if (focusMode) {
+        Ui::DrawRounded(gamePtr, { 60.0f, 24.0f, 1160.0f, 34.0f }, 0.40f, 12, Ui::Fade(theme.Panel, 0.42f));
+        Ui::DrawRoundedLines(gamePtr, { 60.0f, 24.0f, 1160.0f, 34.0f }, 0.40f, 12, Ui::Fade(modeStyle.Accent, 0.24f));
+        Ui::DrawBoldText(gamePtr, uiFont, "FOCUS", { 82.0f, 32.0f }, 13.0f, 1.0f, Ui::Fade(theme.TextDefault, 0.72f));
+        Ui::DrawBoldText(gamePtr, uiFont, TextFormat("WPM %.0f", logic.GetWPM()), { 930.0f, 31.0f }, 17.0f, 0.0f, modeStyle.Accent);
+        Ui::DrawBoldText(gamePtr, uiFont, TextFormat("ACC %.0f%%", logic.GetAccuracy()), { 1060.0f, 31.0f }, 17.0f, 0.0f, modeStyle.Accent);
+    } else {
+        Ui::DrawRounded(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, Ui::Fade(theme.Panel, 0.70f));
+        Ui::DrawRoundedLines(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, Ui::Fade(modeStyle.Accent, 0.50f));
+        Ui::DrawRounded(gamePtr, { 78.0f, 48.0f, 7.0f, 56.0f }, 0.80f, 8, Ui::Fade(modeStyle.Accent, 0.58f));
     }
 
-    Ui::BeginScissor(gamePtr, TextViewport);
+    Ui::DrawRounded(gamePtr, textViewport, 0.12f, 12, Ui::Fade(theme.Panel, focusMode ? 0.64f : 0.54f));
+    Ui::DrawRoundedLines(gamePtr, textViewport, 0.12f, 12, Ui::Fade(modeStyle.Accent, focusMode ? 0.42f : 0.34f));
+    DrawTypingProgress(gamePtr, theme, modeStyle.Accent, textViewport, progressFill, errorFeedback);
+    if (errorFeedback > 0.0f) {
+        Ui::DrawRoundedLines(gamePtr, Ui::Inflate(textViewport, 2.0f + errorFeedback * 3.0f), 0.12f, 12, Ui::Fade(theme.TextError, 0.24f + errorFeedback * 0.48f));
+    }
+
+    Ui::BeginScissor(gamePtr, textViewport);
     for (size_t i = 0; i < target.size(); ++i) {
         if (target[i] == '\n') {
             continue;
@@ -412,7 +473,8 @@ void TypingState::Draw() {
                 color = theme.TextError;
                 const float pulse = (lastFeedbackWasError && i == lastFeedbackIndex) ? EaseOut(errorFeedback) : 0.0f;
                 
-                Ui::DrawRounded(gamePtr, { drawX - 3.0f, drawY - 5.0f, glyphWidth + 7.0f, fontSize + 11.0f }, 0.22f, 8, Ui::Fade(theme.TextError, 0.16f + pulse * 0.28f));
+                Ui::DrawRounded(gamePtr, Ui::Inflate({ drawX - 3.0f, drawY - 5.0f, glyphWidth + 7.0f, fontSize + 11.0f }, 4.0f + pulse * 7.0f), 0.22f, 8, Ui::Fade(theme.TextError, pulse * 0.16f));
+                Ui::DrawRounded(gamePtr, { drawX - 3.0f, drawY - 5.0f, glyphWidth + 7.0f, fontSize + 11.0f }, 0.22f, 8, Ui::Fade(theme.TextError, 0.18f + pulse * 0.34f));
                 Ui::DrawRect(gamePtr, { drawX, drawY + fontSize + 3.0f, glyphWidth, 3.0f + pulse * 2.0f }, Ui::Fade(theme.TextError, 0.78f + pulse * 0.22f));
             }
         }
@@ -437,24 +499,28 @@ void TypingState::Draw() {
     EndScissorMode();
 
     // Заголовки (системным шрифтом или тем же, но для UI можно оставить обычный)
-    const char* title = GetModeTitle();
-    Ui::DrawText(gamePtr, uiFont, title, {98.0f, 48.0f}, 32.0f, 0.0f, theme.Title);
-    Ui::DrawFittedText(gamePtr, uiFont, TextFormat("%s | %s | %s", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str(), uiLanguage == Language::Russian ? u8"ESC Меню" : "ESC Menu"), {98.0f, 88.0f}, 500.0f, 16.0f, 0.0f, theme.TextDefault);
+    if (!focusMode) {
+        const char* title = GetModeTitle();
+        Ui::DrawBoldText(gamePtr, uiFont, title, {98.0f, 48.0f}, 32.0f, 0.0f, theme.Title);
+        Ui::DrawBoldFittedText(gamePtr, uiFont, TextFormat("%s | %s | %s", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str(), uiLanguage == Language::Russian ? u8"ESC Меню" : "ESC Menu"), {98.0f, 88.0f}, 500.0f, 16.0f, 0.0f, theme.TextDefault);
 
-    Ui::DrawRounded(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.13f));
-    Ui::DrawRoundedLines(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.38f));
-    DrawCircleV(gamePtr->ScalePoint({ 666.0f, 75.0f }), 14.0f * scale, Ui::Fade(modeStyle.Accent, 0.72f));
-    Ui::DrawCenteredFittedText(gamePtr, uiFont, modeStyle.Mark, { 652.0f, 61.0f, 28.0f, 28.0f }, 12.0f, 0.0f, WHITE, 9.0f);
-    Ui::DrawFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.LabelRu : modeStyle.LabelEn, { 688.0f, 61.0f }, 150.0f, 15.0f, 0.0f, theme.Title);
-    Ui::DrawFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn, { 688.0f, 81.0f }, 150.0f, 12.0f, 0.0f, theme.TextDefault);
+        Ui::DrawRounded(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.13f));
+        Ui::DrawRoundedLines(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.38f));
+        DrawCircleV(gamePtr->ScalePoint({ 666.0f, 75.0f }), 14.0f * scale, Ui::Fade(modeStyle.Accent, 0.72f));
+        Ui::DrawBoldCenteredFittedText(gamePtr, uiFont, modeStyle.Mark, { 652.0f, 61.0f, 28.0f, 28.0f }, 12.0f, 0.0f, WHITE, 9.0f);
+        Ui::DrawBoldFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.LabelRu : modeStyle.LabelEn, { 688.0f, 61.0f }, 150.0f, 15.0f, 0.0f, theme.Title);
+        Ui::DrawBoldFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn, { 688.0f, 81.0f }, 150.0f, 12.0f, 0.0f, theme.TextDefault);
 
-    // Live Metrics
-    Ui::DrawText(gamePtr, uiFont, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, 0.0f, modeStyle.Accent);
-    Ui::DrawText(gamePtr, uiFont, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, 0.0f, modeStyle.Accent);
-    Ui::DrawText(gamePtr, uiFont, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, 0.0f, logic.GetCurrentStreak() > 20 ? modeStyle.Accent : theme.TextDefault);
+        Ui::DrawBoldText(gamePtr, uiFont, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, 0.0f, modeStyle.Accent);
+        Ui::DrawBoldText(gamePtr, uiFont, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, 0.0f, modeStyle.Accent);
+        Ui::DrawBoldText(gamePtr, uiFont, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, 0.0f, logic.GetCurrentStreak() > 20 ? modeStyle.Accent : theme.TextDefault);
+    }
 
-    Ui::DrawRounded(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, Ui::Fade(theme.Panel, 0.66f));
-    Ui::DrawRoundedLines(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, Ui::Fade(modeStyle.Accent, 0.28f));
-    DrawHandsGuide(uiFont, theme);
+    const Rectangle keyboardPanel = GetKeyboardPanelRect();
+    Ui::DrawRounded(gamePtr, keyboardPanel, 0.12f, 12, Ui::Fade(theme.Panel, focusMode ? 0.46f : 0.66f));
+    Ui::DrawRoundedLines(gamePtr, keyboardPanel, 0.12f, 12, Ui::Fade(modeStyle.Accent, focusMode ? 0.18f : 0.28f));
+    if (!focusMode) {
+        DrawHandsGuide(uiFont, theme);
+    }
     DrawVirtualKeyboard(keyboardFont, theme);
 }

@@ -14,6 +14,8 @@ enum class SettingRowId {
     InterfaceLanguage,
     TypingLanguage,
     Difficulty,
+    FocusMode,
+    UiDensity,
     UiFont,
     TypingFont,
     KeyboardFont,
@@ -38,6 +40,8 @@ const SettingRowDefinition SettingRows[SettingRowCount] = {
     { SettingRowId::InterfaceLanguage, "I", u8"Язык интерфейса", "Interface language" },
     { SettingRowId::TypingLanguage, "L", u8"Язык набора", "Typing language" },
     { SettingRowId::Difficulty, "D", u8"Сложность", "Difficulty" },
+    { SettingRowId::FocusMode, "O", u8"Режим фокуса", "Focus mode" },
+    { SettingRowId::UiDensity, "Y", u8"Плотность UI", "UI density" },
     { SettingRowId::UiFont, "U", u8"Шрифт интерфейса", "Interface font" },
     { SettingRowId::TypingFont, "F", u8"Шрифт печати", "Typing font" },
     { SettingRowId::KeyboardFont, "K", u8"Шрифт клавиш", "Keyboard font" },
@@ -52,11 +56,11 @@ constexpr int RowIndex(SettingRowId id) {
 }
 
 Rectangle SettingsPanel() {
-    return { 110.0f, 28.0f, 1060.0f, 664.0f };
+    return { 110.0f, 24.0f, 1060.0f, 672.0f };
 }
 
 Rectangle SettingsRow(int index) {
-    return { 150.0f, 136.0f + index * 41.0f, 980.0f, 36.0f };
+    return { 150.0f, 128.0f + index * 36.0f, 980.0f, 32.0f };
 }
 
 Rectangle SettingsRow(SettingRowId id) {
@@ -64,7 +68,7 @@ Rectangle SettingsRow(SettingRowId id) {
 }
 
 Rectangle ControlRect(Rectangle row) {
-    return { row.x + 510.0f, row.y + 4.0f, row.width - 540.0f, 28.0f };
+    return { row.x + 510.0f, row.y + 2.0f, row.width - 540.0f, 28.0f };
 }
 
 Rectangle ControlRect(SettingRowId id) {
@@ -72,7 +76,7 @@ Rectangle ControlRect(SettingRowId id) {
 }
 
 Rectangle KeyRect(Rectangle row) {
-    return { row.x + 14.0f, row.y + 6.0f, 46.0f, 24.0f };
+    return { row.x + 14.0f, row.y + 4.0f, 46.0f, 24.0f };
 }
 
 Rectangle SelectorLeft(Rectangle control) {
@@ -99,8 +103,7 @@ Color HoverOutline(Game* game) {
     return game->IsDarkTheme() ? WHITE : BLACK;
 }
 
-Color TextOnHighlight(const Theme& theme) {
-    (void)theme;
+Color TextOnHighlight() {
     return WHITE;
 }
 
@@ -141,6 +144,21 @@ int DifficultyIndex(Difficulty difficulty) {
     }
 }
 
+UiDensity UiDensityFromIndex(int index) {
+    if (index == 0) return UiDensity::Compact;
+    if (index == 2) return UiDensity::Spacious;
+    return UiDensity::Normal;
+}
+
+int UiDensityIndex(UiDensity density) {
+    switch (density) {
+        case UiDensity::Compact: return 0;
+        case UiDensity::Spacious: return 2;
+        case UiDensity::Normal:
+        default: return 1;
+    }
+}
+
 int LanguageIndex(Language language) {
     return language == Language::Russian ? 1 : 0;
 }
@@ -157,39 +175,23 @@ int NextWrappedIndex(int index, int offset, int count) {
     return (normalized + offset + count) % count;
 }
 
-void DrawCenteredFittedText(Game* game, Font font, const char* text, Rectangle rect, float fontSize, Color color) {
-    float adjustedSize = fontSize;
-    Vector2 measured = MeasureTextEx(font, text, adjustedSize, 0.0f);
-    while (adjustedSize > 10.0f && measured.x > rect.width - 12.0f) {
-        adjustedSize -= 1.0f;
-        measured = MeasureTextEx(font, text, adjustedSize, 0.0f);
-    }
-
-    const Vector2 position = {
-        rect.x + (rect.width - measured.x) * 0.5f,
-        rect.y + (rect.height - measured.y) * 0.5f
-    };
-    const float scale = game->GetUiScale();
-    DrawTextEx(font, text, game->ScalePoint(position), adjustedSize * scale, 0.0f, color);
-}
-
 void DrawKeyBadge(Game* game, Font font, const Theme& theme, Rectangle row, const char* key) {
     const Rectangle keyRect = KeyRect(row);
     DrawRectangleRounded(game->ScaleRect(keyRect), 0.28f, 8, Fade(theme.PanelBorder, 0.20f));
     DrawRectangleRoundedLines(game->ScaleRect(keyRect), 0.28f, 8, Fade(theme.TextDefault, 0.22f));
-    DrawCenteredFittedText(game, font, key, keyRect, 14.0f, theme.TextDefault);
+    Ui::DrawBoldCenteredFittedText(game, font, key, keyRect, 14.0f, 0.0f, theme.TextDefault, 10.0f);
 }
 
 void DrawSettingRow(Game* game, Font font, const Theme& theme, int index, const char* key, const char* label, Vector2 mouse) {
     const Rectangle row = SettingsRow(index);
     (void)mouse;
     DrawKeyBadge(game, font, theme, row, key);
-    Ui::DrawFittedText(game, font, label, { row.x + 76.0f, row.y + 11.0f }, 410.0f, 16.0f, 0.0f, theme.TextDefault);
+    Ui::DrawBoldFittedText(game, font, label, { row.x + 76.0f, row.y + 11.0f }, 410.0f, 16.0f, 0.0f, theme.TextDefault);
 }
 
 void DrawSegmented(Game* game, Font font, const Theme& theme, Rectangle rect, const char* const* labels, int count, int selected, float selectedPosition, Vector2 mouse) {
     DrawRectangleRounded(game->ScaleRect(rect), 0.42f, 12, Fade(theme.PanelBorder, 0.18f));
-    const Color activeText = TextOnHighlight(theme);
+    const Color activeText = TextOnHighlight();
 
     if (count > 0) {
         const float segmentWidth = rect.width / static_cast<float>(count);
@@ -222,7 +224,7 @@ void DrawSegmented(Game* game, Font font, const Theme& theme, Rectangle rect, co
             const Vector2 end = game->ScalePoint({ segment.x, segment.y + segment.height - 7.0f });
             DrawLineEx(start, end, 1.0f * game->GetUiScale(), Fade(theme.TextDefault, 0.15f));
         }
-        DrawCenteredFittedText(game, font, labels[index], segment, 14.0f, active ? activeText : theme.TextDefault);
+        Ui::DrawBoldCenteredFittedText(game, font, labels[index], segment, 14.0f, 0.0f, active ? activeText : theme.TextDefault, 10.0f);
     }
 }
 
@@ -238,12 +240,12 @@ void DrawSelector(Game* game, Font font, Font valueFont, const Theme& theme, Rec
     if (Hit(game, rect, mouse)) {
         DrawHoverOutline(game, rect, 0.30f, 10);
     }
-    DrawCenteredFittedText(game, font, "<", left, 16.0f, theme.TextDefault);
-    DrawCenteredFittedText(game, font, ">", right, 16.0f, theme.TextDefault);
+    Ui::DrawBoldCenteredFittedText(game, font, "<", left, 16.0f, 0.0f, theme.TextDefault, 10.0f);
+    Ui::DrawBoldCenteredFittedText(game, font, ">", right, 16.0f, 0.0f, theme.TextDefault, 10.0f);
 
     const Rectangle labelRect = { rect.x + 38.0f + direction * pulse * 8.0f, rect.y, rect.width - 76.0f, rect.height };
     DrawRectangleRounded(game->ScaleRect({ rect.x + 38.0f, rect.y, rect.width - 76.0f, rect.height }), 0.26f, 8, Fade(theme.Highlight, 0.04f + pulse * 0.08f));
-    DrawCenteredFittedText(game, valueFont, value, labelRect, 14.0f, theme.Title);
+    Ui::DrawBoldCenteredFittedText(game, valueFont, value, labelRect, 14.0f, 0.0f, theme.Title, 10.0f);
 }
 
 void DrawThemeSelector(Game* game, Font font, const Theme& theme, Rectangle rect, int themeIndex, bool ru, float pulse, float direction, Vector2 mouse) {
@@ -258,12 +260,12 @@ void DrawThemeSelector(Game* game, Font font, const Theme& theme, Rectangle rect
     if (Hit(game, rect, mouse)) {
         DrawHoverOutline(game, rect, 0.30f, 10);
     }
-    DrawCenteredFittedText(game, font, "<", left, 16.0f, theme.TextDefault);
-    DrawCenteredFittedText(game, font, ">", right, 16.0f, theme.TextDefault);
+    Ui::DrawBoldCenteredFittedText(game, font, "<", left, 16.0f, 0.0f, theme.TextDefault, 10.0f);
+    Ui::DrawBoldCenteredFittedText(game, font, ">", right, 16.0f, 0.0f, theme.TextDefault, 10.0f);
 
     const Rectangle labelRect = { rect.x + 38.0f + direction * pulse * 8.0f, rect.y, rect.width - 164.0f, rect.height };
     DrawRectangleRounded(game->ScaleRect({ rect.x + 38.0f, rect.y, rect.width - 164.0f, rect.height }), 0.26f, 8, Fade(theme.Highlight, 0.03f + pulse * 0.07f));
-    Ui::DrawFittedText(
+    Ui::DrawBoldFittedText(
         game,
         font,
         ru ? ThemeManager::GetThemeLabelRu(themeIndex) : ThemeManager::GetThemeLabel(themeIndex),
@@ -312,14 +314,14 @@ void DrawSlider(Game* game, Font font, const Theme& theme, Rectangle rect, float
     DrawCircleV(knob, 8.0f * scale, theme.Title);
 
     const Rectangle percentRect = { rect.x + rect.width - 52.0f, rect.y, 52.0f, rect.height };
-    DrawCenteredFittedText(game, font, TextFormat("%.0f%%", value * 100.0f), percentRect, 14.0f, theme.TextDefault);
+    Ui::DrawBoldCenteredFittedText(game, font, TextFormat("%.0f%%", value * 100.0f), percentRect, 14.0f, 0.0f, theme.TextDefault, 10.0f);
 }
 
 void DrawMenuButton(Game* game, Font font, const Theme& theme, Rectangle rect, bool ru, Vector2 mouse) {
     const bool hover = Hit(game, rect, mouse);
     DrawRectangleRounded(game->ScaleRect(rect), 0.26f, 10, Fade(theme.Highlight, hover ? 0.92f : 0.82f));
     DrawRectangleRoundedLines(game->ScaleRect(rect), 0.26f, 10, hover ? Fade(HoverOutline(game), 0.92f) : Fade(theme.Highlight, 0.72f));
-    DrawCenteredFittedText(game, font, ru ? u8"Выйти в меню" : "Back to menu", rect, 16.0f, TextOnHighlight(theme));
+    Ui::DrawBoldCenteredFittedText(game, font, ru ? u8"Выйти в меню" : "Back to menu", rect, 16.0f, 0.0f, TextOnHighlight(), 10.0f);
 }
 }
 
@@ -337,12 +339,16 @@ void SettingsState::LoadDraftFromCurrent() {
     draftUiFontIndex = std::clamp(gamePtr->GetProgress().GetUiFontIndex(), 0, gamePtr->GetUiFontCount() - 1);
     draftTypingTextFontIndex = std::clamp(gamePtr->GetProgress().GetTypingTextFontIndex(), 0, fontCount - 1);
     draftKeyboardFontIndex = std::clamp(gamePtr->GetProgress().GetKeyboardFontIndex(), 0, fontCount - 1);
+    draftFocusModeEnabled = gamePtr->GetProgress().IsFocusModeEnabled();
+    draftUiDensity = gamePtr->GetProgress().GetUiDensity();
     draftAudioEnabled = AudioManager::IsEnabled();
     draftClickProfile = AudioManager::GetClickProfile() <= 0 ? 0 : 1;
     draftVolume = AudioManager::GetVolume();
     interfaceLanguagePosition = static_cast<float>(LanguageIndex(draftInterfaceLanguage));
     typingLanguagePosition = static_cast<float>(LanguageIndex(draftTypingLanguage));
     difficultyPosition = static_cast<float>(DifficultyIndex(draftDifficulty));
+    focusModePosition = draftFocusModeEnabled ? 1.0f : 0.0f;
+    uiDensityPosition = static_cast<float>(UiDensityIndex(draftUiDensity));
     clickProfilePosition = static_cast<float>(draftClickProfile);
     soundPosition = draftAudioEnabled ? 1.0f : 0.0f;
     volumeVisual = draftVolume;
@@ -391,6 +397,16 @@ void SettingsState::SetDraftKeyboardFontIndex(int index, int direction) {
     keyboardFontDirection = direction < 0 ? -1.0f : 1.0f;
 }
 
+void SettingsState::SetDraftFocusModeEnabled(bool enabled) {
+    draftFocusModeEnabled = enabled;
+    gamePtr->GetProgress().SetFocusModeEnabled(draftFocusModeEnabled);
+}
+
+void SettingsState::SetDraftUiDensity(UiDensity density) {
+    draftUiDensity = density;
+    gamePtr->GetProgress().SetUiDensity(draftUiDensity);
+}
+
 void SettingsState::SetDraftAudioEnabled(bool enabled) {
     draftAudioEnabled = enabled;
     AudioManager::SetEnabled(draftAudioEnabled);
@@ -421,6 +437,10 @@ void SettingsState::HandleInput() {
         SetDraftTypingLanguage(draftTypingLanguage == Language::English ? Language::Russian : Language::English);
     } else if (IsKeyPressed(KEY_D)) {
         SetDraftDifficulty(DifficultyFromIndex((DifficultyIndex(draftDifficulty) + 1) % 3));
+    } else if (IsKeyPressed(KEY_O)) {
+        SetDraftFocusModeEnabled(!draftFocusModeEnabled);
+    } else if (IsKeyPressed(KEY_Y)) {
+        SetDraftUiDensity(UiDensityFromIndex((UiDensityIndex(draftUiDensity) + 1) % 3));
     } else if (IsKeyPressed(KEY_U)) {
         SetDraftUiFontIndex(NextWrappedIndex(draftUiFontIndex, 1, gamePtr->GetUiFontCount()), 1);
     } else if (IsKeyPressed(KEY_F)) {
@@ -492,6 +512,18 @@ void SettingsState::HandleInput() {
             SetDraftDifficulty(DifficultyFromIndex(difficultyIndex));
         }
 
+        const Rectangle focusControl = ControlRect(SettingRowId::FocusMode);
+        const int focusIndex = SegmentIndexAt(gamePtr, focusControl, 2, mouse);
+        if (focusIndex >= 0) {
+            SetDraftFocusModeEnabled(focusIndex == 1);
+        }
+
+        const Rectangle densityControl = ControlRect(SettingRowId::UiDensity);
+        const int densityIndex = SegmentIndexAt(gamePtr, densityControl, 3, mouse);
+        if (densityIndex >= 0) {
+            SetDraftUiDensity(UiDensityFromIndex(densityIndex));
+        }
+
         const Rectangle uiFontControl = ControlRect(SettingRowId::UiFont);
         if (Hit(gamePtr, uiFontControl, mouse)) {
             const int count = gamePtr->GetUiFontCount();
@@ -538,6 +570,8 @@ void SettingsState::Update(float deltaTime) {
     interfaceLanguagePosition = MoveToward(interfaceLanguagePosition, static_cast<float>(LanguageIndex(draftInterfaceLanguage)), deltaTime);
     typingLanguagePosition = MoveToward(typingLanguagePosition, static_cast<float>(LanguageIndex(draftTypingLanguage)), deltaTime);
     difficultyPosition = MoveToward(difficultyPosition, static_cast<float>(DifficultyIndex(draftDifficulty)), deltaTime);
+    focusModePosition = MoveToward(focusModePosition, draftFocusModeEnabled ? 1.0f : 0.0f, deltaTime);
+    uiDensityPosition = MoveToward(uiDensityPosition, static_cast<float>(UiDensityIndex(draftUiDensity)), deltaTime);
     clickProfilePosition = MoveToward(clickProfilePosition, static_cast<float>(draftClickProfile), deltaTime);
     soundPosition = MoveToward(soundPosition, draftAudioEnabled ? 1.0f : 0.0f, deltaTime);
     volumeVisual = MoveToward(volumeVisual, draftVolume, deltaTime);
@@ -550,15 +584,14 @@ void SettingsState::Update(float deltaTime) {
 void SettingsState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
     Font font = gamePtr->GetUiFont();
-    const float scale = gamePtr->GetUiScale();
     const bool ru = IsRu(gamePtr);
 
     const Rectangle panel = gamePtr->ScaleRect(SettingsPanel());
     DrawRectangleRounded(panel, 0.08f, 12, Fade(theme.Panel, 0.80f));
     DrawRectangleRoundedLines(panel, 0.08f, 12, Fade(theme.PanelBorder, 0.80f));
 
-    DrawTextEx(font, ru ? u8"Настройки" : "Settings", gamePtr->ScalePoint({ 150.0f, 62.0f }), 36.0f * scale, 0.0f, theme.Title);
-    DrawTextEx(font, ru ? u8"Внешний вид, языки, ввод и звук" : "Display, languages, input and sound", gamePtr->ScalePoint({ 152.0f, 106.0f }), 16.0f * scale, 0.0f, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, ru ? u8"Настройки" : "Settings", { 150.0f, 62.0f }, 36.0f, 0.0f, theme.Title);
+    Ui::DrawBoldText(gamePtr, font, ru ? u8"Внешний вид, языки, ввод и звук" : "Display, languages, input and sound", { 152.0f, 106.0f }, 16.0f, 0.0f, theme.TextDefault);
 
     const Vector2 mouse = GetMousePosition();
 
@@ -577,13 +610,21 @@ void SettingsState::Draw() {
     const char* difficultyLabelsEn[] = { "Relaxed", "Normal", "Strict" };
     DrawSegmented(gamePtr, font, theme, ControlRect(SettingRowId::Difficulty), ru ? difficultyLabelsRu : difficultyLabelsEn, 3, DifficultyIndex(draftDifficulty), difficultyPosition, mouse);
 
+    const char* focusLabelsRu[] = { u8"Выкл", u8"Вкл" };
+    const char* focusLabelsEn[] = { "Off", "On" };
+    DrawSegmented(gamePtr, font, theme, ControlRect(SettingRowId::FocusMode), ru ? focusLabelsRu : focusLabelsEn, 2, draftFocusModeEnabled ? 1 : 0, focusModePosition, mouse);
+
+    const char* densityLabelsRu[] = { u8"Компактно", u8"Норма", u8"Свободно" };
+    const char* densityLabelsEn[] = { "Compact", "Normal", "Spacious" };
+    DrawSegmented(gamePtr, font, theme, ControlRect(SettingRowId::UiDensity), ru ? densityLabelsRu : densityLabelsEn, 3, UiDensityIndex(draftUiDensity), uiDensityPosition, mouse);
+
     DrawSelector(gamePtr, font, gamePtr->GetUiFontByIndex(draftUiFontIndex), theme, ControlRect(SettingRowId::UiFont), gamePtr->GetUiFontLabel(draftUiFontIndex), uiFontPulse, uiFontDirection, mouse);
     DrawSelector(gamePtr, font, gamePtr->GetTypingFontByIndex(draftTypingTextFontIndex), theme, ControlRect(SettingRowId::TypingFont), gamePtr->GetTypingFontLabel(draftTypingTextFontIndex), typingFontPulse, typingFontDirection, mouse);
     DrawSelector(gamePtr, font, gamePtr->GetTypingFontByIndex(draftKeyboardFontIndex), theme, ControlRect(SettingRowId::KeyboardFont), gamePtr->GetTypingFontLabel(draftKeyboardFontIndex), keyboardFontPulse, keyboardFontDirection, mouse);
 
     const Rectangle soundControl = ControlRect(SettingRowId::Sound);
     DrawToggle(gamePtr, theme, { soundControl.x + soundControl.width - 70.0f, soundControl.y + 1.0f, 58.0f, 28.0f }, draftAudioEnabled, soundPosition, mouse);
-    Ui::DrawFittedText(gamePtr, font, draftAudioEnabled ? (ru ? u8"Вкл" : "On") : (ru ? u8"Выкл" : "Off"), { soundControl.x + 6.0f, soundControl.y + 7.0f }, 160.0f, 14.0f, 0.0f, theme.TextDefault);
+    Ui::DrawBoldFittedText(gamePtr, font, draftAudioEnabled ? (ru ? u8"Вкл" : "On") : (ru ? u8"Выкл" : "Off"), { soundControl.x + 6.0f, soundControl.y + 7.0f }, 160.0f, 14.0f, 0.0f, theme.TextDefault);
 
     const char* clickLabelsRu[] = { u8"Мягкий", u8"Яркий" };
     const char* clickLabelsEn[] = { "Soft", "Bright" };
@@ -594,10 +635,10 @@ void SettingsState::Draw() {
     const Rectangle resetControl = ControlRect(SettingRowId::ResetProgress);
     DrawRectangleRounded(gamePtr->ScaleRect(resetControl), 0.32f, 10, Fade(theme.TextError, Hit(gamePtr, resetControl, mouse) ? 0.25f : 0.14f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect(resetControl), 0.32f, 10, Hit(gamePtr, resetControl, mouse) ? Fade(HoverOutline(gamePtr), 0.88f) : Fade(theme.TextError, 0.55f));
-    DrawCenteredFittedText(gamePtr, font, ru ? u8"Сбросить" : "Reset", resetControl, 15.0f, theme.TextError);
+    Ui::DrawBoldCenteredFittedText(gamePtr, font, ru ? u8"Сбросить" : "Reset", resetControl, 15.0f, 0.0f, theme.TextError, 10.0f);
 
     const char* status = ru ? u8"\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u044e\u0442\u0441\u044f \u0441\u0440\u0430\u0437\u0443" : "Changes apply instantly";
-    Ui::DrawFittedText(
+    Ui::DrawBoldFittedText(
         gamePtr,
         font,
         status,

@@ -49,6 +49,11 @@ private:
     void CalculateLayout(Font font, float fontSize);
     void DrawVirtualKeyboard(Font font, const Theme& theme);
     void DrawHandsGuide(Font font, const Theme& theme);
+    bool IsFocusModeActive() const;
+    Rectangle GetTextViewport() const;
+    Rectangle GetKeyboardPanelRect() const;
+    float GetKeyboardStartY() const;
+    float GetKeyboardScale() const;
     float GetTextFontSize() const;
     const char* GetModeTitle() const;
     int GetNextExpectedChar() const;

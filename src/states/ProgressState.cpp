@@ -72,8 +72,8 @@ FingerType RepresentativeFinger(int bucket) {
 void DrawMetricCard(Game* game, Font font, const Theme& theme, Rectangle rect, const char* label, const char* value, Color accent) {
     Ui::DrawRounded(game, rect, 0.14f, 12, Ui::Fade(theme.PanelBorder, 0.18f));
     Ui::DrawRoundedLines(game, rect, 0.14f, 12, Ui::Fade(accent, 0.65f));
-    Ui::DrawText(game, font, label, { rect.x + 24.0f, rect.y + 22.0f }, 16.0f, 1.0f, theme.TextDefault);
-    Ui::DrawText(game, font, value, { rect.x + 24.0f, rect.y + 54.0f }, 30.0f, 1.0f, accent);
+    Ui::DrawBoldText(game, font, label, { rect.x + 24.0f, rect.y + 22.0f }, 16.0f, 1.0f, theme.TextDefault);
+    Ui::DrawBoldText(game, font, value, { rect.x + 24.0f, rect.y + 54.0f }, 30.0f, 1.0f, accent);
 }
 
 void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle rect, Language language, const std::map<std::string, int>& weakKeys, bool ru) {
@@ -85,8 +85,8 @@ void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle re
 
     Ui::DrawRounded(game, rect, 0.08f, 12, Ui::Fade(theme.PanelBorder, 0.14f));
     Ui::DrawRoundedLines(game, rect, 0.08f, 12, Ui::Fade(theme.PanelBorder, 0.50f));
-    Ui::DrawText(game, font, ru ? u8"Карта клавиш" : "Keyboard Heatmap", { rect.x + 24.0f, rect.y + 20.0f }, 23.0f, 1.0f, theme.Title);
-    Ui::DrawText(game, font, ru ? u8"Ярче = больше промахов" : "Brighter keys have more misses", { rect.x + 24.0f, rect.y + 48.0f }, 14.0f, 1.0f, theme.TextDefault);
+    Ui::DrawBoldText(game, font, ru ? u8"Карта клавиш" : "Keyboard Heatmap", { rect.x + 24.0f, rect.y + 20.0f }, 23.0f, 1.0f, theme.Title);
+    Ui::DrawBoldText(game, font, ru ? u8"Ярче = больше промахов" : "Brighter keys have more misses", { rect.x + 24.0f, rect.y + 48.0f }, 14.0f, 1.0f, theme.TextDefault);
 
     const float keySize = 27.0f;
     const float gap = 5.0f;
@@ -135,7 +135,7 @@ void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle re
             Ui::DrawRoundedLines(game, keyRect, 0.22f, 8, border);
 
             const float labelSize = key->row == 0 ? 8.0f : (key->width > 2.0f ? 9.0f : (language == Language::Russian ? 11.0f : 12.0f));
-            Ui::DrawCenteredFittedText(game, font, key->label.c_str(), keyRect, labelSize, 0.0f, count > 0 ? WHITE : Ui::Fade(theme.TextDefault, 0.72f), 7.0f);
+            Ui::DrawBoldCenteredFittedText(game, font, key->label.c_str(), keyRect, labelSize, 0.0f, count > 0 ? WHITE : Ui::Fade(theme.TextDefault, 0.72f), 7.0f);
 
             if (count > 0 && key->width <= 1.2f) {
                 DrawCircleV(game->ScalePoint({ keyRect.x + keyRect.width - 5.0f, keyRect.y + 5.0f }), (2.0f + intensity * 2.0f) * game->GetUiScale(), Ui::Fade(theme.TextError, 0.78f));
@@ -146,19 +146,19 @@ void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle re
     }
 
     if (maxCount == 0) {
-        Ui::DrawText(game, font, ru ? u8"Ошибок пока нет. Пройди тренировку, и карта оживет." : "No misses yet. Complete a drill to light up the map.", { rect.x + 24.0f, rect.y + rect.height - 34.0f }, 14.0f, 1.0f, theme.TextDefault);
+        Ui::DrawBoldText(game, font, ru ? u8"Ошибок пока нет. Пройди тренировку, и карта оживет." : "No misses yet. Complete a drill to light up the map.", { rect.x + 24.0f, rect.y + rect.height - 34.0f }, 14.0f, 1.0f, theme.TextDefault);
     } else {
-        Ui::DrawText(game, font, TextFormat(ru ? u8"Самая горячая клавиша: %d ошибок" : "Hottest key: %d misses", maxCount), { rect.x + 24.0f, rect.y + rect.height - 34.0f }, 14.0f, 1.0f, theme.TextDefault);
+        Ui::DrawBoldText(game, font, TextFormat(ru ? u8"Самая горячая клавиша: %d ошибок" : "Hottest key: %d misses", maxCount), { rect.x + 24.0f, rect.y + rect.height - 34.0f }, 14.0f, 1.0f, theme.TextDefault);
     }
 }
 
 void DrawSessionTrend(Game* game, Font font, const Theme& theme, Rectangle rect, const std::vector<SessionRecord>& sessions, bool ru) {
     Ui::DrawRounded(game, rect, 0.08f, 12, Ui::Fade(theme.PanelBorder, 0.14f));
     Ui::DrawRoundedLines(game, rect, 0.08f, 12, Ui::Fade(theme.PanelBorder, 0.50f));
-    Ui::DrawText(game, font, ru ? u8"Последние сессии" : "Recent Sessions", { rect.x + 22.0f, rect.y + 18.0f }, 21.0f, 1.0f, theme.Title);
+    Ui::DrawBoldText(game, font, ru ? u8"Последние сессии" : "Recent Sessions", { rect.x + 22.0f, rect.y + 18.0f }, 21.0f, 1.0f, theme.Title);
 
     if (sessions.size() < 2) {
-        Ui::DrawFittedText(game, font, ru ? u8"Нужно хотя бы 2 завершенных прохода для графика." : "Finish at least 2 runs to see the trend.", { rect.x + 22.0f, rect.y + 60.0f }, rect.width - 44.0f, 15.0f, 0.0f, theme.TextDefault);
+        Ui::DrawBoldFittedText(game, font, ru ? u8"Нужно хотя бы 2 завершенных прохода для графика." : "Finish at least 2 runs to see the trend.", { rect.x + 22.0f, rect.y + 60.0f }, rect.width - 44.0f, 15.0f, 0.0f, theme.TextDefault);
         return;
     }
 
@@ -182,8 +182,8 @@ void DrawSessionTrend(Game* game, Font font, const Theme& theme, Rectangle rect,
     const SessionRecord& current = sessions[count - 1];
     const float wpmDelta = current.wpm - previous.wpm;
     const float accDelta = current.accuracy - previous.accuracy;
-    Ui::DrawText(game, font, TextFormat("WPM %+.0f", wpmDelta), { rect.x + 24.0f, rect.y + rect.height - 26.0f }, 14.0f, 1.0f, wpmDelta >= 0.0f ? theme.Highlight : theme.TextError);
-    Ui::DrawText(game, font, TextFormat("ACC %+.0f%%", accDelta), { rect.x + 120.0f, rect.y + rect.height - 26.0f }, 14.0f, 1.0f, accDelta >= 0.0f ? theme.Fingers.Index : theme.TextError);
+    Ui::DrawBoldText(game, font, TextFormat("WPM %+.0f", wpmDelta), { rect.x + 24.0f, rect.y + rect.height - 26.0f }, 14.0f, 1.0f, wpmDelta >= 0.0f ? theme.Highlight : theme.TextError);
+    Ui::DrawBoldText(game, font, TextFormat("ACC %+.0f%%", accDelta), { rect.x + 120.0f, rect.y + rect.height - 26.0f }, 14.0f, 1.0f, accDelta >= 0.0f ? theme.Fingers.Index : theme.TextError);
 }
 
 void DrawFingerLoad(Game* game, Font font, const Theme& theme, Rectangle rect, Language language, const std::map<std::string, int>& weakKeys, bool ru) {
@@ -200,17 +200,17 @@ void DrawFingerLoad(Game* game, Font font, const Theme& theme, Rectangle rect, L
 
     Ui::DrawRounded(game, rect, 0.08f, 12, Ui::Fade(theme.PanelBorder, 0.14f));
     Ui::DrawRoundedLines(game, rect, 0.08f, 12, Ui::Fade(theme.PanelBorder, 0.50f));
-    Ui::DrawText(game, font, ru ? u8"Нагрузка пальцев" : "Finger Load", { rect.x + 22.0f, rect.y + 18.0f }, 21.0f, 1.0f, theme.Title);
+    Ui::DrawBoldText(game, font, ru ? u8"Нагрузка пальцев" : "Finger Load", { rect.x + 22.0f, rect.y + 18.0f }, 21.0f, 1.0f, theme.Title);
 
     const char* labelsEn[5] = { "Pinky", "Ring", "Middle", "Index", "Thumb" };
     const char* labelsRu[5] = { u8"Мизинец", u8"Безым.", u8"Средний", u8"Указ.", u8"Большой" };
     for (int i = 0; i < 5; ++i) {
         const float y = rect.y + 58.0f + i * 24.0f;
         const float ratio = maxLoad > 0 ? static_cast<float>(loads[i]) / static_cast<float>(maxLoad) : 0.0f;
-        Ui::DrawText(game, font, ru ? labelsRu[i] : labelsEn[i], { rect.x + 22.0f, y - 2.0f }, 13.0f, 1.0f, theme.TextDefault);
+        Ui::DrawBoldText(game, font, ru ? labelsRu[i] : labelsEn[i], { rect.x + 22.0f, y - 2.0f }, 13.0f, 1.0f, theme.TextDefault);
         Ui::DrawRounded(game, { rect.x + 98.0f, y + 3.0f, 180.0f, 10.0f }, 0.5f, 8, Ui::Fade(theme.PanelBorder, 0.20f));
         Ui::DrawRounded(game, { rect.x + 98.0f, y + 3.0f, 180.0f * ratio, 10.0f }, 0.5f, 8, Ui::Fade(GetFingerColor(RepresentativeFinger(i), theme), 0.36f + ratio * 0.48f));
-        Ui::DrawText(game, font, TextFormat("%d", loads[i]), { rect.x + 288.0f, y - 2.0f }, 13.0f, 1.0f, loads[i] > 0 ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.62f));
+        Ui::DrawBoldText(game, font, TextFormat("%d", loads[i]), { rect.x + 288.0f, y - 2.0f }, 13.0f, 1.0f, loads[i] > 0 ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.62f));
     }
 }
 }
@@ -249,8 +249,8 @@ void ProgressState::Draw() {
     Ui::DrawRounded(gamePtr, { 70.0f, 54.0f, 1140.0f, 610.0f }, 0.04f, 16, Ui::Fade(theme.Panel, 0.80f));
     Ui::DrawRoundedLines(gamePtr, { 70.0f, 54.0f, 1140.0f, 610.0f }, 0.04f, 16, Ui::Fade(theme.PanelBorder, 0.78f));
 
-    Ui::DrawText(gamePtr, font, IsRu(gamePtr) ? u8"Статистика" : "Progress Stats", { 105.0f, 92.0f }, 38.0f, 1.0f, theme.Title);
-    Ui::DrawText(gamePtr, font, IsRu(gamePtr) ? u8"ESC Меню | R Сброс прогресса" : "ESC Menu | R Reset Progress", { 800.0f, 105.0f }, 16.0f, 1.0f, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, IsRu(gamePtr) ? u8"Статистика" : "Progress Stats", { 105.0f, 92.0f }, 38.0f, 1.0f, theme.Title);
+    Ui::DrawBoldText(gamePtr, font, IsRu(gamePtr) ? u8"ESC Меню | R Сброс прогресса" : "ESC Menu | R Reset Progress", { 800.0f, 105.0f }, 16.0f, 1.0f, theme.TextDefault);
     const Rectangle resetRect = { 830.0f, 94.0f, 250.0f, 32.0f };
     if (CheckCollisionPointRec(GetMousePosition(), gamePtr->ScaleRect(resetRect))) {
         Ui::DrawRoundedLines(gamePtr, resetRect, 0.28f, 8, Ui::Fade(HoverOutline(gamePtr), 0.86f));
@@ -271,5 +271,5 @@ void ProgressState::Draw() {
     const int russianCount = static_cast<int>(LessonLibrary::GetLessons(Language::Russian).size());
     const int englishUnlocked = std::min(progress.GetUnlockedLesson(Language::English) + 1, englishCount);
     const int russianUnlocked = std::min(progress.GetUnlockedLesson(Language::Russian) + 1, russianCount);
-    Ui::DrawText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"Курс: EN %d/%d | RU %d/%d | Порог %.0f%% точности" : "Course: EN %d/%d | RU %d/%d | %.0f%% unlock threshold", englishUnlocked, englishCount, russianUnlocked, russianCount, progress.GetUnlockAccuracyThreshold()), { 125.0f, 622.0f }, 15.0f, 1.0f, theme.TextDefault);
+    Ui::DrawBoldText(gamePtr, font, TextFormat(IsRu(gamePtr) ? u8"Курс: EN %d/%d | RU %d/%d | Порог %.0f%% точности" : "Course: EN %d/%d | RU %d/%d | %.0f%% unlock threshold", englishUnlocked, englishCount, russianUnlocked, russianCount, progress.GetUnlockAccuracyThreshold()), { 125.0f, 622.0f }, 15.0f, 1.0f, theme.TextDefault);
 }

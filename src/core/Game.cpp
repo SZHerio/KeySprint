@@ -225,14 +225,6 @@ void Game::SetKeyboardFontIndex(int index) {
     progress.SetKeyboardFontIndex(index, TypingFontCount);
 }
 
-void Game::CycleTypingTextFont() {
-    progress.CycleTypingTextFont(TypingFontCount);
-}
-
-void Game::CycleKeyboardFont() {
-    progress.CycleKeyboardFont(TypingFontCount);
-}
-
 void Game::SetThemeIndex(int index) {
     themeIndex = ThemeManager::ClampIndex(index);
     currentTheme = ThemeManager::GetTheme(themeIndex);

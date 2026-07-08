@@ -49,8 +49,6 @@ public:
     void SetUiFontIndex(int index);
     void SetTypingTextFontIndex(int index);
     void SetKeyboardFontIndex(int index);
-    void CycleTypingTextFont();
-    void CycleKeyboardFont();
     Language GetLanguage() const { return uiLanguage; }
     Language GetInterfaceLanguage() const { return uiLanguage; }
     Language GetTypingLanguage() const { return typingLanguage; }
