@@ -141,17 +141,29 @@ void AudioManager::PlayError() {
 }
 
 void AudioManager::ToggleEnabled() {
-    enabled = !enabled;
+    SetEnabled(!enabled);
+}
+
+void AudioManager::SetEnabled(bool value) {
+    enabled = value;
 }
 
 void AudioManager::IncreaseVolume() {
-    volume = fminf(1.0f, volume + 0.1f);
+    SetVolume(volume + 0.1f);
 }
 
 void AudioManager::DecreaseVolume() {
-    volume = fmaxf(0.0f, volume - 0.1f);
+    SetVolume(volume - 0.1f);
+}
+
+void AudioManager::SetVolume(float value) {
+    volume = fmaxf(0.0f, fminf(1.0f, value));
 }
 
 void AudioManager::CycleClickProfile() {
-    clickProfile = (clickProfile + 1) % 2;
+    SetClickProfile(clickProfile + 1);
+}
+
+void AudioManager::SetClickProfile(int profile) {
+    clickProfile = profile <= 0 ? 0 : 1;
 }

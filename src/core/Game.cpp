@@ -5,17 +5,50 @@
 #include <vector>
 #include "AudioManager.h"
 
+namespace {
+const char* TypingFontLabels[Game::TypingFontCount] = {
+    "JetBrains Mono",
+    "Cascadia Mono",
+    "Cascadia Code",
+    "Consolas"
+};
+
+Font LoadFirstAvailableFont(const std::vector<std::string>& candidates, std::vector<int>& glyphs) {
+    Font font = {};
+    for (const std::string& path : candidates) {
+        if (!FileExists(path.c_str())) {
+            continue;
+        }
+        font = LoadFontEx(path.c_str(), 64, glyphs.data(), static_cast<int>(glyphs.size()));
+        if (font.texture.id != 0) {
+            SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+            break;
+        }
+    }
+    return font;
+}
+
+int ClampFontIndex(int index) {
+    return std::clamp(index, 0, Game::TypingFontCount - 1);
+}
+}
+
 Game::Game(int width, int height, const char* title) 
-    : screenWidth(width), screenHeight(height), isRunning(true), windowedWidth(width), windowedHeight(height), isDarkTheme(true), language(Language::English) {
+    : screenWidth(width), screenHeight(height), isRunning(true), windowedWidth(width), windowedHeight(height), language(Language::English) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     InitWindow(screenWidth, screenHeight, title);
+    Image windowIcon = LoadImage("assets/icons/key-sprint-icon.png");
+    if (windowIcon.data != nullptr) {
+        SetWindowIcon(windowIcon);
+        UnloadImage(windowIcon);
+    }
     SetExitKey(KEY_NULL);
     SetWindowMinSize(960, 540);
     InitAudioDevice();
     AudioManager::Init();
     SetTargetFPS(60);
-    currentTheme = ThemeManager::GetMidnightTheme();
     progress.Load();
+    SetThemeIndex(progress.GetThemeIndex());
     
     // Загружаем жирный системный шрифт с кириллицей. Assets могут отсутствовать в чистой сборке.
     std::vector<int> glyphs;
@@ -25,30 +58,56 @@ Game::Game(int width, int height, const char* title)
     glyphs.push_back(0x00BB);
     glyphs.push_back(0x2014);
 
-    const std::vector<std::string> fontCandidates = {
-        "assets/fonts/JetBrainsMono-Bold.ttf",
-        "assets/fonts/JetBrainsMono-Regular.ttf",
-        "C:/Windows/Fonts/consolab.ttf",
-        "C:/Windows/Fonts/arialbd.ttf"
+    const std::vector<std::vector<std::string>> typingFontCandidates = {
+        {
+            "assets/fonts/JetBrainsMono-Regular.ttf",
+            "assets/fonts/JetBrainsMono-Bold.ttf",
+            "C:/Windows/Fonts/consola.ttf",
+            "C:/Windows/Fonts/consolab.ttf"
+        },
+        {
+            "assets/fonts/CascadiaMono.ttf",
+            "C:/Windows/Fonts/CascadiaMono.ttf",
+            "C:/Windows/Fonts/consola.ttf"
+        },
+        {
+            "assets/fonts/CascadiaCode.ttf",
+            "C:/Windows/Fonts/CascadiaCode.ttf",
+            "C:/Windows/Fonts/consola.ttf"
+        },
+        {
+            "C:/Windows/Fonts/consola.ttf",
+            "C:/Windows/Fonts/consolab.ttf",
+            "assets/fonts/JetBrainsMono-Regular.ttf"
+        }
     };
 
-    for (const std::string& path : fontCandidates) {
-        if (!FileExists(path.c_str())) {
-            continue;
-        }
-        mainFont = LoadFontEx(path.c_str(), 64, glyphs.data(), static_cast<int>(glyphs.size()));
-        if (mainFont.texture.id != 0) {
-            break;
-        }
+    const std::vector<std::string> uiFontCandidates = {
+        "assets/fonts/Inter-Variable.ttf",
+        "assets/fonts/Manrope-Variable.ttf",
+        "assets/fonts/IBMPlexSans-Regular.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+        "C:/Windows/Fonts/arial.ttf"
+    };
+
+    for (int index = 0; index < TypingFontCount; ++index) {
+        typingFonts[index] = LoadFirstAvailableFont(typingFontCandidates[index], glyphs);
+        typingFontLoaded[index] = typingFonts[index].texture.id != 0;
     }
 
-    if (mainFont.texture.id != 0) {
-        SetTextureFilter(mainFont.texture, TEXTURE_FILTER_BILINEAR);
-    }
+    uiFont = LoadFirstAvailableFont(uiFontCandidates, glyphs);
+    uiFontLoaded = uiFont.texture.id != 0;
 }
 
 Game::~Game() {
-    UnloadFont(mainFont);
+    if (uiFontLoaded) {
+        UnloadFont(uiFont);
+    }
+    for (int index = 0; index < TypingFontCount; ++index) {
+        if (typingFontLoaded[index]) {
+            UnloadFont(typingFonts[index]);
+        }
+    }
     AudioManager::Unload();
     CloseAudioDevice();
     CloseWindow();
@@ -59,6 +118,67 @@ void Game::ChangeState(std::shared_ptr<GameState> newState) {
     if (currentState) {
         currentState->Init(this);
     }
+}
+
+Font Game::GetFont() const {
+    return GetTypingTextFont();
+}
+
+Font Game::GetTypingFontByIndex(int index) const {
+    const int selected = ClampFontIndex(index);
+    if (typingFontLoaded[selected]) {
+        return typingFonts[selected];
+    }
+
+    for (int index = 0; index < TypingFontCount; ++index) {
+        if (typingFontLoaded[index]) {
+            return typingFonts[index];
+        }
+    }
+
+    return GetFontDefault();
+}
+
+Font Game::GetTypingTextFont() const {
+    return GetTypingFontByIndex(progress.GetTypingTextFontIndex());
+}
+
+Font Game::GetKeyboardFont() const {
+    return GetTypingFontByIndex(progress.GetKeyboardFontIndex());
+}
+
+Font Game::GetUiFont() const {
+    return uiFontLoaded ? uiFont : GetTypingTextFont();
+}
+
+const char* Game::GetTypingFontLabel(int index) const {
+    return TypingFontLabels[ClampFontIndex(index)];
+}
+
+const char* Game::GetTypingTextFontLabel() const {
+    return GetTypingFontLabel(progress.GetTypingTextFontIndex());
+}
+
+const char* Game::GetKeyboardFontLabel() const {
+    return GetTypingFontLabel(progress.GetKeyboardFontIndex());
+}
+
+void Game::CycleTypingTextFont() {
+    progress.CycleTypingTextFont(TypingFontCount);
+}
+
+void Game::CycleKeyboardFont() {
+    progress.CycleKeyboardFont(TypingFontCount);
+}
+
+void Game::SetThemeIndex(int index) {
+    themeIndex = ThemeManager::ClampIndex(index);
+    currentTheme = ThemeManager::GetTheme(themeIndex);
+    progress.SetThemeIndex(themeIndex, ThemeManager::ThemeCount);
+}
+
+void Game::CycleTheme() {
+    SetThemeIndex((themeIndex + 1) % ThemeManager::ThemeCount);
 }
 
 void Game::Run() {
@@ -89,7 +209,7 @@ void Game::Quit() {
 }
 
 void Game::ToggleLanguage() {
-    language = language == Language::English ? Language::Russian : Language::English;
+    SetLanguage(language == Language::English ? Language::Russian : Language::English);
 }
 
 void Game::ToggleFullscreenMode() {
@@ -124,7 +244,7 @@ int Game::GetWindowHeight() const {
 float Game::GetUiScale() const {
     const float scaleX = static_cast<float>(GetWindowWidth()) / VirtualWidth;
     const float scaleY = static_cast<float>(GetWindowHeight()) / VirtualHeight;
-    return std::max(0.65f, std::min(scaleX, scaleY));
+    return std::min(scaleX, scaleY);
 }
 
 Vector2 Game::ScalePoint(Vector2 point) const {

@@ -9,6 +9,7 @@
 
 namespace {
 const char* ProgressPath = "settings/progress.json";
+constexpr int MaxRecentSessions = 18;
 
 int& UnlockedForLanguage(ProgressData& data, Language language) {
     return language == Language::Russian ? data.russianUnlockedLesson : data.englishUnlockedLesson;
@@ -32,6 +33,28 @@ std::string DifficultyToString(Difficulty difficulty) {
         default: return "normal";
     }
 }
+
+Language LanguageFromString(const std::string& value) {
+    return value == "ru" ? Language::Russian : Language::English;
+}
+
+std::string LanguageToString(Language language) {
+    return language == Language::Russian ? "ru" : "en";
+}
+
+int NextWrappedIndex(int index, int count) {
+    if (count <= 0) {
+        return 0;
+    }
+    return (std::clamp(index, 0, count - 1) + 1) % count;
+}
+
+int ClampSettingIndex(int index, int count) {
+    if (count <= 0) {
+        return 0;
+    }
+    return std::clamp(index, 0, count - 1);
+}
 }
 
 void ProgressManager::Load() {
@@ -52,11 +75,29 @@ void ProgressManager::Load() {
         data.bestAccuracy = json.value("bestAccuracy", 0.0f);
         data.bestStreak = json.value("bestStreak", 0);
         data.difficulty = DifficultyFromString(json.value("difficulty", std::string("normal")));
+        data.themeIndex = json.value("themeIndex", 0);
+        data.typingTextFontIndex = json.value("typingTextFontIndex", 0);
+        data.keyboardFontIndex = json.value("keyboardFontIndex", 0);
         data.weakKeys.clear();
 
         if (json.contains("weakKeys") && json["weakKeys"].is_object()) {
             for (const auto& item : json["weakKeys"].items()) {
                 data.weakKeys[item.key()] = item.value().get<int>();
+            }
+        }
+
+        data.recentSessions.clear();
+        if (json.contains("recentSessions") && json["recentSessions"].is_array()) {
+            for (const auto& item : json["recentSessions"]) {
+                SessionRecord session;
+                session.language = LanguageFromString(item.value("language", std::string("en")));
+                session.wpm = item.value("wpm", 0.0f);
+                session.accuracy = item.value("accuracy", 0.0f);
+                session.bestStreak = item.value("bestStreak", 0);
+                data.recentSessions.push_back(session);
+            }
+            if (static_cast<int>(data.recentSessions.size()) > MaxRecentSessions) {
+                data.recentSessions.erase(data.recentSessions.begin(), data.recentSessions.end() - MaxRecentSessions);
             }
         }
     } catch (...) {
@@ -75,14 +116,35 @@ void ProgressManager::Save() const {
     json["bestAccuracy"] = data.bestAccuracy;
     json["bestStreak"] = data.bestStreak;
     json["difficulty"] = DifficultyToString(data.difficulty);
+    json["themeIndex"] = data.themeIndex;
+    json["typingTextFontIndex"] = data.typingTextFontIndex;
+    json["keyboardFontIndex"] = data.keyboardFontIndex;
     json["weakKeys"] = data.weakKeys;
+    json["recentSessions"] = nlohmann::json::array();
+    for (const SessionRecord& session : data.recentSessions) {
+        json["recentSessions"].push_back({
+            { "language", LanguageToString(session.language) },
+            { "wpm", session.wpm },
+            { "accuracy", session.accuracy },
+            { "bestStreak", session.bestStreak }
+        });
+    }
 
     std::ofstream file(ProgressPath);
     file << json.dump(2);
 }
 
 void ProgressManager::Reset() {
+    const Difficulty preservedDifficulty = data.difficulty;
+    const int preservedThemeIndex = data.themeIndex;
+    const int preservedTypingTextFontIndex = data.typingTextFontIndex;
+    const int preservedKeyboardFontIndex = data.keyboardFontIndex;
+
     data = ProgressData{};
+    data.difficulty = preservedDifficulty;
+    data.themeIndex = preservedThemeIndex;
+    data.typingTextFontIndex = preservedTypingTextFontIndex;
+    data.keyboardFontIndex = preservedKeyboardFontIndex;
     Save();
 }
 
@@ -93,6 +155,11 @@ void ProgressManager::RecordResult(Language language, int lessonId, float wpm, f
 
     for (const auto& [key, count] : mistakes) {
         data.weakKeys[key] += count;
+    }
+
+    data.recentSessions.push_back({ language, wpm, accuracy, bestStreak });
+    if (static_cast<int>(data.recentSessions.size()) > MaxRecentSessions) {
+        data.recentSessions.erase(data.recentSessions.begin(), data.recentSessions.end() - MaxRecentSessions);
     }
 
     // Completing with solid accuracy unlocks the next lesson.
@@ -131,6 +198,51 @@ void ProgressManager::CycleDifficulty() {
             data.difficulty = Difficulty::Relaxed;
             break;
     }
+    Save();
+}
+
+void ProgressManager::SetDifficulty(Difficulty difficulty) {
+    if (data.difficulty == difficulty) {
+        return;
+    }
+    data.difficulty = difficulty;
+    Save();
+}
+
+void ProgressManager::SetThemeIndex(int index, int themeCount) {
+    const int clamped = ClampSettingIndex(index, themeCount);
+    if (data.themeIndex == clamped) {
+        return;
+    }
+    data.themeIndex = clamped;
+    Save();
+}
+
+void ProgressManager::SetTypingTextFontIndex(int index, int fontCount) {
+    const int clamped = ClampSettingIndex(index, fontCount);
+    if (data.typingTextFontIndex == clamped) {
+        return;
+    }
+    data.typingTextFontIndex = clamped;
+    Save();
+}
+
+void ProgressManager::SetKeyboardFontIndex(int index, int fontCount) {
+    const int clamped = ClampSettingIndex(index, fontCount);
+    if (data.keyboardFontIndex == clamped) {
+        return;
+    }
+    data.keyboardFontIndex = clamped;
+    Save();
+}
+
+void ProgressManager::CycleTypingTextFont(int fontCount) {
+    data.typingTextFontIndex = NextWrappedIndex(data.typingTextFontIndex, fontCount);
+    Save();
+}
+
+void ProgressManager::CycleKeyboardFont(int fontCount) {
+    data.keyboardFontIndex = NextWrappedIndex(data.keyboardFontIndex, fontCount);
     Save();
 }
 

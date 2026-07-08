@@ -61,6 +61,13 @@ private:
     float caretY = 300.0f;
     float pulseTime = 0.0f;
     float textScrollY = 0.0f;
+    float progressFill = 0.0f;
+    float correctFeedback = 0.0f;
+    float errorFeedback = 0.0f;
+    float caretImpact = 0.0f;
+    size_t visualTypedLength = 0;
+    size_t lastFeedbackIndex = 0;
+    bool lastFeedbackWasError = false;
     
     // Предрасчет позиций символов
     std::vector<Vector2> charPositions;

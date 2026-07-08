@@ -8,9 +8,12 @@ public:
 
     static void PlayClick();
     static void PlayError();
+    static void SetEnabled(bool value);
     static void ToggleEnabled();
+    static void SetVolume(float value);
     static void IncreaseVolume();
     static void DecreaseVolume();
+    static void SetClickProfile(int profile);
     static void CycleClickProfile();
 
     static bool IsEnabled() { return enabled; }

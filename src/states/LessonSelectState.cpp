@@ -14,6 +14,16 @@ void DrawSceneText(Game* game, Font font, const char* text, Vector2 position, fl
     DrawTextEx(font, text, game->ScalePoint(position), fontSize * scale, 1.0f * scale, color);
 }
 
+void DrawFittedSceneText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, Color color) {
+    float adjustedSize = fontSize;
+    while (adjustedSize > 10.0f && MeasureTextEx(font, text, adjustedSize, 0.0f).x > maxWidth) {
+        adjustedSize -= 1.0f;
+    }
+
+    const float scale = game->GetUiScale();
+    DrawTextEx(font, text, game->ScalePoint(position), adjustedSize * scale, 0.0f, color);
+}
+
 bool IsRu(Language language) {
     return language == Language::Russian;
 }
@@ -106,7 +116,7 @@ void LessonSelectState::Update(float deltaTime) {
 
 void LessonSelectState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
-    const Font font = gamePtr->GetFont();
+    const Font font = gamePtr->GetUiFont();
     const float scale = gamePtr->GetUiScale();
     const auto& lessons = LessonLibrary::GetLessons(language);
     const int unlocked = gamePtr->GetProgress().GetUnlockedLesson(language);
@@ -153,7 +163,7 @@ void LessonSelectState::Draw() {
 
         DrawSceneText(gamePtr, font, TextFormat("%02d", i + 1), { rect.x + 22.0f, rect.y + 18.0f }, 28.0f, unlockedLesson ? theme.Highlight : theme.TextDefault);
         DrawSceneText(gamePtr, font, lesson.title.c_str(), { rect.x + 88.0f, rect.y + 16.0f }, 22.0f, unlockedLesson ? theme.TextCorrect : Fade(theme.TextDefault, 0.55f));
-        DrawSceneText(gamePtr, font, lesson.description.c_str(), { rect.x + 88.0f, rect.y + 50.0f }, 14.0f, unlockedLesson ? theme.TextDefault : Fade(theme.TextDefault, 0.42f));
+        DrawFittedSceneText(gamePtr, font, lesson.description.c_str(), { rect.x + 88.0f, rect.y + 50.0f }, 310.0f, 14.0f, unlockedLesson ? theme.TextDefault : Fade(theme.TextDefault, 0.42f));
 
         const char* status = unlockedLesson ? (i < unlocked ? (IsRu(language) ? u8"ГОТОВО" : "DONE") : (IsRu(language) ? u8"ОТКРЫТ" : "OPEN")) : (IsRu(language) ? u8"ЗАКРЫТ" : "LOCKED");
         const Color statusColor = unlockedLesson ? theme.TextCorrect : theme.TextError;

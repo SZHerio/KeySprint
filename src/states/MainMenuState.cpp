@@ -34,8 +34,8 @@ const char* LocalizedDescription(int index, Language language) {
         case 2: return ru ? u8"Ежедневный смешанный текст с игровой целью на сессию." : "A fresh mixed challenge with a daily mission mindset.";
         case 3: return ru ? u8"Длинный связный текст, прокрутка и тренировка выносливости." : "Long-form typing flow: larger text, scrolling canvas and endurance.";
         case 4: return ru ? u8"Ранг, миссии, слабые клавиши, серия и открытые уроки." : "Review rank, missions, weak keys, lesson unlocks and reset progress.";
-        case 5: return ru ? u8"Тема, язык, сложность, звук, громкость и сброс прогресса." : "Theme, language, difficulty, sound profiles and progress reset.";
-        case 6: return ru ? u8"Закрыть программу и вернуться на рабочий стол." : "Close KeySprint and return to desktop.";
+        case 5: return ru ? u8"Тема, язык, шрифты, сложность, звук, громкость и сброс прогресса." : "Theme, language, fonts, difficulty, sound profiles and progress reset.";
+        case 6: return ru ? u8"Закрыть программу и вернуться на рабочий стол." : "Close Key Sprint and return to desktop.";
         default: return "";
     }
 }
@@ -56,7 +56,13 @@ const char* LocalDifficulty(const std::string& difficulty, Language language) {
 }
 
 struct MainMenuLayout {
-    float statusY = 215.0f;
+    float cardX = 320.0f;
+    float cardY = 48.0f;
+    float cardWidth = 640.0f;
+    float cardHeight = 624.0f;
+    float contentX = 390.0f;
+    float contentWidth = 500.0f;
+    float statusY = 204.0f;
     float statusFontSize = 15.0f;
     float menuItemSpacing = 39.0f;
     float menuItemHeight = 38.0f;
@@ -100,6 +106,10 @@ struct MainMenuLayout {
     float HighlightY(int index) const {
         return MenuTop() + static_cast<float>(index) * menuItemSpacing;
     }
+
+    Rectangle CardRect() const {
+        return { cardX, cardY, cardWidth, cardHeight };
+    }
 };
 
 const MainMenuLayout& GetLayout() {
@@ -132,6 +142,31 @@ void DrawWrappedText(Game* game, Font font, const char* text, Vector2 position, 
         DrawTextEx(font, line.c_str(), game->ScalePoint({ position.x, y }), fontSize * scale, spacing * scale, color);
     }
 }
+
+void DrawBrandTitle(Game* game, Font font, const Theme& theme, float centerX, float y) {
+    const float fontSize = 52.0f;
+    const float spacing = 0.0f;
+    const float wordGap = 12.0f;
+    const Vector2 keySize = MeasureTextEx(font, "Key", fontSize, spacing);
+    const Vector2 sprintSize = MeasureTextEx(font, "Sprint", fontSize, spacing);
+    const float totalWidth = keySize.x + wordGap + sprintSize.x;
+    const float startX = centerX - totalWidth * 0.5f;
+
+    DrawTextEx(font, "Key", game->ScalePoint({ startX + 2.0f, y + 2.0f }), fontSize * game->GetUiScale(), spacing, Fade(theme.Background, 0.34f));
+    DrawTextEx(font, "Sprint", game->ScalePoint({ startX + keySize.x + wordGap + 2.0f, y + 2.0f }), fontSize * game->GetUiScale(), spacing, Fade(theme.Highlight, 0.18f));
+    DrawTextEx(font, "Key", game->ScalePoint({ startX, y }), fontSize * game->GetUiScale(), spacing, theme.Title);
+    DrawTextEx(font, "Sprint", game->ScalePoint({ startX + keySize.x + wordGap, y }), fontSize * game->GetUiScale(), spacing, theme.Highlight);
+}
+
+void DrawFittedText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, float spacing, Color color) {
+    float adjustedSize = fontSize;
+    while (adjustedSize > 11.0f && MeasureTextEx(font, text, adjustedSize, spacing).x > maxWidth) {
+        adjustedSize -= 1.0f;
+    }
+
+    const float scale = game->GetUiScale();
+    DrawTextEx(font, text, game->ScalePoint(position), adjustedSize * scale, spacing * scale, color);
+}
 }
 
 void MainMenuState::Init(Game* game) {
@@ -146,7 +181,7 @@ void MainMenuState::HandleInput() {
     const Vector2 mouse = GetMousePosition();
     const MainMenuLayout& layout = GetLayout();
     for (size_t i = 0; i < options.size(); ++i) {
-        const Rectangle optionRect = gamePtr->ScaleRect({ 390.0f, layout.HighlightY(static_cast<int>(i)), 500.0f, layout.menuItemHeight - 2.0f });
+        const Rectangle optionRect = gamePtr->ScaleRect({ layout.contentX, layout.HighlightY(static_cast<int>(i)), layout.contentWidth, layout.menuItemHeight - 2.0f });
         if (CheckCollisionPointRec(mouse, optionRect)) {
             selectedOption = static_cast<int>(i);
             hoveringOption = true;
@@ -186,15 +221,17 @@ void MainMenuState::Update(float deltaTime) {
 
 void MainMenuState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
-    Font font = gamePtr->GetFont();
+    Font font = gamePtr->GetUiFont();
+    Font titleFont = gamePtr->GetTypingFontByIndex(2);
     const float scale = gamePtr->GetUiScale();
+    const MainMenuLayout& layout = GetLayout();
 
     const float glow = (std::sin(menuTime * 2.1f) + 1.0f) * 0.5f;
-    const Rectangle card = gamePtr->ScaleRect({ 310.0f, 70.0f, 660.0f, 585.0f });
+    const Rectangle card = gamePtr->ScaleRect(layout.CardRect());
     DrawRectangleRounded(card, 0.09f, 16, Fade(theme.Panel, 0.82f));
     DrawRectangleRoundedLines(card, 0.09f, 16, Fade(theme.PanelBorder, 0.80f));
 
-    DrawTextEx(font, "KeySprint", gamePtr->ScalePoint({ 438.0f, 122.0f }), 54.0f * scale, 1.0f * scale, theme.Title);
+    DrawBrandTitle(gamePtr, titleFont, theme, 640.0f, 104.0f);
     DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Тренажер скорости печати" : "Typing speed trainer", gamePtr->ScalePoint({ 414.0f, 178.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
     const Language lang = gamePtr->GetLanguage();
     const std::string rank = gamePtr->GetProgress().GetRankLabel();
@@ -206,30 +243,29 @@ void MainMenuState::Draw() {
         gamePtr->GetProgress().GetBestWpm()),
         gamePtr->ScalePoint({ 384.0f, 215.0f }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
 
-    const Rectangle highlight = gamePtr->ScaleRect({ 390.0f, highlightY, 500.0f, 38.0f });
+    const Rectangle highlight = gamePtr->ScaleRect({ layout.contentX, highlightY, layout.contentWidth, 38.0f });
     DrawRectangleRounded(highlight, 0.35f, 10, Fade(theme.Highlight, 0.18f));
     DrawRectangleRoundedLines(highlight, 0.35f, 10, Fade(theme.Highlight, 0.48f));
 
-    const MainMenuLayout& layout = GetLayout();
-    const Rectangle detail = gamePtr->ScaleRect({ 390.0f, layout.DetailTop(), 500.0f, layout.detailHeight });
+    const Rectangle detail = gamePtr->ScaleRect({ layout.contentX, layout.DetailTop(), layout.contentWidth, layout.detailHeight });
     DrawRectangleRounded(detail, 0.18f, 10, Fade(theme.PanelBorder, 0.18f));
     DrawRectangleRoundedLines(detail, 0.18f, 10, Fade(theme.Highlight, 0.35f));
     DrawWrappedText(
         gamePtr,
         font,
         LocalizedDescription(selectedOption, gamePtr->GetLanguage()),
-        { 420.0f, layout.DetailTop() + 15.0f },
-        440.0f,
+        { layout.contentX + 30.0f, layout.DetailTop() + 15.0f },
+        layout.contentWidth - 60.0f,
         14.0f,
-        1.0f,
+        0.0f,
         theme.TextDefault);
 
     for (size_t i = 0; i < options.size(); ++i) {
         const float y = layout.OptionTextY(static_cast<int>(i));
         const Color color = selectedOption == static_cast<int>(i) ? theme.TextCorrect : theme.TextDefault;
         const float dotPulse = selectedOption == static_cast<int>(i) ? glow : 0.15f;
-        DrawCircleV(gamePtr->ScalePoint({ 420.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? theme.Highlight : Fade(theme.TextDefault, 0.35f));
-        DrawTextEx(font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), gamePtr->ScalePoint({ 455.0f, y }), 21.0f * scale, 1.0f * scale, color);
+        DrawCircleV(gamePtr->ScalePoint({ layout.contentX + 30.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? theme.Highlight : Fade(theme.TextDefault, 0.35f));
+        DrawTextEx(font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), gamePtr->ScalePoint({ layout.contentX + 65.0f, y }), 21.0f * scale, 0.0f, color);
     }
 
     DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Стрелки/WASD, Enter или мышь" : "Use Up/Down, Enter or Mouse", gamePtr->ScalePoint({ 420.0f, layout.FooterY() }), 16.0f * scale, 1.0f * scale, theme.TextDefault);

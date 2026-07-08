@@ -8,8 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(raylib REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
-# Add executable
-add_executable(${PROJECT_NAME} 
+set(PROJECT_SOURCES
     src/main.cpp
     src/core/Game.cpp
     src/core/TypingLogic.cpp
@@ -24,6 +23,16 @@ add_executable(${PROJECT_NAME}
     src/states/SettingsState.cpp
     src/states/ResultsState.cpp
 )
+
+if(WIN32)
+    enable_language(RC)
+    set(APP_ICON_PATH "${CMAKE_SOURCE_DIR}/assets/icons/key-sprint.ico")
+    configure_file(src/app.rc.in ${CMAKE_CURRENT_BINARY_DIR}/app.rc @ONLY)
+    list(APPEND PROJECT_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/app.rc)
+endif()
+
+# Add executable
+add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)

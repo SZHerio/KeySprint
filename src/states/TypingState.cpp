@@ -23,6 +23,18 @@ Rectangle Inflate(Rectangle rect, float amount) {
     return { rect.x - amount, rect.y - amount, rect.width + amount * 2.0f, rect.height + amount * 2.0f };
 }
 
+float GlyphWidth(Font font, int codepoint, float fontSize, float spacing) {
+    const std::string glyph = codepoint == ' ' ? "n" : CodepointToUtf8(codepoint);
+    const float measured = MeasureTextEx(font, glyph.c_str(), fontSize, spacing).x;
+    const float fallback = MeasureTextEx(font, "n", fontSize, spacing).x * 0.62f;
+    return std::max(measured, fallback);
+}
+
+float EaseOut(float value) {
+    const float clamped = std::clamp(value, 0.0f, 1.0f);
+    return 1.0f - (1.0f - clamped) * (1.0f - clamped);
+}
+
 void DrawTextScene(Game* game, Font font, const char* text, Vector2 position, float fontSize, float spacing, Color color) {
     const float scale = game->GetUiScale();
     DrawTextEx(font, text, game->ScalePoint(position), fontSize * scale, spacing * scale, color);
@@ -38,6 +50,20 @@ void DrawRoundedLinesScene(Game* game, Rectangle rect, float roundness, int segm
 
 void DrawRectScene(Game* game, Rectangle rect, Color color) {
     DrawRectangleRec(game->ScaleRect(rect), color);
+}
+
+void DrawTypingProgress(Game* game, const Theme& theme, Rectangle viewport, float progress, float errorPulse) {
+    const Rectangle track = { viewport.x + 22.0f, viewport.y + viewport.height - 18.0f, viewport.width - 44.0f, 5.0f };
+    const float fillWidth = std::clamp(progress, 0.0f, 1.0f) * track.width;
+    const Color fillColor = errorPulse > 0.0f
+        ? FadeColor(theme.TextError, 0.60f + errorPulse * 0.28f)
+        : FadeColor(theme.Highlight, 0.68f);
+
+    DrawRoundedScene(game, track, 1.0f, 8, FadeColor(theme.PanelBorder, 0.20f));
+    if (fillWidth > 1.0f) {
+        DrawRoundedScene(game, { track.x, track.y, fillWidth, track.height }, 1.0f, 8, fillColor);
+        DrawCircleV(game->ScalePoint({ track.x + fillWidth, track.y + track.height * 0.5f }), (4.0f + errorPulse * 3.0f) * game->GetUiScale(), fillColor);
+    }
 }
 
 void BeginScissorScene(Game* game, Rectangle rect) {
@@ -183,7 +209,7 @@ void TypingState::Init(Game* game) {
         lessonDescription = language == Language::Russian ? u8"Свободная тренировка" : "Free typing test";
     }
     
-    Font font = gamePtr->GetFont();
+    Font font = gamePtr->GetTypingTextFont();
     float fontSize = GetTextFontSize();
     CalculateLayout(font, fontSize);
     
@@ -192,6 +218,13 @@ void TypingState::Init(Game* game) {
         caretY = charPositions[0].y;
     }
     textScrollY = 0.0f;
+    progressFill = 0.0f;
+    correctFeedback = 0.0f;
+    errorFeedback = 0.0f;
+    caretImpact = 0.0f;
+    visualTypedLength = 0;
+    lastFeedbackIndex = 0;
+    lastFeedbackWasError = false;
 }
 
 void TypingState::HandleInput() {
@@ -208,7 +241,28 @@ void TypingState::Update(float deltaTime) {
     pulseTime += deltaTime;
 
     // Плавность каретки
-    size_t typedLen = logic.GetTypedCodepoints().size();
+    const auto& target = logic.GetTargetCodepoints();
+    const auto& typed = logic.GetTypedCodepoints();
+    const size_t typedLen = typed.size();
+
+    if (typedLen != visualTypedLength) {
+        if (typedLen > visualTypedLength && typedLen > 0 && typedLen - 1 < target.size()) {
+            lastFeedbackIndex = typedLen - 1;
+            lastFeedbackWasError = ToLowerCodepoint(typed[lastFeedbackIndex]) != ToLowerCodepoint(target[lastFeedbackIndex]);
+            correctFeedback = lastFeedbackWasError ? 0.0f : 1.0f;
+            errorFeedback = lastFeedbackWasError ? 1.0f : 0.0f;
+            caretImpact = 1.0f;
+        }
+        visualTypedLength = typedLen;
+    }
+
+    correctFeedback = std::max(0.0f, correctFeedback - deltaTime * 3.0f);
+    errorFeedback = std::max(0.0f, errorFeedback - deltaTime * 2.8f);
+    caretImpact = std::max(0.0f, caretImpact - deltaTime * 4.6f);
+
+    const float targetProgress = target.empty() ? 0.0f : static_cast<float>(typedLen) / static_cast<float>(target.size());
+    progressFill += (targetProgress - progressFill) * std::min(1.0f, deltaTime * 9.0f);
+
     if (typedLen < charPositions.size()) {
         Vector2 targetPos = charPositions[typedLen];
         // Lerp
@@ -472,7 +526,9 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
 
 void TypingState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
-    Font font = gamePtr->GetFont();
+    Font textFont = gamePtr->GetTypingTextFont();
+    Font keyboardFont = gamePtr->GetKeyboardFont();
+    Font uiFont = gamePtr->GetUiFont();
     float fontSize = GetTextFontSize();
 
     const auto& target = logic.GetTargetCodepoints();
@@ -482,6 +538,10 @@ void TypingState::Draw() {
     DrawRoundedLinesScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(theme.PanelBorder, 0.75f));
     DrawRoundedScene(gamePtr, TextViewport, 0.12f, 12, FadeColor(theme.Panel, 0.54f));
     DrawRoundedLinesScene(gamePtr, TextViewport, 0.12f, 12, FadeColor(theme.PanelBorder, 0.55f));
+    DrawTypingProgress(gamePtr, theme, TextViewport, progressFill, errorFeedback);
+    if (errorFeedback > 0.0f) {
+        DrawRoundedLinesScene(gamePtr, Inflate(TextViewport, 2.0f + errorFeedback * 2.0f), 0.12f, 12, FadeColor(theme.TextError, 0.18f + errorFeedback * 0.34f));
+    }
 
     BeginScissorScene(gamePtr, TextViewport);
     for (size_t i = 0; i < target.size(); ++i) {
@@ -490,39 +550,60 @@ void TypingState::Draw() {
         }
 
         Color color = theme.TextDefault;
+        const float glyphWidth = GlyphWidth(textFont, target[i], fontSize, UiSpacing);
+        const float drawX = charPositions[i].x;
+        const float drawY = charPositions[i].y - textScrollY;
         
         if (i < typed.size()) {
             if (ToLowerCodepoint(typed[i]) == ToLowerCodepoint(target[i])) {
                 color = theme.TextCorrect;
+                const float age = static_cast<float>(typed.size() - i);
+                const float trail = std::clamp((13.0f - age) / 12.0f, 0.0f, 1.0f);
+                const float hitPulse = (!lastFeedbackWasError && i == lastFeedbackIndex) ? correctFeedback : 0.0f;
+                const float trailAlpha = trail * 0.10f + hitPulse * 0.22f;
+                if (trailAlpha > 0.01f) {
+                    DrawRoundedScene(gamePtr, { drawX - 2.0f, drawY - 4.0f, glyphWidth + 5.0f, fontSize + 10.0f }, 0.28f, 8, FadeColor(theme.Highlight, trailAlpha));
+                }
             } else {
                 color = theme.TextError;
+                const float pulse = (lastFeedbackWasError && i == lastFeedbackIndex) ? EaseOut(errorFeedback) : 0.0f;
                 
-                // Рисуем подчеркивание для ошибок для лучшей читаемости
-                DrawRectScene(gamePtr, { charPositions[i].x, charPositions[i].y - textScrollY + fontSize + 3.0f, MeasureTextEx(font, "A", fontSize, UiSpacing).x, 3.0f }, theme.TextError);
+                DrawRoundedScene(gamePtr, { drawX - 3.0f, drawY - 5.0f, glyphWidth + 7.0f, fontSize + 11.0f }, 0.22f, 8, FadeColor(theme.TextError, 0.16f + pulse * 0.28f));
+                DrawRectScene(gamePtr, { drawX, drawY + fontSize + 3.0f, glyphWidth, 3.0f + pulse * 2.0f }, FadeColor(theme.TextError, 0.78f + pulse * 0.22f));
             }
         }
 
         const std::string glyph = CodepointToUtf8(target[i]);
-        DrawTextScene(gamePtr, font, glyph.c_str(), { charPositions[i].x, charPositions[i].y - textScrollY }, fontSize, UiSpacing, color);
+        const float errorOffset = (lastFeedbackWasError && i == lastFeedbackIndex)
+            ? std::sin(errorFeedback * 18.0f) * errorFeedback * 2.5f
+            : 0.0f;
+        DrawTextScene(gamePtr, textFont, glyph.c_str(), { drawX + errorOffset, drawY }, fontSize, UiSpacing, color);
     }
     
     // Рисуем плавную каретку
-    float caretWidth = MeasureTextEx(font, "A", fontSize, UiSpacing).x;
-    DrawRoundedScene(gamePtr, { caretX, caretY - textScrollY + fontSize + 4.0f, caretWidth, 4.0f }, 1.0f, 4, theme.Caret);
+    float caretWidth = MeasureTextEx(textFont, "A", fontSize, UiSpacing).x;
+    const float caretDrawY = caretY - textScrollY;
+    const float blink = (std::sin(pulseTime * 5.5f) + 1.0f) * 0.5f;
+    const int nextChar = GetNextExpectedChar();
+    const Color caretColor = nextChar == 0 ? theme.Caret : GetFingerColor(GetFingerForKey(nextChar), theme);
+    const float impact = EaseOut(caretImpact);
+    DrawRoundedScene(gamePtr, Inflate({ caretX - 1.0f, caretDrawY - 5.0f, 3.5f, fontSize + 13.0f }, 3.0f + impact * 5.0f), 0.70f, 8, FadeColor(caretColor, 0.10f + impact * 0.16f));
+    DrawRoundedScene(gamePtr, { caretX - 1.0f, caretDrawY - 5.0f, 3.5f, fontSize + 13.0f }, 0.75f, 8, FadeColor(caretColor, 0.64f + blink * 0.30f));
+    DrawRoundedScene(gamePtr, { caretX, caretDrawY + fontSize + 5.0f, caretWidth, 4.0f }, 1.0f, 4, FadeColor(caretColor, 0.64f));
     EndScissorMode();
 
     // Заголовки (системным шрифтом или тем же, но для UI можно оставить обычный)
     const char* title = GetModeTitle();
-    DrawTextScene(gamePtr, font, title, {80.0f, 48.0f}, 34.0f, UiSpacing, theme.Title);
-    DrawTextScene(gamePtr, font, TextFormat("%s | %s | %s", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str(), language == Language::Russian ? u8"ESC Меню" : "ESC Menu"), {80.0f, 90.0f}, 17.0f, UiSpacing, theme.TextDefault);
+    DrawTextScene(gamePtr, uiFont, title, {80.0f, 48.0f}, 34.0f, 0.0f, theme.Title);
+    DrawTextScene(gamePtr, uiFont, TextFormat("%s | %s | %s", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str(), language == Language::Russian ? u8"ESC Меню" : "ESC Menu"), {80.0f, 90.0f}, 17.0f, 0.0f, theme.TextDefault);
 
     // Live Metrics
-    DrawTextScene(gamePtr, font, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, UiSpacing, theme.TextCorrect);
-    DrawTextScene(gamePtr, font, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, UiSpacing, theme.TextCorrect);
-    DrawTextScene(gamePtr, font, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, UiSpacing, logic.GetCurrentStreak() > 20 ? theme.Highlight : theme.TextDefault);
+    DrawTextScene(gamePtr, uiFont, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, 0.0f, theme.TextCorrect);
+    DrawTextScene(gamePtr, uiFont, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, 0.0f, theme.TextCorrect);
+    DrawTextScene(gamePtr, uiFont, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, 0.0f, logic.GetCurrentStreak() > 20 ? theme.Highlight : theme.TextDefault);
 
     DrawRoundedScene(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, FadeColor(theme.Panel, 0.66f));
     DrawRoundedLinesScene(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, FadeColor(theme.PanelBorder, 0.70f));
-    DrawHandsGuide(font, theme);
-    DrawVirtualKeyboard(font, theme);
+    DrawHandsGuide(uiFont, theme);
+    DrawVirtualKeyboard(keyboardFont, theme);
 }

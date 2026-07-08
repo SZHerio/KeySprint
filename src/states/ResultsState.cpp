@@ -41,6 +41,15 @@ const char* LocalFinger(const std::string& finger, bool ru) {
     if (finger == "Thumb") return u8"большой палец";
     return u8"нет данных";
 }
+void DrawFittedText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, Color color) {
+    float adjustedSize = fontSize;
+    while (adjustedSize > 11.0f && MeasureTextEx(font, text, adjustedSize, 0.0f).x > maxWidth) {
+        adjustedSize -= 1.0f;
+    }
+
+    const float scale = game->GetUiScale();
+    DrawTextEx(font, text, game->ScalePoint(position), adjustedSize * scale, 0.0f, color);
+}
 }
 
 ResultsState::ResultsState(
@@ -92,7 +101,7 @@ void ResultsState::Update(float deltaTime) {
 
 void ResultsState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
-    Font font = gamePtr->GetFont();
+    Font font = gamePtr->GetUiFont();
     const float scale = gamePtr->GetUiScale();
     const Vector2 mouse = GetMousePosition();
 
@@ -129,9 +138,9 @@ void ResultsState::Draw() {
     const std::string weakKeyLine = IsRu(language)
         ? u8"Слабая клавиша: «" + weakKeyLabel + u8"» | Фокус: " + LocalFinger(weakFinger, true)
         : "Weak key: " + weakKeyLabel + " | Finger focus: " + LocalFinger(weakFinger, false);
-    DrawTextEx(font, weakKeyLine.c_str(), gamePtr->ScalePoint({ 380.0f, 416.0f }), 16.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawFittedText(gamePtr, font, weakKeyLine.c_str(), { 380.0f, 416.0f }, 520.0f, 16.0f, theme.TextDefault);
     const char* tip = accuracy < threshold ? (IsRu(language) ? u8"Миссия: повтори медленнее и держи точность выше порога." : "Mission: replay this lesson slower and keep accuracy above threshold.") : (IsRu(language) ? u8"Миссия: повтори и побей серию без потери точности." : "Mission: repeat once and beat your streak without losing accuracy.");
-    DrawTextEx(font, tip, gamePtr->ScalePoint({ 380.0f, 438.0f }), 14.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawFittedText(gamePtr, font, tip, { 380.0f, 438.0f }, 520.0f, 14.0f, theme.TextDefault);
 
     const Rectangle retryRect = { 430.0f, 500.0f, 420.0f, 40.0f };
     const Rectangle menuRect = { 430.0f, 548.0f, 420.0f, 40.0f };
