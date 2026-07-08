@@ -12,6 +12,14 @@
 #include "TypingState.h"
 
 namespace {
+constexpr int LessonColumns = 2;
+constexpr float LessonCardWidth = 520.0f;
+constexpr float LessonCardHeight = 70.0f;
+constexpr float LessonGapX = 40.0f;
+constexpr float LessonGapY = 8.0f;
+constexpr float LessonStartX = 90.0f;
+constexpr float LessonViewportPaddingY = 14.0f;
+
 bool IsRu(Language language) {
     return language == Language::Russian;
 }
@@ -44,21 +52,15 @@ Rectangle LessonSelectState::GetLessonViewport() const {
 }
 
 Rectangle LessonSelectState::GetCardBaseRect(int index) const {
-    const int columns = 2;
-    const float cardWidth = 520.0f;
-    const float cardHeight = 70.0f;
-    const float gapX = 40.0f;
-    const float gapY = 8.0f;
-    const float startX = 90.0f;
-    const float startY = GetLessonViewport().y;
+    const float startY = GetLessonViewport().y + LessonViewportPaddingY;
 
-    const int col = index % columns;
-    const int row = index / columns;
+    const int col = index % LessonColumns;
+    const int row = index / LessonColumns;
     return {
-        startX + col * (cardWidth + gapX),
-        startY + row * (cardHeight + gapY),
-        cardWidth,
-        cardHeight
+        LessonStartX + col * (LessonCardWidth + LessonGapX),
+        startY + row * (LessonCardHeight + LessonGapY),
+        LessonCardWidth,
+        LessonCardHeight
     };
 }
 
@@ -69,23 +71,22 @@ Rectangle LessonSelectState::GetCardRect(int index) const {
 }
 
 float LessonSelectState::GetMaxScrollOffset() const {
-    const int columns = 2;
-    const float cardHeight = 70.0f;
-    const float gapY = 8.0f;
     const int count = GetLessonCount();
-    const int rows = (count + columns - 1) / columns;
+    const int rows = (count + LessonColumns - 1) / LessonColumns;
     if (rows <= 0) {
         return 0.0f;
     }
 
-    const float contentHeight = static_cast<float>(rows) * cardHeight + static_cast<float>(rows - 1) * gapY;
+    const float contentHeight = LessonViewportPaddingY * 2.0f +
+        static_cast<float>(rows) * LessonCardHeight +
+        static_cast<float>(rows - 1) * LessonGapY;
     return std::max(0.0f, contentHeight - GetLessonViewport().height);
 }
 
 void LessonSelectState::EnsureSelectedVisible() {
     const Rectangle viewport = GetLessonViewport();
     const Rectangle base = GetCardBaseRect(selectedLesson);
-    const float margin = 10.0f;
+    const float margin = LessonViewportPaddingY;
 
     if (base.y - scrollTarget < viewport.y + margin) {
         scrollTarget = base.y - viewport.y - margin;

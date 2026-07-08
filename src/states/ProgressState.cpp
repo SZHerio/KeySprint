@@ -36,21 +36,6 @@ const char* LocalDifficulty(const std::string& difficulty, bool ru) {
     return u8"Нормальная";
 }
 
-int WeakCountForKey(const std::map<std::string, int>& weakKeys, const std::string& id) {
-    const auto found = weakKeys.find(id);
-    return found == weakKeys.end() ? 0 : found->second;
-}
-
-std::string WeakIdForKey(const KeyLayout& key) {
-    if (key.key == ' ') {
-        return "Space";
-    }
-    if (key.key == '\n') {
-        return "Enter";
-    }
-    return key.label;
-}
-
 int FingerBucket(FingerType finger) {
     switch (finger) {
         case FingerType::LeftPinky:
@@ -95,7 +80,7 @@ void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle re
     const std::vector<KeyLayout> keys = BuildKeyboardLayout(language);
     int maxCount = 0;
     for (const KeyLayout& key : keys) {
-        maxCount = std::max(maxCount, WeakCountForKey(weakKeys, WeakIdForKey(key)));
+        maxCount = std::max(maxCount, WeakCountForKey(key, weakKeys));
     }
 
     Ui::DrawRounded(game, rect, 0.08f, 12, Ui::Fade(theme.PanelBorder, 0.14f));
@@ -107,25 +92,39 @@ void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle re
     const float gap = 5.0f;
     const float startY = rect.y + 84.0f;
 
-    for (int row = 0; row <= 4; ++row) {
+    auto rowKeysFor = [&](int row) {
         std::vector<const KeyLayout*> rowKeys;
         for (const KeyLayout& key : keys) {
             if (key.row == row) {
                 rowKeys.push_back(&key);
             }
         }
+        return rowKeys;
+    };
 
+    auto rowWidth = [&](const std::vector<const KeyLayout*>& rowKeys) {
         float totalWidth = 0.0f;
         for (const KeyLayout* key : rowKeys) {
             totalWidth += key->width * keySize;
         }
         totalWidth += std::max(0, static_cast<int>(rowKeys.size()) - 1) * gap;
+        return totalWidth;
+    };
 
-        float x = rect.x + (rect.width - totalWidth) * 0.5f;
+    const float referenceX = rect.x + (rect.width - rowWidth(rowKeysFor(0))) * 0.5f;
+
+    for (int row = 0; row < KeyboardRowCount; ++row) {
+        const std::vector<const KeyLayout*> rowKeys = rowKeysFor(row);
+        const float totalWidth = rowWidth(rowKeys);
+
+        float x = referenceX + GetKeyboardRowOffsetUnits(row) * (keySize + gap);
+        if (row == 4) {
+            x = rect.x + (rect.width - totalWidth) * 0.5f;
+        }
         const float y = startY + row * (keySize + gap);
 
         for (const KeyLayout* key : rowKeys) {
-            const int count = WeakCountForKey(weakKeys, WeakIdForKey(*key));
+            const int count = WeakCountForKey(*key, weakKeys);
             const float intensity = maxCount > 0 ? std::sqrt(static_cast<float>(count) / static_cast<float>(maxCount)) : 0.0f;
             const Color finger = GetFingerColor(key->finger, theme);
             const Rectangle keyRect = { x, y, key->width * keySize, keySize };
@@ -135,9 +134,8 @@ void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle re
             Ui::DrawRounded(game, keyRect, 0.22f, 8, fill);
             Ui::DrawRoundedLines(game, keyRect, 0.22f, 8, border);
 
-            const float labelSize = key->row == 0 ? 11.0f : (key->width > 2.0f ? 10.0f : (language == Language::Russian ? 13.0f : 14.0f));
-            const Vector2 labelSizeVec = MeasureTextEx(font, key->label.c_str(), labelSize, 0.0f);
-            Ui::DrawText(game, font, key->label.c_str(), { keyRect.x + (keyRect.width - labelSizeVec.x) * 0.5f, keyRect.y + 7.0f }, labelSize, 0.0f, count > 0 ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.72f));
+            const float labelSize = key->row == 0 ? 8.0f : (key->width > 2.0f ? 9.0f : (language == Language::Russian ? 11.0f : 12.0f));
+            Ui::DrawCenteredFittedText(game, font, key->label.c_str(), keyRect, labelSize, 0.0f, count > 0 ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.72f), 7.0f);
 
             if (count > 0 && key->width <= 1.2f) {
                 DrawCircleV(game->ScalePoint({ keyRect.x + keyRect.width - 5.0f, keyRect.y + 5.0f }), (2.0f + intensity * 2.0f) * game->GetUiScale(), Ui::Fade(theme.TextError, 0.78f));
@@ -192,7 +190,7 @@ void DrawFingerLoad(Game* game, Font font, const Theme& theme, Rectangle rect, L
     int loads[5] = {};
     const std::vector<KeyLayout> keys = BuildKeyboardLayout(language);
     for (const KeyLayout& key : keys) {
-        loads[FingerBucket(key.finger)] += WeakCountForKey(weakKeys, WeakIdForKey(key));
+        loads[FingerBucket(key.finger)] += WeakCountForKey(key, weakKeys);
     }
 
     int maxLoad = 0;

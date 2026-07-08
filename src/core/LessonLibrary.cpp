@@ -10,6 +10,10 @@ namespace {
 using json = nlohmann::json;
 
 constexpr const char* ContentPath = "assets/content/typing_content.json";
+constexpr int PracticeSentenceCount = 512;
+constexpr int CompositionParagraphCount = 256;
+constexpr int DailyPracticeSentenceCount = 6;
+constexpr int DailyCompositionParagraphCount = 1;
 
 struct LanguageContent {
     std::vector<Lesson> lessons;
@@ -169,12 +173,16 @@ std::string JoinSample(const std::vector<std::string>& source, int count, const 
 
     std::vector<std::string> items = Shuffled(source);
     std::ostringstream out;
-    const int actualCount = std::min(count, static_cast<int>(items.size()));
-    for (int i = 0; i < actualCount; ++i) {
+    size_t itemIndex = 0;
+    for (int i = 0; i < count; ++i) {
+        if (itemIndex >= items.size()) {
+            items = Shuffled(source);
+            itemIndex = 0;
+        }
         if (i > 0) {
             out << separator;
         }
-        out << items[i];
+        out << items[itemIndex++];
     }
     return out.str();
 }
@@ -184,15 +192,8 @@ std::string JoinSampleLines(const std::vector<std::string>& source, int count, b
         return "";
     }
 
-    std::vector<std::string> items = Shuffled(source);
     std::ostringstream out;
-    const int actualCount = std::min(count, static_cast<int>(items.size()));
-    for (int i = 0; i < actualCount; ++i) {
-        if (i > 0) {
-            out << '\n';
-        }
-        out << items[i];
-    }
+    out << JoinSample(source, count, "\n");
     if (trailingNewline) {
         out << '\n';
     }
@@ -261,17 +262,17 @@ Lesson LessonLibrary::BuildAdaptiveLesson(Language language, int lessonId, const
 }
 
 std::string LessonLibrary::BuildPracticeText(Language language) {
-    return JoinSampleLines(DataFor(language).practiceSentences, 32, true);
+    return JoinSampleLines(DataFor(language).practiceSentences, PracticeSentenceCount, true);
 }
 
 std::string LessonLibrary::BuildCompositionText(Language language) {
-    return JoinSample(DataFor(language).compositionParagraphs, 16, "\n");
+    return JoinSample(DataFor(language).compositionParagraphs, CompositionParagraphCount, "\n");
 }
 
 std::string LessonLibrary::BuildDailyChallengeText(Language language) {
     const LanguageContent& content = DataFor(language);
-    return JoinSampleLines(content.practiceSentences, 6, false) + "\n" +
-        JoinSample(content.compositionParagraphs, 1, "\n");
+    return JoinSampleLines(content.practiceSentences, DailyPracticeSentenceCount, false) + "\n" +
+        JoinSample(content.compositionParagraphs, DailyCompositionParagraphCount, "\n");
 }
 
 std::string LessonLibrary::GetLanguageLabel(Language language) {

@@ -249,20 +249,23 @@ int TypingState::GetNextExpectedChar() const {
 
 void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
     const int nextChar = GetNextExpectedChar();
-    const float keyboardScale = 1.02f;
+    const float keyboardScale = 0.92f;
     const float keySize = 34.0f * keyboardScale;
     const float gap = 5.0f * keyboardScale;
     const float startY = 506.0f;
     const float pulse = (std::sin(pulseTime * 6.0f) + 1.0f) * 0.5f;
 
-    for (int row = 0; row <= 4; ++row) {
+    auto rowKeysFor = [&](int row) {
         std::vector<const KeyLayout*> rowKeys;
         for (const KeyLayout& key : keyboardKeys) {
             if (key.row == row) {
                 rowKeys.push_back(&key);
             }
         }
+        return rowKeys;
+    };
 
+    auto rowWidth = [&](const std::vector<const KeyLayout*>& rowKeys) {
         float totalWidth = 0.0f;
         for (const KeyLayout* key : rowKeys) {
             totalWidth += key->width * keySize;
@@ -270,12 +273,23 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
         if (!rowKeys.empty()) {
             totalWidth += static_cast<float>(rowKeys.size() - 1) * gap;
         }
+        return totalWidth;
+    };
 
-        float x = (Game::VirtualWidth - totalWidth) * 0.5f;
+    const float referenceX = (Game::VirtualWidth - rowWidth(rowKeysFor(0))) * 0.5f;
+
+    for (int row = 0; row < KeyboardRowCount; ++row) {
+        const std::vector<const KeyLayout*> rowKeys = rowKeysFor(row);
+        const float totalWidth = rowWidth(rowKeys);
+
+        float x = referenceX + GetKeyboardRowOffsetUnits(row) * (keySize + gap);
+        if (row == 4) {
+            x = (Game::VirtualWidth - totalWidth) * 0.5f;
+        }
         const float y = startY + row * (keySize + gap);
 
         for (const KeyLayout* key : rowKeys) {
-            const bool isNext = key->key == nextChar;
+            const bool isNext = KeyMatchesCodepoint(*key, nextChar);
             const Color fingerColor = GetFingerColor(key->finger, theme);
             Rectangle keyRect = { x, y, key->width * keySize, keySize };
 
@@ -286,16 +300,16 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
             Ui::DrawRounded(gamePtr, keyRect, 0.22f, 8, Ui::Fade(fingerColor, isNext ? 0.80f : 0.34f));
             Ui::DrawRoundedLines(gamePtr, keyRect, 0.22f, 8, Ui::Fade(isNext ? theme.TextCorrect : theme.PanelBorder, isNext ? 0.95f : 0.60f));
 
-            const float labelSize = key->row == 0 ? 13.0f : (key->key == ' ' ? 12.0f : (language == Language::Russian ? 14.0f : 15.0f));
-            const Vector2 textSize = MeasureTextEx(font, key->label.c_str(), labelSize, UiSpacing);
-            Ui::DrawText(
+            const float labelSize = key->row == 0 ? 10.0f : (key->width > 1.4f ? 11.0f : (language == Language::Russian ? 13.0f : 14.0f));
+            Ui::DrawCenteredFittedText(
                 gamePtr,
                 font,
                 key->label.c_str(),
-                { keyRect.x + (keyRect.width - textSize.x) * 0.5f, keyRect.y + (keyRect.height - labelSize) * 0.5f - 2.0f },
+                keyRect,
                 labelSize,
                 UiSpacing,
-                isNext ? theme.TextCorrect : theme.TextDefault
+                isNext ? theme.TextCorrect : theme.TextDefault,
+                8.0f
             );
 
             x += keyRect.width + gap;
@@ -430,7 +444,7 @@ void TypingState::Draw() {
     Ui::DrawRounded(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.13f));
     Ui::DrawRoundedLines(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.38f));
     DrawCircleV(gamePtr->ScalePoint({ 666.0f, 75.0f }), 14.0f * scale, Ui::Fade(modeStyle.Accent, 0.72f));
-    Ui::DrawFittedText(gamePtr, uiFont, modeStyle.Mark, { 658.0f, 67.0f }, 18.0f, 12.0f, 0.0f, theme.Background);
+    Ui::DrawCenteredFittedText(gamePtr, uiFont, modeStyle.Mark, { 652.0f, 61.0f, 28.0f, 28.0f }, 12.0f, 0.0f, theme.Background, 9.0f);
     Ui::DrawFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.LabelRu : modeStyle.LabelEn, { 688.0f, 61.0f }, 150.0f, 15.0f, 0.0f, theme.Title);
     Ui::DrawFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn, { 688.0f, 81.0f }, 150.0f, 12.0f, 0.0f, theme.TextDefault);
 
