@@ -1,0 +1,285 @@
+{
+    "schema_version":  1,
+    "languages":  {
+                      "english":  {
+                                      "lessons":  [
+                                                      {
+                                                          "id":  0,
+                                                          "title":  "Home Anchors",
+                                                          "description":  "Find the fixed home position: left and right anchors.",
+                                                          "text":  "asdf jkl; asdf jkl; fj dk sl a; fj dk sl a; aa ss dd ff jj kk ll ;;"
+                                                      },
+                                                      {
+                                                          "id":  1,
+                                                          "title":  "Home Alternation",
+                                                          "description":  "Keep the hands still and switch fingers cleanly.",
+                                                          "text":  "as sa ad da af fa jk kj jl lj j; ;j asdf fdsa jkl; ;lkj fj dk sl a;"
+                                                      },
+                                                      {
+                                                          "id":  2,
+                                                          "title":  "Index Bridge",
+                                                          "description":  "Train the busy index fingers before adding full rows.",
+                                                          "text":  "fg gf fr rf ft tf fv vf gb bg jh hj ju uj jy yj jm mj hn nh fg jh gb hn"
+                                                      },
+                                                      {
+                                                          "id":  3,
+                                                          "title":  "Top Left",
+                                                          "description":  "Add qwert with short reaches back to home.",
+                                                          "text":  "qa aq ws sw ed de rf fr tg gt qwe wer ert tre qwert trewq red fed free water"
+                                                      },
+                                                      {
+                                                          "id":  4,
+                                                          "title":  "Top Right",
+                                                          "description":  "Add yuiop and keep the wrist quiet.",
+                                                          "text":  "yh hy uj ju ik ki ol lo p; ;p yui iop poi oil hill join point loop"
+                                                      },
+                                                      {
+                                                          "id":  5,
+                                                          "title":  "Bottom Left",
+                                                          "description":  "Add zxcvb with controlled downward reaches.",
+                                                          "text":  "za az xs sx dc cd fv vf bg gb zxc cvb bad cab fade vase cave brave"
+                                                      },
+                                                      {
+                                                          "id":  6,
+                                                          "title":  "Bottom Right",
+                                                          "description":  "Add nm,./ and return each finger to home.",
+                                                          "text":  "hn nh jm mj k, ,k l. .l ;/ /; nm, m,. pin lion milk join moon line"
+                                                      },
+                                                      {
+                                                          "id":  7,
+                                                          "title":  "Hand Balance",
+                                                          "description":  "Alternate hands so speed comes from rhythm, not force.",
+                                                          "text":  "far jump safe look desk point water milk brave union field calm rhythm keyboard"
+                                                      },
+                                                      {
+                                                          "id":  8,
+                                                          "title":  "Common Pairs",
+                                                          "description":  "Practice frequent two-letter motions and double letters.",
+                                                          "text":  "th he in er an re on at en nd st ou ea to or it is ha ng as ll ee oo tt ss"
+                                                      },
+                                                      {
+                                                          "id":  9,
+                                                          "title":  "Word Groups",
+                                                          "description":  "Move from drills to short useful words.",
+                                                          "text":  "the and you that have with this from they will your about would there their which people"
+                                                      },
+                                                      {
+                                                          "id":  10,
+                                                          "title":  "Punctuation Flow",
+                                                          "description":  "Add comma, period and semicolon without losing posture.",
+                                                          "text":  "type clean words, pause briefly, then continue. accuracy first; speed follows. steady hands, clear eyes, calm rhythm."
+                                                      },
+                                                      {
+                                                          "id":  11,
+                                                          "title":  "Sentence Control",
+                                                          "description":  "Read ahead and keep corrections small.",
+                                                          "text":  "slow practice builds fast typing. keep your hands quiet and let each finger return home. the next word should feel expected before you press it."
+                                                      },
+                                                      {
+                                                          "id":  12,
+                                                          "title":  "Endurance Block",
+                                                          "description":  "Hold accuracy through several connected thoughts.",
+                                                          "text":  "reliable typing starts with a stable hand position.\nconsistent fingers make each key easier to predict.\nwhen the rhythm stays calm, speed grows without tension."
+                                                      },
+                                                      {
+                                                          "id":  13,
+                                                          "title":  "Final Mixed Run",
+                                                          "description":  "A full course check with rows, words and punctuation.",
+                                                          "text":  "focus on accuracy, posture, and even timing. use the same finger for the same key, prepare the next movement early, and keep both hands close to home."
+                                                      }
+                                                  ],
+                                      "practice_sentences":  [
+                                                                 "A quiet desk can feel like a small studio for attention.",
+                                                                 "Before breakfast, Mira labels the jars: tea, oats, salt, and cocoa.",
+                                                                 "The lamp hummed softly; the notebook stayed open beside the cup.",
+                                                                 "Theo asked, \"Can we test the new shortcut before lunch?\"",
+                                                                 "A good recipe needs patience, heat, and one clean spoon.",
+                                                                 "The folder [archive] contains sketches, receipts, and a map.",
+                                                                 "If the plan fails, try the smaller version first.",
+                                                                 "Use the path C:\\drafts\\scene-4 before exporting the file.",
+                                                                 "The sign above the door read \u003cstudio\u003e, but nobody whispered.",
+                                                                 "A weather app, a pencil, and a glass of water sat on the table.",
+                                                                 "Nora saved three colors: blue, amber, and violet.",
+                                                                 "The garden looked simple; every path had been measured twice.",
+                                                                 "When the kettle clicked, the room became suddenly cheerful.",
+                                                                 "Please compare the lists {morning} and {evening} after practice.",
+                                                                 "A clear question is better than a dramatic answer.",
+                                                                 "The artist\u0027s label used \u0027draft\u0027 for the unfinished frame.",
+                                                                 "Sam wrote \"focus / rest / repeat\" on a sticky note.",
+                                                                 "The bookshelf leaned left, so we placed a wedge under it.",
+                                                                 "Why does a tiny bell make the whole hallway feel awake?",
+                                                                 "The bakery opened early, and the first tray smelled like cinnamon.",
+                                                                 "Keep the cable straight; the left port is marked with a thin line.",
+                                                                 "A calm hand can cross a difficult key without panic.",
+                                                                 "The museum guide said, \"Look at the frame, not only the painting.\"",
+                                                                 "A small lantern lit the path between the porch and the shed.",
+                                                                 "The note said: return the blue box before sunset.",
+                                                                 "I found the missing card behind the keyboard, under a receipt.",
+                                                                 "The task was simple, but the timing had to be exact.",
+                                                                 "Every shelf had a label: tools, paper, clay, thread.",
+                                                                 "The printer clicked once, paused, and then finished the page.",
+                                                                 "A narrow bridge crossed the stream; it looked stronger than it sounded.",
+                                                                 "Use A | B only when both choices are truly equal.",
+                                                                 "The final sketch included (hands), [keys], and {light}."
+                                                             ],
+                                      "composition_paragraphs":  [
+                                                                     "A long typing session is a small expedition through attention. At first, the hands notice every reach, every pause, and every uncertain letter. After a few minutes, the body begins to understand the route: the eyes read ahead, the fingers prepare early, and the mind stops arguing with each key.",
+                                                                     "The goal is not to attack the text. The goal is to stay available to it. A calm typist can correct a mistake without turning the next word into another mistake, and that calmness matters more than one brilliant burst of speed.",
+                                                                     "Imagine a workshop in the evening. Tools are returned to their places, a lamp warms the center of the table, and someone checks a list before closing the door. Good typing has the same quiet order: each finger leaves home, does one job, and comes back.",
+                                                                     "A useful practice text should not feel like random noise. It should contain ordinary images, clear punctuation, and enough variety to make the hands solve real problems. Commas, quotes, brackets, and questions are not decorations; they are part of everyday writing.",
+                                                                     "When you type for ten minutes or more, posture becomes a character in the story. Shoulders creep upward, wrists search for shortcuts, and the eyes start skipping. Notice those changes early, relax the grip, and let the next sentence begin with a smaller movement.",
+                                                                     "There is a difference between speed and hurry. Speed is organized; hurry is scattered. Speed knows where the next word is going before it arrives. Hurry presses harder, misses more often, and then spends its energy repairing the damage.",
+                                                                     "A page of prose trains more than fingers. It trains memory, spacing, punctuation, breath, and the small patience required to finish a paragraph without losing the thread. That is why long-form typing belongs next to short drills rather than replacing them.",
+                                                                     "The room in this exercise has no dramatic event. A chair is pulled closer, a cable is straightened, a window is opened, and a notebook waits. These plain details are useful because they let the hands practice rhythm without fighting complicated names or rare words.",
+                                                                     "If your accuracy begins to fall, do not chase the old pace. Let the tempo shrink until the letters become predictable again. The fastest route back to confidence is usually a slower sentence typed without panic.",
+                                                                     "A skilled typist does not merely react to the current key. The unused fingers prepare for what comes next: a shift, a bracket, an enter press, or a return to the home row. Preparation makes difficult combinations feel less sudden.",
+                                                                     "Consider the punctuation marks as small turns in a road. A colon opens a gate; a semicolon asks for balance; a question mark changes the voice; parentheses make a quiet aside. The hands should learn these turns as naturally as they learn letters.",
+                                                                     "Endurance grows from honest repetition. One paragraph teaches nothing by itself, but sixteen paragraphs can reveal a pattern: the same finger hesitates, the same hand drifts, or the same punctuation mark breaks the rhythm.",
+                                                                     "During this passage, let your eyes lead by two or three words. If the gaze waits on the exact letter being typed, the fingers receive instructions too late. Reading ahead gives the body time to arrange the next motion.",
+                                                                     "The best corrections are small. Backspace, breathe, and continue; do not punish the sentence for one wrong letter. A clean recovery is a skill, and it is often the difference between a fragile sprint and a reliable working pace.",
+                                                                     "By the final paragraphs, the text should feel familiar but not automatic. Keep listening to the rhythm of the keys. If the sound becomes uneven, soften the hands; if the sound becomes steady, trust it and continue.",
+                                                                     "When the exercise ends, notice what survived the distance: accuracy, posture, breathing, and attention. Those are the real gains. Speed is welcome, but it should arrive as a result of order, not as a demand shouted at the fingers."
+                                                                 ]
+                                  },
+                      "russian":  {
+                                      "lessons":  [
+                                                      {
+                                                          "id":  0,
+                                                          "title":  "Домашние опоры",
+                                                          "description":  "Найди устойчивую позицию ФЫВА и ОЛДЖ.",
+                                                          "text":  "фыва олдж фыва олдж аж вд ыо фл аж вд ыо фл фф ыы вв аа оо лл дд жж"
+                                                      },
+                                                      {
+                                                          "id":  1,
+                                                          "title":  "Чередование дома",
+                                                          "description":  "Держи кисти спокойно и меняй пальцы без рывка.",
+                                                          "text":  "фы ыф ыв вы ва ав ол ло лд дл дж жд фыва авыф олдж ждло аж вд ыо фл"
+                                                      },
+                                                      {
+                                                          "id":  2,
+                                                          "title":  "Мост указательных",
+                                                          "description":  "Отработай самые занятые указательные пальцы.",
+                                                          "text":  "ап па пр рп ак ка км мк ке ек ен не нг гн ои ио нг пр ак ке ап ои"
+                                                      },
+                                                      {
+                                                          "id":  3,
+                                                          "title":  "Верх слева",
+                                                          "description":  "Добавь йцукен и возвращай пальцы домой.",
+                                                          "text":  "йф фй цы ыц ув ву ка ак еп пе нр рн йцу цук уке кен рука река цена урок"
+                                                      },
+                                                      {
+                                                          "id":  4,
+                                                          "title":  "Верх справа",
+                                                          "description":  "Добавь гшщзхъ без смещения кисти.",
+                                                          "text":  "го ог шл лш щд дщ зж жз хэ эх гш шг щз зщ день окно школа город взгляд"
+                                                      },
+                                                      {
+                                                          "id":  5,
+                                                          "title":  "Низ слева",
+                                                          "description":  "Добавь ячсми короткими контролируемыми движениями.",
+                                                          "text":  "яф фя чы ыч св вс ма ам ип пи ячс чсм сми мама сила часы миска число"
+                                                      },
+                                                      {
+                                                          "id":  6,
+                                                          "title":  "Низ справа",
+                                                          "description":  "Добавь тьбю и точку, сохраняя домашний ряд.",
+                                                          "text":  "то от ьл ль бд дб юж жю .э э. ть ьт б ю быть люди путь июль блюдо"
+                                                      },
+                                                      {
+                                                          "id":  7,
+                                                          "title":  "Баланс рук",
+                                                          "description":  "Чередуй руки, чтобы ритм вел скорость.",
+                                                          "text":  "рука поле вода лист дом сила урок экран клавиша точность ритм спокойствие"
+                                                      },
+                                                      {
+                                                          "id":  8,
+                                                          "title":  "Частые пары",
+                                                          "description":  "Повтори частые переходы русского текста.",
+                                                          "text":  "ст то но на ен ов ни ра ко ро по ер ос ого ени про при что как или"
+                                                      },
+                                                      {
+                                                          "id":  9,
+                                                          "title":  "Группы слов",
+                                                          "description":  "Переход от слогов к коротким частым словам.",
+                                                          "text":  "это как для что они она его был уже еще при все или если когда после"
+                                                      },
+                                                      {
+                                                          "id":  10,
+                                                          "title":  "Знаки и паузы",
+                                                          "description":  "Добавь запятую и точку без потери осанки.",
+                                                          "text":  "печатай ровно, делай короткую паузу, затем продолжай. сначала точность; скорость придет. спокойные руки, ясный взгляд, ровный ритм."
+                                                      },
+                                                      {
+                                                          "id":  11,
+                                                          "title":  "Контроль фразы",
+                                                          "description":  "Читай вперед и исправляй ошибки спокойно.",
+                                                          "text":  "медленная практика строит быструю печать. держи руки спокойно и возвращай каждый палец домой. следующее слово должно быть ожидаемым."
+                                                      },
+                                                      {
+                                                          "id":  12,
+                                                          "title":  "Выносливость",
+                                                          "description":  "Сохрани точность в нескольких связанных строках.",
+                                                          "text":  "уверенная печать начинается с устойчивой позиции рук.\nодин палец отвечает за одну клавишу и путь становится предсказуемым.\nкогда ритм остается спокойным, скорость растет без напряжения."
+                                                      },
+                                                      {
+                                                          "id":  13,
+                                                          "title":  "Финальный проход",
+                                                          "description":  "Проверка курса: ряды, слова и знаки.",
+                                                          "text":  "сохраняй точность, осанку и ровный темп. используй один и тот же палец для той же клавиши, готовь следующее движение заранее и держи руки рядом с домом."
+                                                      }
+                                                  ],
+                                      "practice_sentences":  [
+                                                                 "Тихий стол похож на маленькую мастерскую внимания.",
+                                                                 "Перед завтраком Лина подписала банки: чай, овес, соль и какао.",
+                                                                 "Лампа гудела мягко; блокнот лежал рядом с чашкой.",
+                                                                 "Илья спросил: \"Проверим новый набросок до обеда?\"",
+                                                                 "Хорошему рецепту нужны терпение, тепло и чистая ложка.",
+                                                                 "Папка [архив] хранит эскизы, чеки и старую карту.",
+                                                                 "Если план не сработал, попробуй меньшую версию.",
+                                                                 "Маршрут дом\\сад\\мастерская помог не забыть порядок дел.",
+                                                                 "Над дверью висела табличка \u003cстудия\u003e, но внутри говорили спокойно.",
+                                                                 "На столе лежали карандаш, стакан воды и маленький календарь.",
+                                                                 "Нина выбрала три цвета: синий, янтарный и фиолетовый.",
+                                                                 "Сад казался простым; каждую дорожку измерили дважды.",
+                                                                 "Когда чайник щелкнул, комната сразу стала уютнее.",
+                                                                 "Сравни списки {утро} и {вечер} после тренировки.",
+                                                                 "Ясный вопрос лучше шумного ответа.",
+                                                                 "Мастер поставил метку \u0027черновик\u0027 на первой странице.",
+                                                                 "На стикере было написано: \"фокус / отдых / повтор\".",
+                                                                 "Полка наклонилась влево, и мы подложили тонкий клин.",
+                                                                 "Почему маленький звонок делает весь коридор бодрее?",
+                                                                 "Пекарня открылась рано, и первый противень пах корицей.",
+                                                                 "Держи кабель ровно; левый разъем отмечен тонкой линией.",
+                                                                 "Спокойная рука проходит сложную клавишу без паники.",
+                                                                 "Экскурсовод сказал: \"Смотрите на раму, а не только на картину.\"",
+                                                                 "Маленький фонарь освещал путь от крыльца до сарая.",
+                                                                 "Записка напоминала: вернуть синюю коробку до заката.",
+                                                                 "Я нашел карточку за клавиатурой, под старым чеком.",
+                                                                 "Задача была простой, но время нужно было выбрать точно.",
+                                                                 "На каждой полке была метка: инструменты, бумага, глина, нить.",
+                                                                 "Принтер щелкнул, замолчал, а потом закончил страницу.",
+                                                                 "Узкий мост пересекал ручей; он был крепче, чем казался.",
+                                                                 "Используй А | Б только тогда, когда оба выбора равны.",
+                                                                 "Финальный эскиз включал (руки), [клавиши] и {свет}."
+                                                             ],
+                                      "composition_paragraphs":  [
+                                                                     "Длинная тренировка печати похожа на маленькое путешествие через внимание. В первые минуты руки замечают каждое движение, каждую паузу и каждую сомнительную букву. Потом тело постепенно понимает маршрут: взгляд читает вперед, пальцы готовятся заранее, а мысль перестает спорить с каждой клавишей.",
+                                                                     "Цель не в том, чтобы нападать на текст. Цель в том, чтобы оставаться с ним в контакте. Спокойный набор позволяет исправить ошибку и не превратить следующее слово в новую ошибку, а это важнее одного яркого рывка скорости.",
+                                                                     "Представь вечернюю мастерскую. Инструменты возвращены на места, лампа согревает середину стола, и перед уходом кто-то проверяет список. Хорошая печать устроена так же: палец уходит с домашней позиции, выполняет одну задачу и возвращается.",
+                                                                     "Полезный тренировочный текст не должен быть случайным шумом. В нем нужны обычные образы, ясные знаки препинания и достаточное разнообразие, чтобы руки решали настоящие задачи. Запятые, кавычки, скобки и вопросы не украшения; это часть живого письма.",
+                                                                     "Когда печатаешь десять минут или дольше, осанка становится отдельным участником истории. Плечи поднимаются, запястья ищут короткие пути, а взгляд начинает перескакивать. Замечай это рано, ослабляй хватку и начинай следующее предложение меньшим движением.",
+                                                                     "Есть разница между скоростью и спешкой. Скорость организована; спешка рассыпается. Скорость знает, куда идет следующее слово. Спешка давит сильнее, ошибается чаще и тратит силы на ремонт того, что сама сломала.",
+                                                                     "Страница связного текста тренирует не только пальцы. Она тренирует память, пробелы, пунктуацию, дыхание и терпение, которое нужно, чтобы закончить абзац и не потерять мысль. Поэтому длинный режим должен жить рядом с короткими упражнениями.",
+                                                                     "В этом упражнении нет громкого события. Стул придвинут ближе, кабель расправлен, окно приоткрыто, а блокнот ждет на столе. Такие простые детали полезны: они дают рукам тренировать ритм без борьбы с редкими словами.",
+                                                                     "Если точность начинает падать, не догоняй старый темп. Уменьши скорость до тех пор, пока буквы снова не станут предсказуемыми. Самая короткая дорога к уверенности часто проходит через более медленную фразу без паники.",
+                                                                     "Опытный наборщик не только реагирует на текущую клавишу. Свободные пальцы заранее готовятся к следующему действию: к знаку, скобке, нажатию Enter или возвращению на домашний ряд. Подготовка делает трудные сочетания менее внезапными.",
+                                                                     "Относись к знакам препинания как к поворотам дороги. Двоеточие открывает ворота; точка с запятой просит равновесия; вопрос меняет голос; скобки добавляют тихое отступление. Руки должны знать эти повороты так же естественно, как буквы.",
+                                                                     "Выносливость растет из честного повторения. Один абзац почти ничего не показывает, но шестнадцать абзацев обнаруживают закономерность: один палец медлит, одна рука смещается, один знак снова ломает ритм.",
+                                                                     "Во время этого текста веди взгляд на два или три слова вперед. Если глаза ждут ту самую букву, которую пальцы уже печатают, команда приходит слишком поздно. Чтение вперед дает телу время подготовить движение.",
+                                                                     "Лучшие исправления выглядят маленькими. Backspace, вдох, продолжение; не нужно наказывать всю фразу за одну неверную букву. Чистое восстановление тоже навык, и оно отличает хрупкий рывок от надежного рабочего темпа.",
+                                                                     "К финальным абзацам текст должен казаться знакомым, но не автоматическим. Продолжай слушать ритм клавиш. Если звук становится неровным, смягчи руки; если звук стабилен, доверься ему и продолжай.",
+                                                                     "Когда упражнение закончится, обрати внимание, что выдержало дистанцию: точность, осанка, дыхание и внимание. Это настоящая добыча длинной тренировки. Скорость приятна, но лучше, когда она приходит как результат порядка, а не как приказ пальцам."
+                                                                 ]
+                                  }
+                  }
+}

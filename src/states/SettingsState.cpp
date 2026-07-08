@@ -9,7 +9,47 @@
 #include "MainMenuState.h"
 
 namespace {
-constexpr int SettingRowCount = 11;
+enum class SettingRowId {
+    Theme,
+    InterfaceLanguage,
+    TypingLanguage,
+    Difficulty,
+    UiFont,
+    TypingFont,
+    KeyboardFont,
+    Sound,
+    ClickProfile,
+    Volume,
+    ResetProgress,
+    Count
+};
+
+struct SettingRowDefinition {
+    SettingRowId id;
+    const char* key;
+    const char* labelRu;
+    const char* labelEn;
+};
+
+constexpr int SettingRowCount = static_cast<int>(SettingRowId::Count);
+
+const SettingRowDefinition SettingRows[SettingRowCount] = {
+    { SettingRowId::Theme, "T", u8"Тема", "Theme" },
+    { SettingRowId::InterfaceLanguage, "I", u8"Язык интерфейса", "Interface language" },
+    { SettingRowId::TypingLanguage, "L", u8"Язык набора", "Typing language" },
+    { SettingRowId::Difficulty, "D", u8"Сложность", "Difficulty" },
+    { SettingRowId::UiFont, "U", u8"Шрифт интерфейса", "Interface font" },
+    { SettingRowId::TypingFont, "F", u8"Шрифт печати", "Typing font" },
+    { SettingRowId::KeyboardFont, "K", u8"Шрифт клавиш", "Keyboard font" },
+    { SettingRowId::Sound, "A", u8"Звук", "Sound" },
+    { SettingRowId::ClickProfile, "C", u8"Профиль клика", "Click profile" },
+    { SettingRowId::Volume, "+/-", u8"Громкость", "Volume" },
+    { SettingRowId::ResetProgress, "R", u8"Сброс прогресса", "Reset progress" }
+};
+
+constexpr int RowIndex(SettingRowId id) {
+    return static_cast<int>(id);
+}
 
 Rectangle SettingsPanel() {
     return { 110.0f, 28.0f, 1060.0f, 664.0f };
@@ -19,8 +59,16 @@ Rectangle SettingsRow(int index) {
     return { 150.0f, 136.0f + index * 41.0f, 980.0f, 36.0f };
 }
 
+Rectangle SettingsRow(SettingRowId id) {
+    return SettingsRow(RowIndex(id));
+}
+
 Rectangle ControlRect(Rectangle row) {
     return { row.x + 510.0f, row.y + 4.0f, row.width - 540.0f, 28.0f };
+}
+
+Rectangle ControlRect(SettingRowId id) {
+    return ControlRect(SettingsRow(id));
 }
 
 Rectangle KeyRect(Rectangle row) {
@@ -401,7 +449,7 @@ void SettingsState::HandleInput() {
         hover = true;
     }
 
-    const Rectangle volumeControl = ControlRect(SettingsRow(9));
+    const Rectangle volumeControl = ControlRect(SettingRowId::Volume);
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && Hit(gamePtr, volumeControl, mouse)) {
         const Rectangle track = { volumeControl.x, volumeControl.y, volumeControl.width - 58.0f, volumeControl.height };
         SetDraftVolume(SliderValueAt(gamePtr, track, mouse));
@@ -414,63 +462,63 @@ void SettingsState::HandleInput() {
             return;
         }
 
-        const Rectangle themeControl = ControlRect(SettingsRow(0));
+        const Rectangle themeControl = ControlRect(SettingRowId::Theme);
         if (Hit(gamePtr, themeControl, mouse)) {
             const int offset = Hit(gamePtr, SelectorLeft(themeControl), mouse) ? -1 : 1;
             SetDraftThemeIndex(NextWrappedIndex(draftThemeIndex, offset, gamePtr->GetThemeCount()), offset);
         }
 
-        const Rectangle interfaceLanguageControl = ControlRect(SettingsRow(1));
+        const Rectangle interfaceLanguageControl = ControlRect(SettingRowId::InterfaceLanguage);
         const int interfaceLanguageIndex = SegmentIndexAt(gamePtr, interfaceLanguageControl, 2, mouse);
         if (interfaceLanguageIndex >= 0) {
             SetDraftInterfaceLanguage(interfaceLanguageIndex == 0 ? Language::English : Language::Russian);
         }
 
-        const Rectangle typingLanguageControl = ControlRect(SettingsRow(2));
+        const Rectangle typingLanguageControl = ControlRect(SettingRowId::TypingLanguage);
         const int typingLanguageIndex = SegmentIndexAt(gamePtr, typingLanguageControl, 2, mouse);
         if (typingLanguageIndex >= 0) {
             SetDraftTypingLanguage(typingLanguageIndex == 0 ? Language::English : Language::Russian);
         }
 
-        const Rectangle difficultyControl = ControlRect(SettingsRow(3));
+        const Rectangle difficultyControl = ControlRect(SettingRowId::Difficulty);
         const int difficultyIndex = SegmentIndexAt(gamePtr, difficultyControl, 3, mouse);
         if (difficultyIndex >= 0) {
             SetDraftDifficulty(DifficultyFromIndex(difficultyIndex));
         }
 
-        const Rectangle uiFontControl = ControlRect(SettingsRow(4));
+        const Rectangle uiFontControl = ControlRect(SettingRowId::UiFont);
         if (Hit(gamePtr, uiFontControl, mouse)) {
             const int count = gamePtr->GetUiFontCount();
             const int offset = Hit(gamePtr, SelectorLeft(uiFontControl), mouse) ? -1 : 1;
             SetDraftUiFontIndex(NextWrappedIndex(draftUiFontIndex, offset, count), offset);
         }
 
-        const Rectangle typingFontControl = ControlRect(SettingsRow(5));
+        const Rectangle typingFontControl = ControlRect(SettingRowId::TypingFont);
         if (Hit(gamePtr, typingFontControl, mouse)) {
             const int count = gamePtr->GetTypingFontCount();
             const int offset = Hit(gamePtr, SelectorLeft(typingFontControl), mouse) ? -1 : 1;
             SetDraftTypingTextFontIndex(NextWrappedIndex(draftTypingTextFontIndex, offset, count), offset);
         }
 
-        const Rectangle keyboardFontControl = ControlRect(SettingsRow(6));
+        const Rectangle keyboardFontControl = ControlRect(SettingRowId::KeyboardFont);
         if (Hit(gamePtr, keyboardFontControl, mouse)) {
             const int count = gamePtr->GetTypingFontCount();
             const int offset = Hit(gamePtr, SelectorLeft(keyboardFontControl), mouse) ? -1 : 1;
             SetDraftKeyboardFontIndex(NextWrappedIndex(draftKeyboardFontIndex, offset, count), offset);
         }
 
-        const Rectangle soundControl = ControlRect(SettingsRow(7));
+        const Rectangle soundControl = ControlRect(SettingRowId::Sound);
         if (Hit(gamePtr, soundControl, mouse)) {
             SetDraftAudioEnabled(!draftAudioEnabled);
         }
 
-        const Rectangle clickControl = ControlRect(SettingsRow(8));
+        const Rectangle clickControl = ControlRect(SettingRowId::ClickProfile);
         const int clickIndex = SegmentIndexAt(gamePtr, clickControl, 2, mouse);
         if (clickIndex >= 0) {
             SetDraftClickProfile(clickIndex);
         }
 
-        const Rectangle resetControl = ControlRect(SettingsRow(10));
+        const Rectangle resetControl = ControlRect(SettingRowId::ResetProgress);
         if (Hit(gamePtr, resetControl, mouse)) {
             gamePtr->GetProgress().Reset();
             LoadDraftFromCurrent();
@@ -508,43 +556,36 @@ void SettingsState::Draw() {
 
     const Vector2 mouse = GetMousePosition();
 
-    DrawSettingRow(gamePtr, font, theme, 0, "T", ru ? u8"Тема" : "Theme", mouse);
-    DrawSettingRow(gamePtr, font, theme, 1, "I", ru ? u8"Язык интерфейса" : "Interface language", mouse);
-    DrawSettingRow(gamePtr, font, theme, 2, "L", ru ? u8"Язык набора" : "Typing language", mouse);
-    DrawSettingRow(gamePtr, font, theme, 3, "D", ru ? u8"Сложность" : "Difficulty", mouse);
-    DrawSettingRow(gamePtr, font, theme, 4, "U", ru ? u8"Шрифт интерфейса" : "Interface font", mouse);
-    DrawSettingRow(gamePtr, font, theme, 5, "F", ru ? u8"Шрифт печати" : "Typing font", mouse);
-    DrawSettingRow(gamePtr, font, theme, 6, "K", ru ? u8"Шрифт клавиш" : "Keyboard font", mouse);
-    DrawSettingRow(gamePtr, font, theme, 7, "A", ru ? u8"Звук" : "Sound", mouse);
-    DrawSettingRow(gamePtr, font, theme, 8, "C", ru ? u8"Профиль клика" : "Click profile", mouse);
-    DrawSettingRow(gamePtr, font, theme, 9, "+/-", ru ? u8"Громкость" : "Volume", mouse);
-    DrawSettingRow(gamePtr, font, theme, 10, "R", ru ? u8"Сброс прогресса" : "Reset progress", mouse);
+    for (int index = 0; index < SettingRowCount; ++index) {
+        const SettingRowDefinition& row = SettingRows[index];
+        DrawSettingRow(gamePtr, font, theme, index, row.key, ru ? row.labelRu : row.labelEn, mouse);
+    }
 
-    DrawThemeSelector(gamePtr, font, theme, ControlRect(SettingsRow(0)), draftThemeIndex, ru, themePulse, themeDirection, mouse);
+    DrawThemeSelector(gamePtr, font, theme, ControlRect(SettingRowId::Theme), draftThemeIndex, ru, themePulse, themeDirection, mouse);
 
     const char* languageLabels[] = { "EN", "RU" };
-    DrawSegmented(gamePtr, font, theme, ControlRect(SettingsRow(1)), languageLabels, 2, LanguageIndex(draftInterfaceLanguage), interfaceLanguagePosition, mouse);
-    DrawSegmented(gamePtr, font, theme, ControlRect(SettingsRow(2)), languageLabels, 2, LanguageIndex(draftTypingLanguage), typingLanguagePosition, mouse);
+    DrawSegmented(gamePtr, font, theme, ControlRect(SettingRowId::InterfaceLanguage), languageLabels, 2, LanguageIndex(draftInterfaceLanguage), interfaceLanguagePosition, mouse);
+    DrawSegmented(gamePtr, font, theme, ControlRect(SettingRowId::TypingLanguage), languageLabels, 2, LanguageIndex(draftTypingLanguage), typingLanguagePosition, mouse);
 
     const char* difficultyLabelsRu[] = { u8"Легкая", u8"Норма", u8"Строгая" };
     const char* difficultyLabelsEn[] = { "Relaxed", "Normal", "Strict" };
-    DrawSegmented(gamePtr, font, theme, ControlRect(SettingsRow(3)), ru ? difficultyLabelsRu : difficultyLabelsEn, 3, DifficultyIndex(draftDifficulty), difficultyPosition, mouse);
+    DrawSegmented(gamePtr, font, theme, ControlRect(SettingRowId::Difficulty), ru ? difficultyLabelsRu : difficultyLabelsEn, 3, DifficultyIndex(draftDifficulty), difficultyPosition, mouse);
 
-    DrawSelector(gamePtr, font, gamePtr->GetUiFontByIndex(draftUiFontIndex), theme, ControlRect(SettingsRow(4)), gamePtr->GetUiFontLabel(draftUiFontIndex), uiFontPulse, uiFontDirection, mouse);
-    DrawSelector(gamePtr, font, gamePtr->GetTypingFontByIndex(draftTypingTextFontIndex), theme, ControlRect(SettingsRow(5)), gamePtr->GetTypingFontLabel(draftTypingTextFontIndex), typingFontPulse, typingFontDirection, mouse);
-    DrawSelector(gamePtr, font, gamePtr->GetTypingFontByIndex(draftKeyboardFontIndex), theme, ControlRect(SettingsRow(6)), gamePtr->GetTypingFontLabel(draftKeyboardFontIndex), keyboardFontPulse, keyboardFontDirection, mouse);
+    DrawSelector(gamePtr, font, gamePtr->GetUiFontByIndex(draftUiFontIndex), theme, ControlRect(SettingRowId::UiFont), gamePtr->GetUiFontLabel(draftUiFontIndex), uiFontPulse, uiFontDirection, mouse);
+    DrawSelector(gamePtr, font, gamePtr->GetTypingFontByIndex(draftTypingTextFontIndex), theme, ControlRect(SettingRowId::TypingFont), gamePtr->GetTypingFontLabel(draftTypingTextFontIndex), typingFontPulse, typingFontDirection, mouse);
+    DrawSelector(gamePtr, font, gamePtr->GetTypingFontByIndex(draftKeyboardFontIndex), theme, ControlRect(SettingRowId::KeyboardFont), gamePtr->GetTypingFontLabel(draftKeyboardFontIndex), keyboardFontPulse, keyboardFontDirection, mouse);
 
-    const Rectangle soundControl = ControlRect(SettingsRow(7));
+    const Rectangle soundControl = ControlRect(SettingRowId::Sound);
     DrawToggle(gamePtr, theme, { soundControl.x + soundControl.width - 70.0f, soundControl.y + 1.0f, 58.0f, 28.0f }, draftAudioEnabled, soundPosition, mouse);
     Ui::DrawFittedText(gamePtr, font, draftAudioEnabled ? (ru ? u8"Вкл" : "On") : (ru ? u8"Выкл" : "Off"), { soundControl.x + 6.0f, soundControl.y + 7.0f }, 160.0f, 14.0f, 0.0f, theme.TextDefault);
 
     const char* clickLabelsRu[] = { u8"Мягкий", u8"Яркий" };
     const char* clickLabelsEn[] = { "Soft", "Bright" };
-    DrawSegmented(gamePtr, font, theme, ControlRect(SettingsRow(8)), ru ? clickLabelsRu : clickLabelsEn, 2, draftClickProfile, clickProfilePosition, mouse);
+    DrawSegmented(gamePtr, font, theme, ControlRect(SettingRowId::ClickProfile), ru ? clickLabelsRu : clickLabelsEn, 2, draftClickProfile, clickProfilePosition, mouse);
 
-    DrawSlider(gamePtr, font, theme, ControlRect(SettingsRow(9)), draftVolume, volumeVisual, mouse);
+    DrawSlider(gamePtr, font, theme, ControlRect(SettingRowId::Volume), draftVolume, volumeVisual, mouse);
 
-    const Rectangle resetControl = ControlRect(SettingsRow(10));
+    const Rectangle resetControl = ControlRect(SettingRowId::ResetProgress);
     DrawRectangleRounded(gamePtr->ScaleRect(resetControl), 0.32f, 10, Fade(theme.TextError, Hit(gamePtr, resetControl, mouse) ? 0.25f : 0.14f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect(resetControl), 0.32f, 10, Hit(gamePtr, resetControl, mouse) ? Fade(HoverOutline(gamePtr), 0.88f) : Fade(theme.TextError, 0.55f));
     DrawCenteredFittedText(gamePtr, font, ru ? u8"Сбросить" : "Reset", resetControl, 15.0f, theme.TextError);
