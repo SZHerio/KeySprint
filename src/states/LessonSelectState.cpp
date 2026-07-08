@@ -5,6 +5,7 @@
 #include <raylib.h>
 #include "../core/Game.h"
 #include "../core/LessonLibrary.h"
+#include "../core/ModeVisual.h"
 #include "MainMenuState.h"
 #include "TypingState.h"
 
@@ -116,6 +117,7 @@ void LessonSelectState::Update(float deltaTime) {
 
 void LessonSelectState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
+    const ModeVisualStyle modeStyle = GetModeVisualStyle(TypingMode::Tutorial);
     const Font font = gamePtr->GetUiFont();
     const float scale = gamePtr->GetUiScale();
     const auto& lessons = LessonLibrary::GetLessons(language);
@@ -123,11 +125,16 @@ void LessonSelectState::Draw() {
     const float pulse = (std::sin(animTime * 4.0f) + 1.0f) * 0.5f;
 
     DrawRectangleRounded(gamePtr->ScaleRect({ 55.0f, 42.0f, 1170.0f, 635.0f }), 0.04f, 16, Fade(theme.Panel, 0.78f));
-    DrawRectangleRoundedLines(gamePtr->ScaleRect({ 55.0f, 42.0f, 1170.0f, 635.0f }), 0.04f, 16, Fade(theme.PanelBorder, 0.80f));
+    DrawRectangleRoundedLines(gamePtr->ScaleRect({ 55.0f, 42.0f, 1170.0f, 635.0f }), 0.04f, 16, Fade(modeStyle.Accent, 0.44f));
+    DrawRectangleRounded(gamePtr->ScaleRect({ 72.0f, 58.0f, 7.0f, 602.0f }), 0.80f, 8, Fade(modeStyle.Accent, 0.34f));
 
     DrawSceneText(gamePtr, font, IsRu(language) ? u8"Выбор урока" : "Lesson Select", { 90.0f, 72.0f }, 38.0f, theme.Title);
     DrawSceneText(gamePtr, font, TextFormat(IsRu(language) ? u8"%s карта курса | открыто до урока %d" : "%s course map | unlocked through lesson %d", LessonLibrary::GetLanguageLabel(language).c_str(), unlocked + 1), { 90.0f, 118.0f }, 18.0f, theme.TextDefault);
     DrawSceneText(gamePtr, font, IsRu(language) ? u8"ESC Меню | Стрелки/WASD | Enter Старт" : "ESC Menu | Arrows/WASD Move | Enter Start", { 720.0f, 92.0f }, 16.0f, theme.TextDefault);
+
+    DrawRectangleRounded(gamePtr->ScaleRect({ 965.0f, 112.0f, 170.0f, 30.0f }), 0.42f, 10, Fade(modeStyle.Accent, 0.16f));
+    DrawRectangleRoundedLines(gamePtr->ScaleRect({ 965.0f, 112.0f, 170.0f, 30.0f }), 0.42f, 10, Fade(modeStyle.Accent, 0.42f));
+    DrawFittedSceneText(gamePtr, font, IsRu(language) ? modeStyle.ToneRu : modeStyle.ToneEn, { 985.0f, 120.0f }, 130.0f, 13.0f, theme.TextDefault);
 
     for (int i = 0; i + 1 < static_cast<int>(lessons.size()); ++i) {
         const Rectangle from = GetCardRect(i);
@@ -139,13 +146,13 @@ void LessonSelectState::Draw() {
         const Vector2 end = sameRow
             ? gamePtr->ScalePoint({ to.x - 10.0f, to.y + to.height * 0.5f })
             : gamePtr->ScalePoint({ to.x + 28.0f, to.y - 8.0f });
-        DrawLineEx(start, end, 2.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, i < unlocked ? 0.42f : 0.16f));
-        DrawCircleV(start, 3.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, 0.45f));
-        DrawCircleV(end, 3.0f * scale, Fade(i < unlocked ? theme.Highlight : theme.PanelBorder, 0.45f));
+        DrawLineEx(start, end, 2.0f * scale, Fade(i < unlocked ? modeStyle.Accent : theme.PanelBorder, i < unlocked ? 0.50f : 0.16f));
+        DrawCircleV(start, 3.0f * scale, Fade(i < unlocked ? modeStyle.Accent : theme.PanelBorder, 0.55f));
+        DrawCircleV(end, 3.0f * scale, Fade(i < unlocked ? modeStyle.Accent : theme.PanelBorder, 0.55f));
     }
 
-    DrawRectangleRounded(gamePtr->ScaleRect({ cursorX - 5.0f, cursorY - 5.0f, 530.0f, 96.0f }), 0.12f, 12, Fade(theme.Highlight, 0.16f + pulse * 0.06f));
-    DrawRectangleRoundedLines(gamePtr->ScaleRect({ cursorX - 5.0f, cursorY - 5.0f, 530.0f, 96.0f }), 0.12f, 12, Fade(theme.Highlight, 0.55f));
+    DrawRectangleRounded(gamePtr->ScaleRect({ cursorX - 5.0f, cursorY - 5.0f, 530.0f, 96.0f }), 0.12f, 12, Fade(modeStyle.Accent, 0.16f + pulse * 0.06f));
+    DrawRectangleRoundedLines(gamePtr->ScaleRect({ cursorX - 5.0f, cursorY - 5.0f, 530.0f, 96.0f }), 0.12f, 12, Fade(modeStyle.Accent, 0.58f));
 
     for (int i = 0; i < static_cast<int>(lessons.size()); ++i) {
         const Lesson& lesson = lessons[i];
@@ -155,13 +162,13 @@ void LessonSelectState::Draw() {
 
         Color fill = Fade(theme.PanelBorder, unlockedLesson ? 0.20f : 0.08f);
         if (selected) {
-            fill = Fade(theme.Highlight, unlockedLesson ? 0.20f : 0.10f);
+            fill = Fade(modeStyle.Accent, unlockedLesson ? 0.20f : 0.10f);
         }
 
         DrawRectangleRounded(gamePtr->ScaleRect(rect), 0.12f, 12, fill);
-        DrawRectangleRoundedLines(gamePtr->ScaleRect(rect), 0.12f, 12, Fade(unlockedLesson ? theme.PanelBorder : theme.TextDefault, unlockedLesson ? 0.65f : 0.25f));
+        DrawRectangleRoundedLines(gamePtr->ScaleRect(rect), 0.12f, 12, Fade(unlockedLesson ? modeStyle.Accent : theme.TextDefault, unlockedLesson ? 0.36f : 0.25f));
 
-        DrawSceneText(gamePtr, font, TextFormat("%02d", i + 1), { rect.x + 22.0f, rect.y + 18.0f }, 28.0f, unlockedLesson ? theme.Highlight : theme.TextDefault);
+        DrawSceneText(gamePtr, font, TextFormat("%02d", i + 1), { rect.x + 22.0f, rect.y + 18.0f }, 28.0f, unlockedLesson ? modeStyle.Accent : theme.TextDefault);
         DrawSceneText(gamePtr, font, lesson.title.c_str(), { rect.x + 88.0f, rect.y + 16.0f }, 22.0f, unlockedLesson ? theme.TextCorrect : Fade(theme.TextDefault, 0.55f));
         DrawFittedSceneText(gamePtr, font, lesson.description.c_str(), { rect.x + 88.0f, rect.y + 50.0f }, 310.0f, 14.0f, unlockedLesson ? theme.TextDefault : Fade(theme.TextDefault, 0.42f));
 

@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cmath>
 #include "../core/LessonLibrary.h"
+#include "../core/ModeVisual.h"
 #include "../core/TextUtils.h"
 #include "MainMenuState.h"
 #include "ResultsState.h"
@@ -40,6 +41,15 @@ void DrawTextScene(Game* game, Font font, const char* text, Vector2 position, fl
     DrawTextEx(font, text, game->ScalePoint(position), fontSize * scale, spacing * scale, color);
 }
 
+void DrawFittedTextScene(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, float spacing, Color color) {
+    float adjustedSize = fontSize;
+    while (adjustedSize > 11.0f && MeasureTextEx(font, text, adjustedSize, spacing).x > maxWidth) {
+        adjustedSize -= 1.0f;
+    }
+
+    DrawTextScene(game, font, text, position, adjustedSize, spacing, color);
+}
+
 void DrawRoundedScene(Game* game, Rectangle rect, float roundness, int segments, Color color) {
     DrawRectangleRounded(game->ScaleRect(rect), roundness, segments, color);
 }
@@ -52,12 +62,12 @@ void DrawRectScene(Game* game, Rectangle rect, Color color) {
     DrawRectangleRec(game->ScaleRect(rect), color);
 }
 
-void DrawTypingProgress(Game* game, const Theme& theme, Rectangle viewport, float progress, float errorPulse) {
+void DrawTypingProgress(Game* game, const Theme& theme, Color accent, Rectangle viewport, float progress, float errorPulse) {
     const Rectangle track = { viewport.x + 22.0f, viewport.y + viewport.height - 18.0f, viewport.width - 44.0f, 5.0f };
     const float fillWidth = std::clamp(progress, 0.0f, 1.0f) * track.width;
     const Color fillColor = errorPulse > 0.0f
         ? FadeColor(theme.TextError, 0.60f + errorPulse * 0.28f)
-        : FadeColor(theme.Highlight, 0.68f);
+        : FadeColor(accent, 0.72f);
 
     DrawRoundedScene(game, track, 1.0f, 8, FadeColor(theme.PanelBorder, 0.20f));
     if (fillWidth > 1.0f) {
@@ -526,19 +536,22 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
 
 void TypingState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
+    const ModeVisualStyle modeStyle = GetModeVisualStyle(mode);
     Font textFont = gamePtr->GetTypingTextFont();
     Font keyboardFont = gamePtr->GetKeyboardFont();
     Font uiFont = gamePtr->GetUiFont();
+    const float scale = gamePtr->GetUiScale();
     float fontSize = GetTextFontSize();
 
     const auto& target = logic.GetTargetCodepoints();
     const auto& typed = logic.GetTypedCodepoints();
 
     DrawRoundedScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(theme.Panel, 0.70f));
-    DrawRoundedLinesScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(theme.PanelBorder, 0.75f));
+    DrawRoundedLinesScene(gamePtr, { 60.0f, 28.0f, 1160.0f, 96.0f }, 0.18f, 12, FadeColor(modeStyle.Accent, 0.50f));
+    DrawRoundedScene(gamePtr, { 78.0f, 48.0f, 7.0f, 56.0f }, 0.80f, 8, FadeColor(modeStyle.Accent, 0.58f));
     DrawRoundedScene(gamePtr, TextViewport, 0.12f, 12, FadeColor(theme.Panel, 0.54f));
-    DrawRoundedLinesScene(gamePtr, TextViewport, 0.12f, 12, FadeColor(theme.PanelBorder, 0.55f));
-    DrawTypingProgress(gamePtr, theme, TextViewport, progressFill, errorFeedback);
+    DrawRoundedLinesScene(gamePtr, TextViewport, 0.12f, 12, FadeColor(modeStyle.Accent, 0.34f));
+    DrawTypingProgress(gamePtr, theme, modeStyle.Accent, TextViewport, progressFill, errorFeedback);
     if (errorFeedback > 0.0f) {
         DrawRoundedLinesScene(gamePtr, Inflate(TextViewport, 2.0f + errorFeedback * 2.0f), 0.12f, 12, FadeColor(theme.TextError, 0.18f + errorFeedback * 0.34f));
     }
@@ -562,7 +575,7 @@ void TypingState::Draw() {
                 const float hitPulse = (!lastFeedbackWasError && i == lastFeedbackIndex) ? correctFeedback : 0.0f;
                 const float trailAlpha = trail * 0.10f + hitPulse * 0.22f;
                 if (trailAlpha > 0.01f) {
-                    DrawRoundedScene(gamePtr, { drawX - 2.0f, drawY - 4.0f, glyphWidth + 5.0f, fontSize + 10.0f }, 0.28f, 8, FadeColor(theme.Highlight, trailAlpha));
+                    DrawRoundedScene(gamePtr, { drawX - 2.0f, drawY - 4.0f, glyphWidth + 5.0f, fontSize + 10.0f }, 0.28f, 8, FadeColor(modeStyle.Accent, trailAlpha));
                 }
             } else {
                 color = theme.TextError;
@@ -594,16 +607,23 @@ void TypingState::Draw() {
 
     // Заголовки (системным шрифтом или тем же, но для UI можно оставить обычный)
     const char* title = GetModeTitle();
-    DrawTextScene(gamePtr, uiFont, title, {80.0f, 48.0f}, 34.0f, 0.0f, theme.Title);
-    DrawTextScene(gamePtr, uiFont, TextFormat("%s | %s | %s", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str(), language == Language::Russian ? u8"ESC Меню" : "ESC Menu"), {80.0f, 90.0f}, 17.0f, 0.0f, theme.TextDefault);
+    DrawTextScene(gamePtr, uiFont, title, {98.0f, 48.0f}, 32.0f, 0.0f, theme.Title);
+    DrawFittedTextScene(gamePtr, uiFont, TextFormat("%s | %s | %s", LessonLibrary::GetLanguageLabel(language).c_str(), lessonTitle.c_str(), language == Language::Russian ? u8"ESC Меню" : "ESC Menu"), {98.0f, 88.0f}, 500.0f, 16.0f, 0.0f, theme.TextDefault);
+
+    DrawRoundedScene(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, FadeColor(modeStyle.Accent, 0.13f));
+    DrawRoundedLinesScene(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, FadeColor(modeStyle.Accent, 0.38f));
+    DrawCircleV(gamePtr->ScalePoint({ 666.0f, 75.0f }), 14.0f * scale, FadeColor(modeStyle.Accent, 0.72f));
+    DrawFittedTextScene(gamePtr, uiFont, modeStyle.Mark, { 658.0f, 67.0f }, 18.0f, 12.0f, 0.0f, theme.Background);
+    DrawFittedTextScene(gamePtr, uiFont, language == Language::Russian ? modeStyle.LabelRu : modeStyle.LabelEn, { 688.0f, 61.0f }, 150.0f, 15.0f, 0.0f, theme.Title);
+    DrawFittedTextScene(gamePtr, uiFont, language == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn, { 688.0f, 81.0f }, 150.0f, 12.0f, 0.0f, theme.TextDefault);
 
     // Live Metrics
-    DrawTextScene(gamePtr, uiFont, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, 0.0f, theme.TextCorrect);
-    DrawTextScene(gamePtr, uiFont, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, 0.0f, theme.TextCorrect);
-    DrawTextScene(gamePtr, uiFont, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, 0.0f, logic.GetCurrentStreak() > 20 ? theme.Highlight : theme.TextDefault);
+    DrawTextScene(gamePtr, uiFont, TextFormat("WPM %.0f", logic.GetWPM()), {930.0f, 52.0f}, 20.0f, 0.0f, modeStyle.Accent);
+    DrawTextScene(gamePtr, uiFont, TextFormat("ACC %.0f%%", logic.GetAccuracy()), {930.0f, 84.0f}, 20.0f, 0.0f, modeStyle.Accent);
+    DrawTextScene(gamePtr, uiFont, TextFormat("COMBO %d", logic.GetCurrentStreak()), {1080.0f, 52.0f}, 20.0f, 0.0f, logic.GetCurrentStreak() > 20 ? modeStyle.Accent : theme.TextDefault);
 
     DrawRoundedScene(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, FadeColor(theme.Panel, 0.66f));
-    DrawRoundedLinesScene(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, FadeColor(theme.PanelBorder, 0.70f));
+    DrawRoundedLinesScene(gamePtr, { 60.0f, 348.0f, 1160.0f, 356.0f }, 0.12f, 12, FadeColor(modeStyle.Accent, 0.28f));
     DrawHandsGuide(uiFont, theme);
     DrawVirtualKeyboard(keyboardFont, theme);
 }

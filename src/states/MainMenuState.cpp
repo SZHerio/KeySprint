@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include "../core/LessonLibrary.h"
+#include "../core/ModeVisual.h"
 #include "LessonSelectState.h"
 #include "ProgressState.h"
 #include "TypingState.h"
@@ -38,6 +39,24 @@ const char* LocalizedDescription(int index, Language language) {
         case 6: return ru ? u8"Закрыть программу и вернуться на рабочий стол." : "Close Key Sprint and return to desktop.";
         default: return "";
     }
+}
+
+bool IsModeOption(int index) {
+    return index >= 0 && index <= 3;
+}
+
+TypingMode ModeForOption(int index) {
+    switch (index) {
+        case 1: return TypingMode::Tutorial;
+        case 2: return TypingMode::Daily;
+        case 3: return TypingMode::Composition;
+        case 0:
+        default: return TypingMode::Practice;
+    }
+}
+
+Color OptionAccent(int index, const Theme& theme) {
+    return IsModeOption(index) ? GetModeVisualStyle(ModeForOption(index)).Accent : theme.Highlight;
 }
 
 const char* LocalRank(const std::string& rank, Language language) {
@@ -227,6 +246,7 @@ void MainMenuState::Draw() {
     const MainMenuLayout& layout = GetLayout();
 
     const float glow = (std::sin(menuTime * 2.1f) + 1.0f) * 0.5f;
+    const Color selectedAccent = OptionAccent(selectedOption, theme);
     const Rectangle card = gamePtr->ScaleRect(layout.CardRect());
     DrawRectangleRounded(card, 0.09f, 16, Fade(theme.Panel, 0.82f));
     DrawRectangleRoundedLines(card, 0.09f, 16, Fade(theme.PanelBorder, 0.80f));
@@ -244,27 +264,54 @@ void MainMenuState::Draw() {
         gamePtr->ScalePoint({ 384.0f, 215.0f }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
 
     const Rectangle highlight = gamePtr->ScaleRect({ layout.contentX, highlightY, layout.contentWidth, 38.0f });
-    DrawRectangleRounded(highlight, 0.35f, 10, Fade(theme.Highlight, 0.18f));
-    DrawRectangleRoundedLines(highlight, 0.35f, 10, Fade(theme.Highlight, 0.48f));
+    DrawRectangleRounded(highlight, 0.35f, 10, Fade(selectedAccent, 0.17f));
+    DrawRectangleRoundedLines(highlight, 0.35f, 10, Fade(selectedAccent, 0.52f));
 
     const Rectangle detail = gamePtr->ScaleRect({ layout.contentX, layout.DetailTop(), layout.contentWidth, layout.detailHeight });
-    DrawRectangleRounded(detail, 0.18f, 10, Fade(theme.PanelBorder, 0.18f));
-    DrawRectangleRoundedLines(detail, 0.18f, 10, Fade(theme.Highlight, 0.35f));
+    DrawRectangleRounded(detail, 0.18f, 10, Fade(IsModeOption(selectedOption) ? selectedAccent : theme.PanelBorder, IsModeOption(selectedOption) ? 0.12f : 0.18f));
+    DrawRectangleRoundedLines(detail, 0.18f, 10, Fade(selectedAccent, 0.38f));
+
+    if (IsModeOption(selectedOption)) {
+        const ModeVisualStyle modeStyle = GetModeVisualStyle(ModeForOption(selectedOption));
+        const Rectangle badge = gamePtr->ScaleRect({ layout.contentX + layout.contentWidth - 156.0f, layout.DetailTop() + 13.0f, 126.0f, 28.0f });
+        DrawRectangleRounded(badge, 0.42f, 10, Fade(modeStyle.Accent, 0.18f));
+        DrawRectangleRoundedLines(badge, 0.42f, 10, Fade(modeStyle.Accent, 0.42f));
+        DrawFittedText(
+            gamePtr,
+            font,
+            gamePtr->GetLanguage() == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn,
+            { layout.contentX + layout.contentWidth - 142.0f, layout.DetailTop() + 20.0f },
+            98.0f,
+            12.0f,
+            0.0f,
+            theme.TextDefault);
+    }
+
     DrawWrappedText(
         gamePtr,
         font,
         LocalizedDescription(selectedOption, gamePtr->GetLanguage()),
         { layout.contentX + 30.0f, layout.DetailTop() + 15.0f },
-        layout.contentWidth - 60.0f,
+        IsModeOption(selectedOption) ? layout.contentWidth - 200.0f : layout.contentWidth - 60.0f,
         14.0f,
         0.0f,
         theme.TextDefault);
 
     for (size_t i = 0; i < options.size(); ++i) {
         const float y = layout.OptionTextY(static_cast<int>(i));
+        const bool modeOption = IsModeOption(static_cast<int>(i));
+        const ModeVisualStyle modeStyle = GetModeVisualStyle(ModeForOption(static_cast<int>(i)));
+        const Color accent = modeOption ? modeStyle.Accent : theme.Highlight;
         const Color color = selectedOption == static_cast<int>(i) ? theme.TextCorrect : theme.TextDefault;
         const float dotPulse = selectedOption == static_cast<int>(i) ? glow : 0.15f;
-        DrawCircleV(gamePtr->ScalePoint({ layout.contentX + 30.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? theme.Highlight : Fade(theme.TextDefault, 0.35f));
+        if (modeOption) {
+            DrawRectangleRounded(
+                gamePtr->ScaleRect({ layout.contentX + 15.0f, y + 5.0f, 5.0f, 25.0f }),
+                0.80f,
+                6,
+                Fade(accent, selectedOption == static_cast<int>(i) ? 0.78f : 0.36f));
+        }
+        DrawCircleV(gamePtr->ScalePoint({ layout.contentX + 30.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? accent : Fade(modeOption ? accent : theme.TextDefault, modeOption ? 0.45f : 0.35f));
         DrawTextEx(font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), gamePtr->ScalePoint({ layout.contentX + 65.0f, y }), 21.0f * scale, 0.0f, color);
     }
 
