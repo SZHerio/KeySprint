@@ -26,8 +26,8 @@ inline ModeVisualStyle GetModeVisualStyle(TypingMode mode) {
             };
         case TypingMode::Daily:
             return {
-                { 255, 197, 87, 255 },
-                { 144, 101, 45, 255 },
+                { 224, 154, 40, 255 },
+                { 132, 88, 34, 255 },
                 "Daily Event",
                 u8"Событие дня",
                 "One focused run",

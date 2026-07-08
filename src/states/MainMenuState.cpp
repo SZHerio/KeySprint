@@ -83,7 +83,9 @@ struct MainMenuLayout {
     float cardHeight = 624.0f;
     float contentX = 390.0f;
     float contentWidth = 500.0f;
-    float statusY = 204.0f;
+    float brandTitleY = 82.0f;
+    float taglineY = 156.0f;
+    float statusY = 193.0f;
     float statusFontSize = 15.0f;
     float menuItemSpacing = 39.0f;
     float menuItemHeight = 38.0f;
@@ -245,8 +247,8 @@ void MainMenuState::Draw() {
     DrawRectangleRounded(card, 0.09f, 16, Fade(theme.Panel, 0.82f));
     DrawRectangleRoundedLines(card, 0.09f, 16, Fade(theme.PanelBorder, 0.80f));
 
-    DrawBrandTitle(gamePtr, titleFont, theme, 640.0f, 104.0f);
-    DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Тренажер скорости печати" : "Typing speed trainer", gamePtr->ScalePoint({ 414.0f, 178.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawBrandTitle(gamePtr, titleFont, theme, 640.0f, layout.brandTitleY);
+    DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Тренажер скорости печати" : "Typing speed trainer", gamePtr->ScalePoint({ 414.0f, layout.taglineY }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
     const Language uiLang = gamePtr->GetLanguage();
     const Language typingLang = gamePtr->GetTypingLanguage();
     const std::string rank = gamePtr->GetProgress().GetRankLabel();
@@ -256,7 +258,7 @@ void MainMenuState::Draw() {
         LocalRank(rank, uiLang),
         LocalDifficulty(difficulty, uiLang),
         gamePtr->GetProgress().GetBestWpm()),
-        gamePtr->ScalePoint({ 384.0f, 215.0f }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
+        gamePtr->ScalePoint({ 384.0f, layout.statusY }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
 
     const Rectangle highlight = gamePtr->ScaleRect({ layout.contentX, highlightY, layout.contentWidth, 38.0f });
     DrawRectangleRounded(highlight, 0.35f, 10, Fade(selectedAccent, 0.17f));

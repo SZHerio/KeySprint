@@ -10,8 +10,8 @@ namespace {
 using json = nlohmann::json;
 
 constexpr const char* ContentPath = "assets/content/typing_content.json";
-constexpr int PracticeSentenceCount = 512;
-constexpr int CompositionParagraphCount = 256;
+constexpr int PracticeSessionSentenceCount = 512;
+constexpr int CompositionSessionParagraphCount = 256;
 constexpr int DailyPracticeSentenceCount = 6;
 constexpr int DailyCompositionParagraphCount = 1;
 
@@ -262,11 +262,11 @@ Lesson LessonLibrary::BuildAdaptiveLesson(Language language, int lessonId, const
 }
 
 std::string LessonLibrary::BuildPracticeText(Language language) {
-    return JoinSampleLines(DataFor(language).practiceSentences, PracticeSentenceCount, true);
+    return JoinSampleLines(DataFor(language).practiceSentences, PracticeSessionSentenceCount, true);
 }
 
 std::string LessonLibrary::BuildCompositionText(Language language) {
-    return JoinSample(DataFor(language).compositionParagraphs, CompositionParagraphCount, "\n");
+    return JoinSample(DataFor(language).compositionParagraphs, CompositionSessionParagraphCount, "\n");
 }
 
 std::string LessonLibrary::BuildDailyChallengeText(Language language) {
