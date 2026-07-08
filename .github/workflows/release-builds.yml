@@ -66,7 +66,7 @@ jobs:
         run: conan profile detect --force
 
       - name: Install dependencies
-        run: conan install . --output-folder=build --build=missing -s build_type=${{ env.BUILD_TYPE }}
+        run: conan install . --output-folder=build --build=missing -s build_type=${{ env.BUILD_TYPE }} -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
 
       - name: List CMake presets
         run: cmake --list-presets
@@ -94,20 +94,11 @@ jobs:
           rm -rf "$PACKAGE_PARENT"
           mkdir -p "$PACKAGE_DIR"
 
-          EXE_PATH=""
-          for candidate in \
-            "build/KeySprint" \
-            "build/${{ env.BUILD_TYPE }}/KeySprint" \
-            "build/${{ env.BUILD_TYPE }}/KeySprint.app/Contents/MacOS/KeySprint"; do
-            if [ -f "$candidate" ]; then
-              EXE_PATH="$candidate"
-              break
-            fi
-          done
+          EXE_PATH="$(find build -type f -name KeySprint | head -n 1)"
 
           if [ -z "$EXE_PATH" ]; then
             echo "KeySprint executable was not found."
-            find build -maxdepth 4 -type f -perm -111 -print
+            find build -maxdepth 6 -type f -print
             exit 1
           fi
 
@@ -117,44 +108,40 @@ jobs:
             cp "$EXE_PATH" "$APP_DIR/Contents/MacOS/KeySprint"
             chmod +x "$APP_DIR/Contents/MacOS/KeySprint"
             cp -R assets "$APP_DIR/Contents/MacOS/assets"
-            cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>CFBundleExecutable</key>
-            <string>KeySprint</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.keysprint.app</string>
-            <key>CFBundleName</key>
-            <string>Key Sprint</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>CFBundleShortVersionString</key>
-            <string>VERSION_PLACEHOLDER</string>
-          </dict>
-          </plist>
-          PLIST
-            sed -i '' "s/VERSION_PLACEHOLDER/$VERSION/g" "$APP_DIR/Contents/Info.plist"
-            cat > "$PACKAGE_DIR/README.txt" <<EOF
-          Key Sprint $VERSION for macOS
-
-          How to run:
-          1. Open KeySprint.app.
-          2. If macOS blocks the app, open System Settings > Privacy & Security and allow it.
-          EOF
+            printf '%s\n' \
+              '<?xml version="1.0" encoding="UTF-8"?>' \
+              '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+              '<plist version="1.0">' \
+              '<dict>' \
+              '  <key>CFBundleExecutable</key>' \
+              '  <string>KeySprint</string>' \
+              '  <key>CFBundleIdentifier</key>' \
+              '  <string>com.keysprint.app</string>' \
+              '  <key>CFBundleName</key>' \
+              '  <string>Key Sprint</string>' \
+              '  <key>CFBundlePackageType</key>' \
+              '  <string>APPL</string>' \
+              '  <key>CFBundleShortVersionString</key>' \
+              "  <string>$VERSION</string>" \
+              '</dict>' \
+              '</plist>' > "$APP_DIR/Contents/Info.plist"
+            printf '%s\n' \
+              "Key Sprint $VERSION for macOS" \
+              "" \
+              "How to run:" \
+              "1. Open KeySprint.app." \
+              "2. If macOS blocks the app, open System Settings > Privacy & Security and allow it." > "$PACKAGE_DIR/README.txt"
           else
             cp "$EXE_PATH" "$PACKAGE_DIR/KeySprint"
             chmod +x "$PACKAGE_DIR/KeySprint"
             cp -R assets "$PACKAGE_DIR/assets"
-            cat > "$PACKAGE_DIR/README.txt" <<EOF
-          Key Sprint $VERSION for Linux
-
-          How to run:
-          1. Unpack the archive.
-          2. Run ./KeySprint.
-          3. Keep the assets folder next to KeySprint.
-          EOF
+            printf '%s\n' \
+              "Key Sprint $VERSION for Linux" \
+              "" \
+              "How to run:" \
+              "1. Unpack the archive." \
+              "2. Run ./KeySprint." \
+              "3. Keep the assets folder next to KeySprint." > "$PACKAGE_DIR/README.txt"
           fi
 
           tar -czf "$ARCHIVE" -C "$PACKAGE_PARENT" "$PACKAGE_NAME"
