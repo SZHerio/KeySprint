@@ -4,6 +4,7 @@
 #include <cmath>
 #include <raylib.h>
 #include "../core/AudioManager.h"
+#include "../core/UiDraw.h"
 #include "../core/UiMotion.h"
 #include "MainMenuState.h"
 
@@ -103,16 +104,6 @@ int NextWrappedIndex(int index, int offset, int count) {
     return (normalized + offset + count) % count;
 }
 
-void DrawFittedText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, Color color) {
-    float adjustedSize = fontSize;
-    while (adjustedSize > 11.0f && MeasureTextEx(font, text, adjustedSize, 0.0f).x > maxWidth) {
-        adjustedSize -= 1.0f;
-    }
-
-    const float scale = game->GetUiScale();
-    DrawTextEx(font, text, game->ScalePoint(position), adjustedSize * scale, 0.0f, color);
-}
-
 void DrawCenteredFittedText(Game* game, Font font, const char* text, Rectangle rect, float fontSize, Color color) {
     float adjustedSize = fontSize;
     Vector2 measured = MeasureTextEx(font, text, adjustedSize, 0.0f);
@@ -140,7 +131,7 @@ void DrawSettingRow(Game* game, Font font, const Theme& theme, int index, const 
     const Rectangle row = SettingsRow(index);
     (void)mouse;
     DrawKeyBadge(game, font, theme, row, key);
-    DrawFittedText(game, font, label, { row.x + 76.0f, row.y + 11.0f }, 410.0f, 16.0f, theme.TextDefault);
+    Ui::DrawFittedText(game, font, label, { row.x + 76.0f, row.y + 11.0f }, 410.0f, 16.0f, 0.0f, theme.TextDefault);
 }
 
 void DrawSegmented(Game* game, Font font, const Theme& theme, Rectangle rect, const char* const* labels, int count, int selected, float selectedPosition, Vector2 mouse) {
@@ -218,13 +209,14 @@ void DrawThemeSelector(Game* game, Font font, const Theme& theme, Rectangle rect
 
     const Rectangle labelRect = { rect.x + 38.0f + direction * pulse * 8.0f, rect.y, rect.width - 164.0f, rect.height };
     DrawRectangleRounded(game->ScaleRect({ rect.x + 38.0f, rect.y, rect.width - 164.0f, rect.height }), 0.26f, 8, Fade(theme.Highlight, 0.03f + pulse * 0.07f));
-    DrawFittedText(
+    Ui::DrawFittedText(
         game,
         font,
         ru ? ThemeManager::GetThemeLabelRu(themeIndex) : ThemeManager::GetThemeLabel(themeIndex),
         { labelRect.x + 10.0f, labelRect.y + 8.0f },
         labelRect.width - 18.0f,
         14.0f,
+        0.0f,
         theme.Title);
 
     const Theme preview = ThemeManager::GetTheme(themeIndex);
@@ -544,7 +536,7 @@ void SettingsState::Draw() {
 
     const Rectangle soundControl = ControlRect(SettingsRow(7));
     DrawToggle(gamePtr, theme, { soundControl.x + soundControl.width - 70.0f, soundControl.y + 1.0f, 58.0f, 28.0f }, draftAudioEnabled, soundPosition, mouse);
-    DrawFittedText(gamePtr, font, draftAudioEnabled ? (ru ? u8"Вкл" : "On") : (ru ? u8"Выкл" : "Off"), { soundControl.x + 6.0f, soundControl.y + 7.0f }, 160.0f, 14.0f, theme.TextDefault);
+    Ui::DrawFittedText(gamePtr, font, draftAudioEnabled ? (ru ? u8"Вкл" : "On") : (ru ? u8"Выкл" : "Off"), { soundControl.x + 6.0f, soundControl.y + 7.0f }, 160.0f, 14.0f, 0.0f, theme.TextDefault);
 
     const char* clickLabelsRu[] = { u8"Мягкий", u8"Яркий" };
     const char* clickLabelsEn[] = { "Soft", "Bright" };
@@ -558,13 +550,14 @@ void SettingsState::Draw() {
     DrawCenteredFittedText(gamePtr, font, ru ? u8"Сбросить" : "Reset", resetControl, 15.0f, theme.TextError);
 
     const char* status = ru ? u8"\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u044e\u0442\u0441\u044f \u0441\u0440\u0430\u0437\u0443" : "Changes apply instantly";
-    DrawFittedText(
+    Ui::DrawFittedText(
         gamePtr,
         font,
         status,
         { 150.0f, 632.0f },
         420.0f,
         14.0f,
+        0.0f,
         Fade(theme.TextDefault, 0.70f));
     DrawMenuButton(gamePtr, font, theme, MenuButtonRect(), ru, mouse);
 }

@@ -14,6 +14,7 @@ set(PROJECT_SOURCES
     src/core/TypingLogic.cpp
     src/core/TextUtils.cpp
     src/core/KeyboardLayout.cpp
+    src/core/UiDraw.cpp
     src/core/LessonLibrary.cpp
     src/core/ProgressManager.cpp
     src/core/AudioManager.cpp

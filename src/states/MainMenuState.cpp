@@ -7,6 +7,7 @@
 #include <string>
 #include "../core/LessonLibrary.h"
 #include "../core/ModeVisual.h"
+#include "../core/UiDraw.h"
 #include "../core/UiMotion.h"
 #include "LessonSelectState.h"
 #include "ProgressState.h"
@@ -178,15 +179,6 @@ void DrawBrandTitle(Game* game, Font font, const Theme& theme, float centerX, fl
     DrawTextEx(font, "Sprint", game->ScalePoint({ startX + keySize.x + wordGap, y }), fontSize * game->GetUiScale(), spacing, theme.Highlight);
 }
 
-void DrawFittedText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, float spacing, Color color) {
-    float adjustedSize = fontSize;
-    while (adjustedSize > 11.0f && MeasureTextEx(font, text, adjustedSize, spacing).x > maxWidth) {
-        adjustedSize -= 1.0f;
-    }
-
-    const float scale = game->GetUiScale();
-    DrawTextEx(font, text, game->ScalePoint(position), adjustedSize * scale, spacing * scale, color);
-}
 }
 
 void MainMenuState::Init(Game* game) {
@@ -279,7 +271,7 @@ void MainMenuState::Draw() {
         const Rectangle badge = gamePtr->ScaleRect({ layout.contentX + layout.contentWidth - 156.0f, layout.DetailTop() + 13.0f, 126.0f, 28.0f });
         DrawRectangleRounded(badge, 0.42f, 10, Fade(modeStyle.Accent, 0.18f));
         DrawRectangleRoundedLines(badge, 0.42f, 10, Fade(modeStyle.Accent, 0.42f));
-        DrawFittedText(
+        Ui::DrawFittedText(
             gamePtr,
             font,
             gamePtr->GetLanguage() == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn,

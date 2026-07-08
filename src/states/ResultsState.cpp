@@ -2,6 +2,7 @@
 #include "../core/Game.h"
 #include "../core/LessonLibrary.h"
 #include "../core/ModeVisual.h"
+#include "../core/UiDraw.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -45,15 +46,6 @@ const char* LocalFinger(const std::string& finger, bool ru) {
     if (finger == "Right pinky") return u8"правый мизинец";
     if (finger == "Thumb") return u8"большой палец";
     return u8"нет данных";
-}
-void DrawFittedText(Game* game, Font font, const char* text, Vector2 position, float maxWidth, float fontSize, Color color) {
-    float adjustedSize = fontSize;
-    while (adjustedSize > 11.0f && MeasureTextEx(font, text, adjustedSize, 0.0f).x > maxWidth) {
-        adjustedSize -= 1.0f;
-    }
-
-    const float scale = game->GetUiScale();
-    DrawTextEx(font, text, game->ScalePoint(position), adjustedSize * scale, 0.0f, color);
 }
 }
 
@@ -123,8 +115,8 @@ void ResultsState::Draw() {
     DrawRectangleRounded(gamePtr->ScaleRect({ 735.0f, 132.0f, 178.0f, 34.0f }), 0.36f, 10, Fade(modeStyle.Accent, 0.15f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 735.0f, 132.0f, 178.0f, 34.0f }), 0.36f, 10, Fade(modeStyle.Accent, 0.40f));
     DrawCircleV(gamePtr->ScalePoint({ 754.0f, 149.0f }), 10.0f * scale, Fade(modeStyle.Accent, 0.76f));
-    DrawFittedText(gamePtr, font, modeStyle.Mark, { 748.0f, 143.0f }, 14.0f, 10.0f, theme.Background);
-    DrawFittedText(gamePtr, font, ru ? modeStyle.LabelRu : modeStyle.LabelEn, { 772.0f, 142.0f }, 128.0f, 14.0f, theme.TextDefault);
+    Ui::DrawFittedText(gamePtr, font, modeStyle.Mark, { 748.0f, 143.0f }, 14.0f, 10.0f, 0.0f, theme.Background);
+    Ui::DrawFittedText(gamePtr, font, ru ? modeStyle.LabelRu : modeStyle.LabelEn, { 772.0f, 142.0f }, 128.0f, 14.0f, 0.0f, theme.TextDefault);
     
     DrawTextEx(font, TextFormat("WPM %.0f", wpm), gamePtr->ScalePoint({ 365.0f, 210.0f }), 26.0f * scale, 1.0f * scale, modeStyle.Accent);
     DrawTextEx(font, TextFormat("ACC %.0f%%", accuracy), gamePtr->ScalePoint({ 530.0f, 210.0f }), 26.0f * scale, 1.0f * scale, modeStyle.Accent);
@@ -152,9 +144,9 @@ void ResultsState::Draw() {
     const std::string weakKeyLine = ru
         ? u8"Слабая клавиша: " + weakKeyLabel + u8" | Фокус: " + LocalFinger(weakFinger, true)
         : "Weak key: " + weakKeyLabel + " | Finger focus: " + LocalFinger(weakFinger, false);
-    DrawFittedText(gamePtr, font, weakKeyLine.c_str(), { 380.0f, 416.0f }, 520.0f, 16.0f, theme.TextDefault);
+    Ui::DrawFittedText(gamePtr, font, weakKeyLine.c_str(), { 380.0f, 416.0f }, 520.0f, 16.0f, 0.0f, theme.TextDefault);
     const char* tip = accuracy < threshold ? (ru ? u8"Миссия: повтори медленнее и держи точность выше порога." : "Mission: replay this lesson slower and keep accuracy above threshold.") : (ru ? u8"Миссия: повтори и побей серию без потери точности." : "Mission: repeat once and beat your streak without losing accuracy.");
-    DrawFittedText(gamePtr, font, tip, { 380.0f, 438.0f }, 520.0f, 14.0f, theme.TextDefault);
+    Ui::DrawFittedText(gamePtr, font, tip, { 380.0f, 438.0f }, 520.0f, 14.0f, 0.0f, theme.TextDefault);
 
     const Rectangle retryRect = { 430.0f, 500.0f, 420.0f, 40.0f };
     const Rectangle menuRect = { 430.0f, 548.0f, 420.0f, 40.0f };
