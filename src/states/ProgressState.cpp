@@ -135,7 +135,7 @@ void DrawKeyboardHeatmap(Game* game, Font font, const Theme& theme, Rectangle re
             Ui::DrawRoundedLines(game, keyRect, 0.22f, 8, border);
 
             const float labelSize = key->row == 0 ? 8.0f : (key->width > 2.0f ? 9.0f : (language == Language::Russian ? 11.0f : 12.0f));
-            Ui::DrawCenteredFittedText(game, font, key->label.c_str(), keyRect, labelSize, 0.0f, count > 0 ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.72f), 7.0f);
+            Ui::DrawCenteredFittedText(game, font, key->label.c_str(), keyRect, labelSize, 0.0f, count > 0 ? WHITE : Ui::Fade(theme.TextDefault, 0.72f), 7.0f);
 
             if (count > 0 && key->width <= 1.2f) {
                 DrawCircleV(game->ScalePoint({ keyRect.x + keyRect.width - 5.0f, keyRect.y + 5.0f }), (2.0f + intensity * 2.0f) * game->GetUiScale(), Ui::Fade(theme.TextError, 0.78f));

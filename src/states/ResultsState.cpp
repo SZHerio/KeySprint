@@ -115,7 +115,7 @@ void ResultsState::Draw() {
     DrawRectangleRounded(gamePtr->ScaleRect({ 735.0f, 132.0f, 178.0f, 34.0f }), 0.36f, 10, Fade(modeStyle.Accent, 0.15f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 735.0f, 132.0f, 178.0f, 34.0f }), 0.36f, 10, Fade(modeStyle.Accent, 0.40f));
     DrawCircleV(gamePtr->ScalePoint({ 754.0f, 149.0f }), 10.0f * scale, Fade(modeStyle.Accent, 0.76f));
-    Ui::DrawFittedText(gamePtr, font, modeStyle.Mark, { 748.0f, 143.0f }, 14.0f, 10.0f, 0.0f, theme.Background);
+    Ui::DrawFittedText(gamePtr, font, modeStyle.Mark, { 748.0f, 143.0f }, 14.0f, 10.0f, 0.0f, WHITE);
     Ui::DrawFittedText(gamePtr, font, ru ? modeStyle.LabelRu : modeStyle.LabelEn, { 772.0f, 142.0f }, 128.0f, 14.0f, 0.0f, theme.TextDefault);
     
     DrawTextEx(font, TextFormat("WPM %.0f", wpm), gamePtr->ScalePoint({ 365.0f, 210.0f }), 26.0f * scale, 1.0f * scale, modeStyle.Accent);
@@ -153,13 +153,13 @@ void ResultsState::Draw() {
     const bool retryHover = CheckCollisionPointRec(mouse, gamePtr->ScaleRect(retryRect));
     const bool menuHover = CheckCollisionPointRec(mouse, gamePtr->ScaleRect(menuRect));
 
-    DrawRectangleRounded(gamePtr->ScaleRect(retryRect), 0.25f, 8, Fade(modeStyle.Accent, retryHover ? 0.24f : 0.14f));
+    DrawRectangleRounded(gamePtr->ScaleRect(retryRect), 0.25f, 8, Fade(modeStyle.Accent, retryHover ? 0.88f : 0.74f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect(retryRect), 0.25f, 8, retryHover ? Fade(HoverOutline(gamePtr), 0.88f) : Fade(modeStyle.Accent, 0.28f));
-    DrawCircleV(gamePtr->ScalePoint({ retryRect.x + 18.0f, retryRect.y + 20.0f }), (retryHover ? 6.0f : 4.0f) * scale, retryHover ? modeStyle.Accent : Fade(theme.TextDefault, 0.45f));
-    DrawTextEx(font, ru ? u8"ENTER / Клик: повторить" : "ENTER / Click to Try Again", gamePtr->ScalePoint({ 455.0f, 510.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawCircleV(gamePtr->ScalePoint({ retryRect.x + 18.0f, retryRect.y + 20.0f }), (retryHover ? 6.0f : 4.0f) * scale, Fade(WHITE, retryHover ? 0.95f : 0.72f));
+    DrawTextEx(font, ru ? u8"ENTER / Клик: повторить" : "ENTER / Click to Try Again", gamePtr->ScalePoint({ 455.0f, 510.0f }), 18.0f * scale, 1.0f * scale, WHITE);
 
-    DrawRectangleRounded(gamePtr->ScaleRect(menuRect), 0.25f, 8, Fade(menuHover ? modeStyle.Accent : theme.PanelBorder, menuHover ? 0.20f : 0.18f));
-    DrawRectangleRoundedLines(gamePtr->ScaleRect(menuRect), 0.25f, 8, menuHover ? Fade(HoverOutline(gamePtr), 0.88f) : Fade(theme.PanelBorder, 0.25f));
-    DrawCircleV(gamePtr->ScalePoint({ menuRect.x + 18.0f, menuRect.y + 20.0f }), (menuHover ? 6.0f : 4.0f) * scale, menuHover ? modeStyle.Accent : Fade(theme.TextDefault, 0.45f));
-    DrawTextEx(font, ru ? u8"ESC / Клик: в меню" : "ESC / Click to return to Menu", gamePtr->ScalePoint({ 455.0f, 558.0f }), 18.0f * scale, 1.0f * scale, theme.TextDefault);
+    DrawRectangleRounded(gamePtr->ScaleRect(menuRect), 0.25f, 8, Fade(modeStyle.Accent, menuHover ? 0.80f : 0.62f));
+    DrawRectangleRoundedLines(gamePtr->ScaleRect(menuRect), 0.25f, 8, menuHover ? Fade(HoverOutline(gamePtr), 0.88f) : Fade(modeStyle.Accent, 0.28f));
+    DrawCircleV(gamePtr->ScalePoint({ menuRect.x + 18.0f, menuRect.y + 20.0f }), (menuHover ? 6.0f : 4.0f) * scale, Fade(WHITE, menuHover ? 0.95f : 0.72f));
+    DrawTextEx(font, ru ? u8"ESC / Клик: в меню" : "ESC / Click to return to Menu", gamePtr->ScalePoint({ 455.0f, 558.0f }), 18.0f * scale, 1.0f * scale, WHITE);
 }

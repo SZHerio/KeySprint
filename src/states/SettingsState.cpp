@@ -100,10 +100,8 @@ Color HoverOutline(Game* game) {
 }
 
 Color TextOnHighlight(const Theme& theme) {
-    const float luminance = 0.2126f * static_cast<float>(theme.Highlight.r) +
-        0.7152f * static_cast<float>(theme.Highlight.g) +
-        0.0722f * static_cast<float>(theme.Highlight.b);
-    return luminance < 150.0f ? WHITE : theme.Background;
+    (void)theme;
+    return WHITE;
 }
 
 void DrawHoverOutline(Game* game, Rectangle rect, float roundness, int segments) {
@@ -201,7 +199,7 @@ void DrawSegmented(Game* game, Font font, const Theme& theme, Rectangle rect, co
             segmentWidth,
             rect.height
         };
-        DrawRectangleRounded(game->ScaleRect(activeRect), 0.40f, 12, Fade(theme.Highlight, 0.74f));
+        DrawRectangleRounded(game->ScaleRect(activeRect), 0.40f, 12, Fade(theme.Highlight, 0.90f));
     }
 
     for (int index = 0; index < count; ++index) {
@@ -319,7 +317,7 @@ void DrawSlider(Game* game, Font font, const Theme& theme, Rectangle rect, float
 
 void DrawMenuButton(Game* game, Font font, const Theme& theme, Rectangle rect, bool ru, Vector2 mouse) {
     const bool hover = Hit(game, rect, mouse);
-    DrawRectangleRounded(game->ScaleRect(rect), 0.26f, 10, Fade(theme.Highlight, hover ? 0.86f : 0.68f));
+    DrawRectangleRounded(game->ScaleRect(rect), 0.26f, 10, Fade(theme.Highlight, hover ? 0.92f : 0.82f));
     DrawRectangleRoundedLines(game->ScaleRect(rect), 0.26f, 10, hover ? Fade(HoverOutline(game), 0.92f) : Fade(theme.Highlight, 0.72f));
     DrawCenteredFittedText(game, font, ru ? u8"Выйти в меню" : "Back to menu", rect, 16.0f, TextOnHighlight(theme));
 }

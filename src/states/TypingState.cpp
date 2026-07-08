@@ -308,7 +308,7 @@ void TypingState::DrawVirtualKeyboard(Font font, const Theme& theme) {
                 keyRect,
                 labelSize,
                 UiSpacing,
-                isNext ? theme.TextCorrect : theme.TextDefault,
+                key->finger == FingerType::None ? theme.TextDefault : WHITE,
                 8.0f
             );
 
@@ -339,7 +339,7 @@ void TypingState::DrawHandsGuide(Font font, const Theme& theme) {
         const Vector2 labelSize = MeasureTextEx(font, label, 10.0f, UiSpacing);
         const bool thumb = rect.height <= 30.0f;
         const float labelY = thumb ? rect.y + (rect.height - 10.0f) * 0.5f : rect.y + rect.height - 18.0f;
-        Ui::DrawText(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, labelY }, 10.0f, UiSpacing, thumb ? theme.TextCorrect : Ui::Fade(theme.TextDefault, 0.72f));
+        Ui::DrawText(gamePtr, font, label, { rect.x + (rect.width - labelSize.x) * 0.5f, labelY }, 10.0f, UiSpacing, WHITE);
     };
 
     auto drawHand = [&](float x, bool left) {
@@ -444,7 +444,7 @@ void TypingState::Draw() {
     Ui::DrawRounded(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.13f));
     Ui::DrawRoundedLines(gamePtr, { 642.0f, 51.0f, 220.0f, 48.0f }, 0.24f, 10, Ui::Fade(modeStyle.Accent, 0.38f));
     DrawCircleV(gamePtr->ScalePoint({ 666.0f, 75.0f }), 14.0f * scale, Ui::Fade(modeStyle.Accent, 0.72f));
-    Ui::DrawCenteredFittedText(gamePtr, uiFont, modeStyle.Mark, { 652.0f, 61.0f, 28.0f, 28.0f }, 12.0f, 0.0f, theme.Background, 9.0f);
+    Ui::DrawCenteredFittedText(gamePtr, uiFont, modeStyle.Mark, { 652.0f, 61.0f, 28.0f, 28.0f }, 12.0f, 0.0f, WHITE, 9.0f);
     Ui::DrawFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.LabelRu : modeStyle.LabelEn, { 688.0f, 61.0f }, 150.0f, 15.0f, 0.0f, theme.Title);
     Ui::DrawFittedText(gamePtr, uiFont, uiLanguage == Language::Russian ? modeStyle.ToneRu : modeStyle.ToneEn, { 688.0f, 81.0f }, 150.0f, 12.0f, 0.0f, theme.TextDefault);
 

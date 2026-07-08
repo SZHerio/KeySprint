@@ -19,6 +19,7 @@ constexpr float LessonGapX = 40.0f;
 constexpr float LessonGapY = 8.0f;
 constexpr float LessonStartX = 90.0f;
 constexpr float LessonViewportPaddingY = 14.0f;
+constexpr float HeaderTextX = 110.0f;
 
 bool IsRu(Language language) {
     return language == Language::Russian;
@@ -178,9 +179,9 @@ void LessonSelectState::Draw() {
     Ui::DrawRoundedLines(gamePtr, { 55.0f, 42.0f, 1170.0f, 635.0f }, 0.04f, 16, Ui::Fade(modeStyle.Accent, 0.44f));
     Ui::DrawRounded(gamePtr, { 72.0f, 58.0f, 7.0f, 602.0f }, 0.80f, 8, Ui::Fade(modeStyle.Accent, 0.34f));
 
-    Ui::DrawText(gamePtr, font, IsRu(uiLanguage) ? u8"Выбор урока" : "Lesson Select", { 90.0f, 72.0f }, 38.0f, 1.0f, theme.Title);
+    Ui::DrawText(gamePtr, font, IsRu(uiLanguage) ? u8"Выбор урока" : "Lesson Select", { HeaderTextX, 72.0f }, 38.0f, 1.0f, theme.Title);
     const int visibleUnlocked = std::min(unlocked + 1, static_cast<int>(lessons.size()));
-    Ui::DrawText(gamePtr, font, TextFormat(IsRu(uiLanguage) ? u8"%s карта курса | открыто %d/%d" : "%s course map | %d/%d open", LessonLibrary::GetLanguageLabel(language).c_str(), visibleUnlocked, static_cast<int>(lessons.size())), { 90.0f, 118.0f }, 18.0f, 1.0f, theme.TextDefault);
+    Ui::DrawText(gamePtr, font, TextFormat(IsRu(uiLanguage) ? u8"%s карта курса | открыто %d/%d" : "%s course map | %d/%d open", LessonLibrary::GetLanguageLabel(language).c_str(), visibleUnlocked, static_cast<int>(lessons.size())), { HeaderTextX, 118.0f }, 18.0f, 1.0f, theme.TextDefault);
     Ui::DrawText(gamePtr, font, IsRu(uiLanguage) ? u8"ESC Меню | Стрелки/WASD | Enter Старт" : "ESC Menu | Arrows/WASD Move | Enter Start", { 720.0f, 92.0f }, 16.0f, 1.0f, theme.TextDefault);
 
     Ui::BeginScissor(gamePtr, viewport);
