@@ -68,11 +68,14 @@ jobs:
       - name: Install dependencies
         run: conan install . --output-folder=build --build=missing -s build_type=${{ env.BUILD_TYPE }}
 
+      - name: List CMake presets
+        run: cmake --list-presets
+
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+        run: cmake --preset conan-release
 
       - name: Build
-        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+        run: cmake --build --preset conan-release
 
       - name: Package
         id: package
@@ -91,10 +94,27 @@ jobs:
           rm -rf "$PACKAGE_PARENT"
           mkdir -p "$PACKAGE_DIR"
 
+          EXE_PATH=""
+          for candidate in \
+            "build/KeySprint" \
+            "build/${{ env.BUILD_TYPE }}/KeySprint" \
+            "build/${{ env.BUILD_TYPE }}/KeySprint.app/Contents/MacOS/KeySprint"; do
+            if [ -f "$candidate" ]; then
+              EXE_PATH="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$EXE_PATH" ]; then
+            echo "KeySprint executable was not found."
+            find build -maxdepth 4 -type f -perm -111 -print
+            exit 1
+          fi
+
           if [ "${{ runner.os }}" = "macOS" ]; then
             APP_DIR="$PACKAGE_DIR/KeySprint.app"
             mkdir -p "$APP_DIR/Contents/MacOS"
-            cp build/KeySprint "$APP_DIR/Contents/MacOS/KeySprint"
+            cp "$EXE_PATH" "$APP_DIR/Contents/MacOS/KeySprint"
             chmod +x "$APP_DIR/Contents/MacOS/KeySprint"
             cp -R assets "$APP_DIR/Contents/MacOS/assets"
             cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
@@ -124,7 +144,7 @@ jobs:
           2. If macOS blocks the app, open System Settings > Privacy & Security and allow it.
           EOF
           else
-            cp build/KeySprint "$PACKAGE_DIR/KeySprint"
+            cp "$EXE_PATH" "$PACKAGE_DIR/KeySprint"
             chmod +x "$PACKAGE_DIR/KeySprint"
             cp -R assets "$PACKAGE_DIR/assets"
             cat > "$PACKAGE_DIR/README.txt" <<EOF
