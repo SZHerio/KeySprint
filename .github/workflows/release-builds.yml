@@ -1,0 +1,164 @@
+name: Build release packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without v prefix"
+        required: true
+        default: "1.2"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build-unix:
+    name: Build ${{ matrix.package }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            package: linux-x64
+          - os: macos-latest
+            package: macos
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Conan
+        run: pip install conan
+
+      - name: Install Linux system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pkg-config \
+            libasound2-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxfixes-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxxf86vm-dev
+
+      - name: Configure Conan profile
+        run: conan profile detect --force
+
+      - name: Install dependencies
+        run: conan install . --output-folder=build --build=missing -s build_type=${{ env.BUILD_TYPE }}
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Package
+        id: package
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [ -z "$VERSION" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+
+          PACKAGE_NAME="KeySprint-${VERSION}-${{ matrix.package }}"
+          PACKAGE_PARENT="$RUNNER_TEMP/key-sprint-package"
+          PACKAGE_DIR="$PACKAGE_PARENT/$PACKAGE_NAME"
+          ARCHIVE="$GITHUB_WORKSPACE/${PACKAGE_NAME}.tar.gz"
+
+          rm -rf "$PACKAGE_PARENT"
+          mkdir -p "$PACKAGE_DIR"
+
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            APP_DIR="$PACKAGE_DIR/KeySprint.app"
+            mkdir -p "$APP_DIR/Contents/MacOS"
+            cp build/KeySprint "$APP_DIR/Contents/MacOS/KeySprint"
+            chmod +x "$APP_DIR/Contents/MacOS/KeySprint"
+            cp -R assets "$APP_DIR/Contents/MacOS/assets"
+            cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>KeySprint</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.keysprint.app</string>
+            <key>CFBundleName</key>
+            <string>Key Sprint</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>VERSION_PLACEHOLDER</string>
+          </dict>
+          </plist>
+          PLIST
+            sed -i '' "s/VERSION_PLACEHOLDER/$VERSION/g" "$APP_DIR/Contents/Info.plist"
+            cat > "$PACKAGE_DIR/README.txt" <<EOF
+          Key Sprint $VERSION for macOS
+
+          How to run:
+          1. Open KeySprint.app.
+          2. If macOS blocks the app, open System Settings > Privacy & Security and allow it.
+          EOF
+          else
+            cp build/KeySprint "$PACKAGE_DIR/KeySprint"
+            chmod +x "$PACKAGE_DIR/KeySprint"
+            cp -R assets "$PACKAGE_DIR/assets"
+            cat > "$PACKAGE_DIR/README.txt" <<EOF
+          Key Sprint $VERSION for Linux
+
+          How to run:
+          1. Unpack the archive.
+          2. Run ./KeySprint.
+          3. Keep the assets folder next to KeySprint.
+          EOF
+          fi
+
+          tar -czf "$ARCHIVE" -C "$PACKAGE_PARENT" "$PACKAGE_NAME"
+          echo "archive=$ARCHIVE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}-package
+          path: ${{ steps.package.outputs.archive }}
+          if-no-files-found: error
+
+  attach-to-release:
+    name: Attach packages to tagged release
+    runs-on: ubuntu-latest
+    needs: build-unix
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*.tar.gz

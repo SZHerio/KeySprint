@@ -1,6 +1,7 @@
 #include "Game.h"
 #include <raylib.h>
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include "AudioManager.h"
@@ -42,12 +43,26 @@ int ClampFontIndex(int index) {
 int ClampUiFontIndex(int index) {
     return std::clamp(index, 0, Game::UiFontCount - 1);
 }
+
+void UseExecutableDirectoryAsWorkingDirectory() {
+    const char* appDirectory = GetApplicationDirectory();
+    if (appDirectory == nullptr || appDirectory[0] == '\0') {
+        return;
+    }
+
+    try {
+        std::filesystem::current_path(appDirectory);
+    } catch (...) {
+        // Keep the launch directory if the platform cannot resolve the app path.
+    }
+}
 }
 
 Game::Game(int width, int height, const char* title) 
     : screenWidth(width), screenHeight(height), isRunning(true), windowedWidth(width), windowedHeight(height), uiLanguage(Language::Russian), typingLanguage(Language::English) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     InitWindow(screenWidth, screenHeight, title);
+    UseExecutableDirectoryAsWorkingDirectory();
     Image windowIcon = LoadImage("assets/icons/key-sprint-icon.png");
     if (windowIcon.data != nullptr) {
         SetWindowIcon(windowIcon);
