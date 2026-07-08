@@ -20,8 +20,8 @@ inline ModeVisualStyle GetModeVisualStyle(TypingMode mode) {
                 { 65, 94, 152, 255 },
                 "Course Map",
                 u8"Карта курса",
-                "structured route",
-                u8"маршрут уроков",
+                "Lesson flow",
+                u8"Поток уроков",
                 "LS"
             };
         case TypingMode::Daily:
@@ -30,8 +30,8 @@ inline ModeVisualStyle GetModeVisualStyle(TypingMode mode) {
                 { 144, 101, 45, 255 },
                 "Daily Event",
                 u8"Событие дня",
-                "one focused run",
-                u8"одна цель дня",
+                "One focused run",
+                u8"Одна цель дня",
                 "DY"
             };
         case TypingMode::Composition:
@@ -40,8 +40,8 @@ inline ModeVisualStyle GetModeVisualStyle(TypingMode mode) {
                 { 119, 79, 154, 255 },
                 "Long Distance",
                 u8"Длинная дистанция",
-                "endurance flow",
-                u8"длинный ритм",
+                "Endurance flow",
+                u8"Длинный ритм",
                 "CP"
             };
         case TypingMode::Practice:
@@ -51,8 +51,8 @@ inline ModeVisualStyle GetModeVisualStyle(TypingMode mode) {
                 { 47, 121, 130, 255 },
                 "Free Run",
                 u8"Свободный забег",
-                "short focus drills",
-                u8"короткий фокус",
+                "Short focus drills",
+                u8"Короткий фокус",
                 "PR"
             };
     }

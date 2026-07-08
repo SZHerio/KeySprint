@@ -17,10 +17,16 @@ private:
     int selectedLesson = 0;
     float cursorX = 0.0f;
     float cursorY = 0.0f;
+    float scrollOffset = 0.0f;
+    float scrollTarget = 0.0f;
     float animTime = 0.0f;
 
     int GetLessonCount() const;
     bool IsLessonUnlocked(int lessonId) const;
+    Rectangle GetLessonViewport() const;
+    Rectangle GetCardBaseRect(int index) const;
     Rectangle GetCardRect(int index) const;
+    float GetMaxScrollOffset() const;
+    void EnsureSelectedVisible();
     void StartSelectedLesson();
 };

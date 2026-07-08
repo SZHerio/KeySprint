@@ -13,6 +13,13 @@ const char* TypingFontLabels[Game::TypingFontCount] = {
     "Consolas"
 };
 
+const char* UiFontLabels[Game::UiFontCount] = {
+    "Inter",
+    "IBM Plex Sans",
+    "Segoe UI",
+    "Verdana"
+};
+
 Font LoadFirstAvailableFont(const std::vector<std::string>& candidates, std::vector<int>& glyphs) {
     Font font = {};
     for (const std::string& path : candidates) {
@@ -31,10 +38,14 @@ Font LoadFirstAvailableFont(const std::vector<std::string>& candidates, std::vec
 int ClampFontIndex(int index) {
     return std::clamp(index, 0, Game::TypingFontCount - 1);
 }
+
+int ClampUiFontIndex(int index) {
+    return std::clamp(index, 0, Game::UiFontCount - 1);
+}
 }
 
 Game::Game(int width, int height, const char* title) 
-    : screenWidth(width), screenHeight(height), isRunning(true), windowedWidth(width), windowedHeight(height), language(Language::English) {
+    : screenWidth(width), screenHeight(height), isRunning(true), windowedWidth(width), windowedHeight(height), uiLanguage(Language::Russian), typingLanguage(Language::English) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     InitWindow(screenWidth, screenHeight, title);
     Image windowIcon = LoadImage("assets/icons/key-sprint-icon.png");
@@ -48,6 +59,8 @@ Game::Game(int width, int height, const char* title)
     AudioManager::Init();
     SetTargetFPS(60);
     progress.Load();
+    uiLanguage = progress.GetUiLanguage();
+    typingLanguage = progress.GetTypingLanguage();
     SetThemeIndex(progress.GetThemeIndex());
     
     // Загружаем жирный системный шрифт с кириллицей. Assets могут отсутствовать в чистой сборке.
@@ -61,7 +74,6 @@ Game::Game(int width, int height, const char* title)
     const std::vector<std::vector<std::string>> typingFontCandidates = {
         {
             "assets/fonts/JetBrainsMono-Regular.ttf",
-            "assets/fonts/JetBrainsMono-Bold.ttf",
             "C:/Windows/Fonts/consola.ttf",
             "C:/Windows/Fonts/consolab.ttf"
         },
@@ -82,12 +94,27 @@ Game::Game(int width, int height, const char* title)
         }
     };
 
-    const std::vector<std::string> uiFontCandidates = {
-        "assets/fonts/Inter-Variable.ttf",
-        "assets/fonts/Manrope-Variable.ttf",
-        "assets/fonts/IBMPlexSans-Regular.ttf",
-        "C:/Windows/Fonts/segoeui.ttf",
-        "C:/Windows/Fonts/arial.ttf"
+    const std::vector<std::vector<std::string>> uiFontCandidates = {
+        {
+            "assets/fonts/Inter-Variable.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/arial.ttf"
+        },
+        {
+            "assets/fonts/IBMPlexSans-Regular.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/arial.ttf"
+        },
+        {
+            "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/arial.ttf",
+            "assets/fonts/Inter-Variable.ttf"
+        },
+        {
+            "C:/Windows/Fonts/verdana.ttf",
+            "C:/Windows/Fonts/tahoma.ttf",
+            "C:/Windows/Fonts/arial.ttf"
+        }
     };
 
     for (int index = 0; index < TypingFontCount; ++index) {
@@ -95,13 +122,17 @@ Game::Game(int width, int height, const char* title)
         typingFontLoaded[index] = typingFonts[index].texture.id != 0;
     }
 
-    uiFont = LoadFirstAvailableFont(uiFontCandidates, glyphs);
-    uiFontLoaded = uiFont.texture.id != 0;
+    for (int index = 0; index < UiFontCount; ++index) {
+        uiFonts[index] = LoadFirstAvailableFont(uiFontCandidates[index], glyphs);
+        uiFontLoaded[index] = uiFonts[index].texture.id != 0;
+    }
 }
 
 Game::~Game() {
-    if (uiFontLoaded) {
-        UnloadFont(uiFont);
+    for (int index = 0; index < UiFontCount; ++index) {
+        if (uiFontLoaded[index]) {
+            UnloadFont(uiFonts[index]);
+        }
     }
     for (int index = 0; index < TypingFontCount; ++index) {
         if (typingFontLoaded[index]) {
@@ -147,12 +178,31 @@ Font Game::GetKeyboardFont() const {
     return GetTypingFontByIndex(progress.GetKeyboardFontIndex());
 }
 
+Font Game::GetUiFontByIndex(int index) const {
+    const int selected = ClampUiFontIndex(index);
+    if (uiFontLoaded[selected]) {
+        return uiFonts[selected];
+    }
+
+    for (int index = 0; index < UiFontCount; ++index) {
+        if (uiFontLoaded[index]) {
+            return uiFonts[index];
+        }
+    }
+
+    return GetTypingTextFont();
+}
+
 Font Game::GetUiFont() const {
-    return uiFontLoaded ? uiFont : GetTypingTextFont();
+    return GetUiFontByIndex(progress.GetUiFontIndex());
 }
 
 const char* Game::GetTypingFontLabel(int index) const {
     return TypingFontLabels[ClampFontIndex(index)];
+}
+
+const char* Game::GetUiFontLabel(int index) const {
+    return UiFontLabels[ClampUiFontIndex(index)];
 }
 
 const char* Game::GetTypingTextFontLabel() const {
@@ -161,6 +211,18 @@ const char* Game::GetTypingTextFontLabel() const {
 
 const char* Game::GetKeyboardFontLabel() const {
     return GetTypingFontLabel(progress.GetKeyboardFontIndex());
+}
+
+void Game::SetUiFontIndex(int index) {
+    progress.SetUiFontIndex(index, UiFontCount);
+}
+
+void Game::SetTypingTextFontIndex(int index) {
+    progress.SetTypingTextFontIndex(index, TypingFontCount);
+}
+
+void Game::SetKeyboardFontIndex(int index) {
+    progress.SetKeyboardFontIndex(index, TypingFontCount);
 }
 
 void Game::CycleTypingTextFont() {
@@ -208,8 +270,22 @@ void Game::Quit() {
     isRunning = false;
 }
 
+void Game::SetInterfaceLanguage(Language newLanguage) {
+    uiLanguage = newLanguage;
+    progress.SetUiLanguage(newLanguage);
+}
+
+void Game::SetTypingLanguage(Language newLanguage) {
+    typingLanguage = newLanguage;
+    progress.SetTypingLanguage(newLanguage);
+}
+
 void Game::ToggleLanguage() {
-    SetLanguage(language == Language::English ? Language::Russian : Language::English);
+    SetInterfaceLanguage(uiLanguage == Language::English ? Language::Russian : Language::English);
+}
+
+void Game::ToggleTypingLanguage() {
+    SetTypingLanguage(typingLanguage == Language::English ? Language::Russian : Language::English);
 }
 
 void Game::ToggleFullscreenMode() {

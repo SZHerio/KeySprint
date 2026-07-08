@@ -13,6 +13,7 @@ set(PROJECT_SOURCES
     src/core/Game.cpp
     src/core/TypingLogic.cpp
     src/core/TextUtils.cpp
+    src/core/KeyboardLayout.cpp
     src/core/LessonLibrary.cpp
     src/core/ProgressManager.cpp
     src/core/AudioManager.cpp
@@ -36,6 +37,9 @@ add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+    target_link_options(${PROJECT_NAME} PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
+elseif(WIN32)
+    target_link_options(${PROJECT_NAME} PRIVATE -mwindows)
 endif()
 
 # Copy assets folder to output directory

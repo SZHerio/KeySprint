@@ -20,7 +20,10 @@ struct ProgressData {
     float bestAccuracy = 0.0f;
     int bestStreak = 0;
     Difficulty difficulty = Difficulty::Normal;
+    Language uiLanguage = Language::Russian;
+    Language typingLanguage = Language::English;
     int themeIndex = 0;
+    int uiFontIndex = 0;
     int typingTextFontIndex = 0;
     int keyboardFontIndex = 0;
     std::map<std::string, int> weakKeys;
@@ -46,8 +49,14 @@ public:
     Difficulty GetDifficulty() const { return data.difficulty; }
     void SetDifficulty(Difficulty difficulty);
     void CycleDifficulty();
+    Language GetUiLanguage() const { return data.uiLanguage; }
+    Language GetTypingLanguage() const { return data.typingLanguage; }
+    void SetUiLanguage(Language language);
+    void SetTypingLanguage(Language language);
     int GetThemeIndex() const { return data.themeIndex; }
     void SetThemeIndex(int index, int themeCount);
+    int GetUiFontIndex() const { return data.uiFontIndex; }
+    void SetUiFontIndex(int index, int fontCount);
     int GetTypingTextFontIndex() const { return data.typingTextFontIndex; }
     int GetKeyboardFontIndex() const { return data.keyboardFontIndex; }
     void SetTypingTextFontIndex(int index, int fontCount);

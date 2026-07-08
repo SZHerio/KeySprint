@@ -4,38 +4,10 @@
 #include <raylib.h>
 #include "../core/AppTypes.h"
 #include "../core/GameState.h"
+#include "../core/KeyboardLayout.h"
 #include "../core/Theme.h"
 #include "../core/TypingLogic.h"
 #include "../core/TypingMode.h"
-
-enum class FingerType {
-    None,
-    LeftPinky,
-    LeftRing,
-    LeftMiddle,
-    LeftIndex,
-    LeftThumb,
-    RightThumb,
-    RightIndex,
-    RightMiddle,
-    RightRing,
-    RightPinky
-};
-
-enum class HandSide {
-    Left,
-    Right,
-    Both
-};
-
-struct KeyLayout {
-    int key;
-    std::string label;
-    int row;
-    float width;
-    FingerType finger;
-    HandSide hand;
-};
 
 class TypingState : public GameState {
 public:
@@ -51,6 +23,7 @@ private:
     TypingLogic logic;
     TypingMode mode;
     Language language = Language::English;
+    Language uiLanguage = Language::Russian;
     int lessonId = 0;
     int lessonOverride = -1;
     std::string lessonTitle;
@@ -73,14 +46,10 @@ private:
     std::vector<Vector2> charPositions;
     std::vector<KeyLayout> keyboardKeys;
 
-    void BuildKeyboardModel();
     void CalculateLayout(Font font, float fontSize);
     void DrawVirtualKeyboard(Font font, const Theme& theme);
     void DrawHandsGuide(Font font, const Theme& theme);
     float GetTextFontSize() const;
     const char* GetModeTitle() const;
-    std::string BuildCompositionText() const;
     int GetNextExpectedChar() const;
-    FingerType GetFingerForKey(int key) const;
-    Color GetFingerColor(FingerType finger, const Theme& theme) const;
 };

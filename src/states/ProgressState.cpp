@@ -16,6 +16,10 @@ bool IsRu(Game* game) {
     return game->GetLanguage() == Language::Russian;
 }
 
+Color HoverOutline(Game* game) {
+    return game->IsDarkTheme() ? WHITE : BLACK;
+}
+
 const char* LocalRank(const std::string& rank, bool ru) {
     if (!ru) return rank.c_str();
     if (rank == "Master") return u8"Мастер";
@@ -345,13 +349,17 @@ void ProgressState::Draw() {
     const Theme& theme = gamePtr->GetTheme();
     const Font font = gamePtr->GetUiFont();
     const ProgressManager& progress = gamePtr->GetProgress();
-    const Language language = gamePtr->GetLanguage();
+    const Language language = gamePtr->GetTypingLanguage();
     const bool ru = IsRu(gamePtr);
     DrawRectangleRounded(gamePtr->ScaleRect({ 70.0f, 54.0f, 1140.0f, 610.0f }), 0.04f, 16, Fade(theme.Panel, 0.80f));
     DrawRectangleRoundedLines(gamePtr->ScaleRect({ 70.0f, 54.0f, 1140.0f, 610.0f }), 0.04f, 16, Fade(theme.PanelBorder, 0.78f));
 
     DrawSceneText(gamePtr, font, IsRu(gamePtr) ? u8"Статистика" : "Progress Stats", { 105.0f, 92.0f }, 38.0f, theme.Title);
     DrawSceneText(gamePtr, font, IsRu(gamePtr) ? u8"ESC Меню | R Сброс прогресса" : "ESC Menu | R Reset Progress", { 800.0f, 105.0f }, 16.0f, theme.TextDefault);
+    const Rectangle resetRect = { 830.0f, 94.0f, 250.0f, 32.0f };
+    if (CheckCollisionPointRec(GetMousePosition(), gamePtr->ScaleRect(resetRect))) {
+        DrawRectangleRoundedLines(gamePtr->ScaleRect(resetRect), 0.28f, 8, Fade(HoverOutline(gamePtr), 0.86f));
+    }
 
     const std::string rank = progress.GetRankLabel();
     const std::string difficulty = progress.GetDifficultyLabel();

@@ -11,16 +11,41 @@ public:
 
 private:
     void LoadDraftFromCurrent();
-    void ApplyDraft();
-    bool HasPendingChanges() const;
+    void SetDraftThemeIndex(int index, int direction);
+    void SetDraftInterfaceLanguage(Language language);
+    void SetDraftTypingLanguage(Language language);
+    void SetDraftDifficulty(Difficulty difficulty);
+    void SetDraftUiFontIndex(int index, int direction);
+    void SetDraftTypingTextFontIndex(int index, int direction);
+    void SetDraftKeyboardFontIndex(int index, int direction);
+    void SetDraftAudioEnabled(bool enabled);
+    void SetDraftClickProfile(int profile);
+    void SetDraftVolume(float volume);
 
     Game* gamePtr = nullptr;
     int draftThemeIndex = 0;
-    Language draftLanguage = Language::English;
+    Language draftInterfaceLanguage = Language::Russian;
+    Language draftTypingLanguage = Language::English;
     Difficulty draftDifficulty = Difficulty::Normal;
+    int draftUiFontIndex = 0;
     int draftTypingTextFontIndex = 0;
     int draftKeyboardFontIndex = 0;
     bool draftAudioEnabled = true;
     int draftClickProfile = 0;
     float draftVolume = 0.65f;
+    int selectedRow = 0;
+    float interfaceLanguagePosition = 1.0f;
+    float typingLanguagePosition = 0.0f;
+    float difficultyPosition = 1.0f;
+    float clickProfilePosition = 0.0f;
+    float soundPosition = 1.0f;
+    float volumeVisual = 0.65f;
+    float themePulse = 0.0f;
+    float themeDirection = 1.0f;
+    float uiFontPulse = 0.0f;
+    float uiFontDirection = 1.0f;
+    float typingFontPulse = 0.0f;
+    float typingFontDirection = 1.0f;
+    float keyboardFontPulse = 0.0f;
+    float keyboardFontDirection = 1.0f;
 };

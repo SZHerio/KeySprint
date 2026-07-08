@@ -7,6 +7,7 @@
 #include <string>
 #include "../core/LessonLibrary.h"
 #include "../core/ModeVisual.h"
+#include "../core/UiMotion.h"
 #include "LessonSelectState.h"
 #include "ProgressState.h"
 #include "TypingState.h"
@@ -33,9 +34,9 @@ const char* LocalizedDescription(int index, Language language) {
         case 0: return ru ? u8"Короткие случайные упражнения с WPM, точностью и подсказками пальцев." : "Short generated drills with live WPM and finger guidance.";
         case 1: return ru ? u8"Выбирай урок на карте курса, повторяй старые и открывай новые." : "Pick a lesson card, replay older drills or unlock the next level.";
         case 2: return ru ? u8"Ежедневный смешанный текст с игровой целью на сессию." : "A fresh mixed challenge with a daily mission mindset.";
-        case 3: return ru ? u8"Длинный связный текст, прокрутка и тренировка выносливости." : "Long-form typing flow: larger text, scrolling canvas and endurance.";
+        case 3: return ru ? u8"Большой связный текст на 10+ минут письма, прокрутка и тренировка выносливости." : "A substantial 10+ minute long-form text with scrolling and endurance training.";
         case 4: return ru ? u8"Ранг, миссии, слабые клавиши, серия и открытые уроки." : "Review rank, missions, weak keys, lesson unlocks and reset progress.";
-        case 5: return ru ? u8"Тема, язык, шрифты, сложность, звук, громкость и сброс прогресса." : "Theme, language, fonts, difficulty, sound profiles and progress reset.";
+        case 5: return ru ? u8"Тема, язык интерфейса, язык набора, шрифты, сложность и звук." : "Theme, interface language, typing language, fonts, difficulty and sound.";
         case 6: return ru ? u8"Закрыть программу и вернуться на рабочий стол." : "Close Key Sprint and return to desktop.";
         default: return "";
     }
@@ -150,7 +151,7 @@ void DrawWrappedText(Game* game, Font font, const char* text, Vector2 position, 
             const float scale = game->GetUiScale();
             DrawTextEx(font, line.c_str(), game->ScalePoint({ position.x, y }), fontSize * scale, spacing * scale, color);
             line = word;
-            y += fontSize + 6.0f;
+            y += (fontSize + 6.0f) * 0.80f;
         } else {
             line = candidate;
         }
@@ -235,7 +236,8 @@ void MainMenuState::HandleInput() {
 
 void MainMenuState::Update(float deltaTime) {
     menuTime += deltaTime;
-    highlightY = GetLayout().HighlightY(selectedOption);
+    const float targetY = GetLayout().HighlightY(selectedOption);
+    highlightY += (targetY - highlightY) * std::min(1.0f, deltaTime * SelectionMoveSpeed);
 }
 
 void MainMenuState::Draw() {
@@ -253,13 +255,14 @@ void MainMenuState::Draw() {
 
     DrawBrandTitle(gamePtr, titleFont, theme, 640.0f, 104.0f);
     DrawTextEx(font, gamePtr->GetLanguage() == Language::Russian ? u8"Тренажер скорости печати" : "Typing speed trainer", gamePtr->ScalePoint({ 414.0f, 178.0f }), 20.0f * scale, 1.0f * scale, theme.TextDefault);
-    const Language lang = gamePtr->GetLanguage();
+    const Language uiLang = gamePtr->GetLanguage();
+    const Language typingLang = gamePtr->GetTypingLanguage();
     const std::string rank = gamePtr->GetProgress().GetRankLabel();
     const std::string difficulty = gamePtr->GetProgress().GetDifficultyLabel();
-    DrawTextEx(font, TextFormat(lang == Language::Russian ? u8"%s | Ранг %s | %s | Рекорд %.0f WPM" : "%s | %s Rank | %s | Best %.0f WPM",
-        LessonLibrary::GetLanguageLabel(lang).c_str(),
-        LocalRank(rank, lang),
-        LocalDifficulty(difficulty, lang),
+    DrawTextEx(font, TextFormat(uiLang == Language::Russian ? u8"%s | Ранг %s | %s | Рекорд %.0f WPM" : "%s | %s Rank | %s | Best %.0f WPM",
+        LessonLibrary::GetLanguageLabel(typingLang).c_str(),
+        LocalRank(rank, uiLang),
+        LocalDifficulty(difficulty, uiLang),
         gamePtr->GetProgress().GetBestWpm()),
         gamePtr->ScalePoint({ 384.0f, 215.0f }), 15.0f * scale, 1.0f * scale, theme.TextDefault);
 
@@ -299,6 +302,8 @@ void MainMenuState::Draw() {
 
     for (size_t i = 0; i < options.size(); ++i) {
         const float y = layout.OptionTextY(static_cast<int>(i));
+        const float rowTop = layout.HighlightY(static_cast<int>(i));
+        const float rowCenterY = rowTop + layout.menuItemHeight * 0.5f;
         const bool modeOption = IsModeOption(static_cast<int>(i));
         const ModeVisualStyle modeStyle = GetModeVisualStyle(ModeForOption(static_cast<int>(i)));
         const Color accent = modeOption ? modeStyle.Accent : theme.Highlight;
@@ -306,12 +311,12 @@ void MainMenuState::Draw() {
         const float dotPulse = selectedOption == static_cast<int>(i) ? glow : 0.15f;
         if (modeOption) {
             DrawRectangleRounded(
-                gamePtr->ScaleRect({ layout.contentX + 15.0f, y + 5.0f, 5.0f, 25.0f }),
+                gamePtr->ScaleRect({ layout.contentX + 15.0f, rowCenterY - 12.5f, 5.0f, 25.0f }),
                 0.80f,
                 6,
                 Fade(accent, selectedOption == static_cast<int>(i) ? 0.78f : 0.36f));
         }
-        DrawCircleV(gamePtr->ScalePoint({ layout.contentX + 30.0f, y + 14.0f }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? accent : Fade(modeOption ? accent : theme.TextDefault, modeOption ? 0.45f : 0.35f));
+        DrawCircleV(gamePtr->ScalePoint({ layout.contentX + 30.0f, rowCenterY }), (5.0f + dotPulse * 3.0f) * scale, selectedOption == static_cast<int>(i) ? accent : Fade(modeOption ? accent : theme.TextDefault, modeOption ? 0.45f : 0.35f));
         DrawTextEx(font, LocalizedOption(static_cast<int>(i), gamePtr->GetLanguage()), gamePtr->ScalePoint({ layout.contentX + 65.0f, y }), 21.0f * scale, 0.0f, color);
     }
 

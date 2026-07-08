@@ -11,6 +11,7 @@ public:
     static constexpr float VirtualWidth = 1280.0f;
     static constexpr float VirtualHeight = 720.0f;
     static constexpr int TypingFontCount = 4;
+    static constexpr int UiFontCount = 4;
 
     Game(int width, int height, const char* title);
     ~Game();
@@ -34,16 +35,30 @@ public:
     Font GetTypingFontByIndex(int index) const;
     Font GetTypingTextFont() const;
     Font GetKeyboardFont() const;
+    Font GetUiFontByIndex(int index) const;
     Font GetUiFont() const;
     int GetTypingFontCount() const { return TypingFontCount; }
+    int GetUiFontCount() const { return UiFontCount; }
+    int GetUiFontIndex() const { return progress.GetUiFontIndex(); }
+    int GetTypingTextFontIndex() const { return progress.GetTypingTextFontIndex(); }
+    int GetKeyboardFontIndex() const { return progress.GetKeyboardFontIndex(); }
     const char* GetTypingFontLabel(int index) const;
+    const char* GetUiFontLabel(int index) const;
     const char* GetTypingTextFontLabel() const;
     const char* GetKeyboardFontLabel() const;
+    void SetUiFontIndex(int index);
+    void SetTypingTextFontIndex(int index);
+    void SetKeyboardFontIndex(int index);
     void CycleTypingTextFont();
     void CycleKeyboardFont();
-    Language GetLanguage() const { return language; }
-    void SetLanguage(Language newLanguage) { language = newLanguage; }
+    Language GetLanguage() const { return uiLanguage; }
+    Language GetInterfaceLanguage() const { return uiLanguage; }
+    Language GetTypingLanguage() const { return typingLanguage; }
+    void SetLanguage(Language newLanguage) { SetInterfaceLanguage(newLanguage); }
+    void SetInterfaceLanguage(Language newLanguage);
+    void SetTypingLanguage(Language newLanguage);
     void ToggleLanguage();
+    void ToggleTypingLanguage();
     ProgressManager& GetProgress() { return progress; }
     const ProgressManager& GetProgress() const { return progress; }
     int GetWindowWidth() const;
@@ -67,8 +82,9 @@ private:
     int themeIndex = ThemeManager::MidnightThemeIndex;
     Font typingFonts[TypingFontCount] = {};
     bool typingFontLoaded[TypingFontCount] = {};
-    Font uiFont = {};
-    bool uiFontLoaded = false;
-    Language language;
+    Font uiFonts[UiFontCount] = {};
+    bool uiFontLoaded[UiFontCount] = {};
+    Language uiLanguage;
+    Language typingLanguage;
     ProgressManager progress;
 };

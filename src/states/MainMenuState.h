@@ -21,7 +21,7 @@ private:
         "A fresh mixed challenge with a daily mission mindset.",
         "Long-form typing flow: larger text, scrolling canvas and endurance.",
         "Review rank, missions, weak keys, lesson unlocks and reset progress.",
-        "Theme, language, fonts, difficulty, sound profiles and progress reset.",
+        "Theme, interface language, typing language, fonts, difficulty and sound.",
         "Close Key Sprint and return to desktop."
     };
 };

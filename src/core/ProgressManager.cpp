@@ -75,7 +75,10 @@ void ProgressManager::Load() {
         data.bestAccuracy = json.value("bestAccuracy", 0.0f);
         data.bestStreak = json.value("bestStreak", 0);
         data.difficulty = DifficultyFromString(json.value("difficulty", std::string("normal")));
+        data.uiLanguage = LanguageFromString(json.value("uiLanguage", std::string("ru")));
+        data.typingLanguage = LanguageFromString(json.value("typingLanguage", std::string("en")));
         data.themeIndex = json.value("themeIndex", 0);
+        data.uiFontIndex = json.value("uiFontIndex", 0);
         data.typingTextFontIndex = json.value("typingTextFontIndex", 0);
         data.keyboardFontIndex = json.value("keyboardFontIndex", 0);
         data.weakKeys.clear();
@@ -116,7 +119,10 @@ void ProgressManager::Save() const {
     json["bestAccuracy"] = data.bestAccuracy;
     json["bestStreak"] = data.bestStreak;
     json["difficulty"] = DifficultyToString(data.difficulty);
+    json["uiLanguage"] = LanguageToString(data.uiLanguage);
+    json["typingLanguage"] = LanguageToString(data.typingLanguage);
     json["themeIndex"] = data.themeIndex;
+    json["uiFontIndex"] = data.uiFontIndex;
     json["typingTextFontIndex"] = data.typingTextFontIndex;
     json["keyboardFontIndex"] = data.keyboardFontIndex;
     json["weakKeys"] = data.weakKeys;
@@ -136,13 +142,19 @@ void ProgressManager::Save() const {
 
 void ProgressManager::Reset() {
     const Difficulty preservedDifficulty = data.difficulty;
+    const Language preservedUiLanguage = data.uiLanguage;
+    const Language preservedTypingLanguage = data.typingLanguage;
     const int preservedThemeIndex = data.themeIndex;
+    const int preservedUiFontIndex = data.uiFontIndex;
     const int preservedTypingTextFontIndex = data.typingTextFontIndex;
     const int preservedKeyboardFontIndex = data.keyboardFontIndex;
 
     data = ProgressData{};
     data.difficulty = preservedDifficulty;
+    data.uiLanguage = preservedUiLanguage;
+    data.typingLanguage = preservedTypingLanguage;
     data.themeIndex = preservedThemeIndex;
+    data.uiFontIndex = preservedUiFontIndex;
     data.typingTextFontIndex = preservedTypingTextFontIndex;
     data.keyboardFontIndex = preservedKeyboardFontIndex;
     Save();
@@ -209,12 +221,37 @@ void ProgressManager::SetDifficulty(Difficulty difficulty) {
     Save();
 }
 
+void ProgressManager::SetUiLanguage(Language language) {
+    if (data.uiLanguage == language) {
+        return;
+    }
+    data.uiLanguage = language;
+    Save();
+}
+
+void ProgressManager::SetTypingLanguage(Language language) {
+    if (data.typingLanguage == language) {
+        return;
+    }
+    data.typingLanguage = language;
+    Save();
+}
+
 void ProgressManager::SetThemeIndex(int index, int themeCount) {
     const int clamped = ClampSettingIndex(index, themeCount);
     if (data.themeIndex == clamped) {
         return;
     }
     data.themeIndex = clamped;
+    Save();
+}
+
+void ProgressManager::SetUiFontIndex(int index, int fontCount) {
+    const int clamped = ClampSettingIndex(index, fontCount);
+    if (data.uiFontIndex == clamped) {
+        return;
+    }
+    data.uiFontIndex = clamped;
     Save();
 }
 

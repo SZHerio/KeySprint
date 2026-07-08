@@ -28,7 +28,9 @@ public:
     static constexpr int DaylightThemeIndex = 1;
     static constexpr int GraphiteThemeIndex = 2;
     static constexpr int EmberThemeIndex = 3;
-    static constexpr int ThemeCount = 4;
+    static constexpr int NeonThemeIndex = 4;
+    static constexpr int RubyThemeIndex = 5;
+    static constexpr int ThemeCount = 6;
 
     static int ClampIndex(int index) {
         if (index < 0) return MidnightThemeIndex;
@@ -41,6 +43,8 @@ public:
             case DaylightThemeIndex: return "Daylight";
             case GraphiteThemeIndex: return "Graphite";
             case EmberThemeIndex: return "Ember";
+            case NeonThemeIndex: return "Neon";
+            case RubyThemeIndex: return "Ruby";
             case MidnightThemeIndex:
             default: return "Midnight";
         }
@@ -51,6 +55,8 @@ public:
             case DaylightThemeIndex: return u8"Светлая";
             case GraphiteThemeIndex: return u8"Графит";
             case EmberThemeIndex: return u8"Теплая";
+            case NeonThemeIndex: return u8"Неон";
+            case RubyThemeIndex: return u8"Рубин";
             case MidnightThemeIndex:
             default: return u8"Ночная";
         }
@@ -61,6 +67,8 @@ public:
             case DaylightThemeIndex: return GetLightTheme();
             case GraphiteThemeIndex: return GetGraphiteTheme();
             case EmberThemeIndex: return GetEmberTheme();
+            case NeonThemeIndex: return GetNeonTheme();
+            case RubyThemeIndex: return GetRubyTheme();
             case MidnightThemeIndex:
             default: return GetMidnightTheme();
         }
@@ -146,6 +154,48 @@ public:
                 { 236, 196, 92, 255 },
                 { 94, 203, 151, 255 },
                 { 112, 166, 240, 255 }
+            }
+        };
+    }
+
+    static Theme GetNeonTheme() {
+        return {
+            { 7, 10, 24, 255 },
+            { 206, 196, 238, 255 },
+            { 252, 244, 255, 255 },
+            { 255, 78, 146, 255 },
+            { 217, 92, 255, 255 },
+            { 236, 220, 255, 255 },
+            { 14, 18, 42, 255 },
+            { 71, 50, 104, 255 },
+            { 190, 89, 255, 255 },
+            {
+                { 255, 83, 157, 255 },
+                { 255, 176, 74, 255 },
+                { 247, 230, 96, 255 },
+                { 119, 99, 255, 255 },
+                { 207, 118, 255, 255 }
+            }
+        };
+    }
+
+    static Theme GetRubyTheme() {
+        return {
+            { 21, 8, 15, 255 },
+            { 218, 190, 200, 255 },
+            { 255, 244, 248, 255 },
+            { 255, 91, 112, 255 },
+            { 255, 113, 148, 255 },
+            { 255, 226, 234, 255 },
+            { 36, 16, 25, 255 },
+            { 91, 43, 61, 255 },
+            { 225, 57, 95, 255 },
+            {
+                { 255, 88, 131, 255 },
+                { 244, 138, 83, 255 },
+                { 229, 188, 93, 255 },
+                { 95, 208, 151, 255 },
+                { 126, 160, 239, 255 }
             }
         };
     }
